@@ -323,7 +323,7 @@ export function DetailPage() {
                     )}
                   </div>
                   <iframe className="pdf-iframe" src={pdfViewUrl} title="PDF Preview"
-                    style={{ height: "calc(100vh - 220px)", minHeight: 600 }} />
+                    style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
                 </div>
               ) : (
                 <div className="info-card" style={{ marginBottom: 0 }}>
