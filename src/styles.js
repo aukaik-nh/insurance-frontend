@@ -189,7 +189,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
 @media(max-width:767px){
   .pvp{
     position:fixed;inset:0;top:auto;bottom:0;
-    width:100%;height:72vh;border-left:none;
+    width:100%;height:85vh;border-left:none;
     border-top:2px solid var(--brd);border-radius:16px 16px 0 0;
     z-index:150;box-shadow:0 -8px 32px rgba(0,0,0,.18);
     animation:pvp-up .22s ease;
@@ -202,8 +202,8 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
   table{min-width:520px}
 }
 .pvp-hd{
-  padding:14px 16px 12px;border-bottom:1px solid var(--brd);
-  display:flex;align-items:flex-start;gap:10px;flex-shrink:0;
+  padding:8px 12px;border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
 }
 .pvp-title{font-size:15px;font-weight:700;color:var(--t1);line-height:1.3}
 .pvp-close{
