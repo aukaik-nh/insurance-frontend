@@ -105,13 +105,6 @@ function Layout() {
                 <Ico n="upload" s={18} />
                 <span>อัปโหลด PDF</span>
               </div>
-              <div className="mob-divider" />
-              <div className="mob-search">
-                <Ico n="search" s={15} />
-                <input placeholder="ค้นหา เลขกรมธรรม์ / ชื่อ / ทะเบียน..."
-                  value={search}
-                  onChange={e => { handleSearch(e.target.value); setMobileMenu(false) }} />
-              </div>
             </div>
           )}
         </header>
