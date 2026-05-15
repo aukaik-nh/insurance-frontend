@@ -340,8 +340,8 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .b-off .bdot{background:var(--red)}
 .plate{
   display:inline-block;background:var(--sur2);
-  border:1.5px solid var(--brd2);border-radius:6px;
-  padding:3px 9px;font-size:13px;font-weight:700;
+  border:1.5px solid var(--brd2);border-radius:8px;
+  padding:6px 12px;font-size:13px;font-weight:700;
   color:var(--t1);letter-spacing:.5px;
   font-family:'SF Mono','Fira Code','Consolas',monospace;
 }
