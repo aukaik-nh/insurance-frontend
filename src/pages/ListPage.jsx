@@ -75,6 +75,21 @@ export function ListPage({ tab }) {
           <div className="top-title">{tabMeta[tab]?.title}</div>
           <div className="top-sub">{tabMeta[tab]?.sub}</div>
         </div>
+        {tab !== "dashboard" && (
+          <div className="top-srch">
+            <Ico n="search" s={15} />
+            <input
+              placeholder="ค้นหา เลขกรมธรรม์, ชื่อ, ทะเบียน..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+            />
+            {search && (
+              <button className="top-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
+                <Ico n="x" s={13} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={`list-layout${previewPolicy ? " has-pvp" : ""}`}>
@@ -82,6 +97,7 @@ export function ListPage({ tab }) {
 
           {tab === "dashboard" && (
             <>
+              <img src="/image.png" alt="logo" style={{ maxWidth: "100%", marginBottom: 16 }} />
               <div className="stats">
                 {[
                   { ico: "doc",      cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
@@ -115,10 +131,10 @@ export function ListPage({ tab }) {
                 </div>
               )}
 
-              {/* big search */}
+              {/* search */}
               <div className="big-srch-wrap">
                 <div className="big-srch">
-                  <Ico n="search" s={18} />
+                  <Ico n="search" s={16} />
                   <input
                     placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
                     value={search}
