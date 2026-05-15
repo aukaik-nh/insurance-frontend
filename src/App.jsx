@@ -75,13 +75,7 @@ function Layout() {
 
           {/* Right area */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
-            <div className="srch">
-              <Ico n="search" s={14} />
-              <input placeholder="ค้นหา เลขกรมธรรม์ / ชื่อ / ทะเบียน..."
-                value={search}
-                onChange={e => handleSearch(e.target.value)} />
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+<div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div className="sb-dot" />
               <span className="sb-status-txt">ระบบพร้อมใช้งาน</span>
             </div>
