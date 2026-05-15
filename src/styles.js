@@ -163,12 +163,11 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
 .srch input:focus{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(30,111,229,.10)}
 .srch input::placeholder{color:var(--t3)}
 
-.table-pvp-wrap{display:block}
-.table-pvp-wrap.has-pvp{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;gap:0}
-.table-pvp-wrap.has-pvp .card{margin-bottom:0;border-radius:12px 0 0 12px;border-right:none}
-.table-pvp-wrap.has-pvp .pvp{position:static;height:100%;min-height:unset;border-radius:0 12px 12px 0;border:1px solid var(--brd);border-left:none}
+.list-layout{display:flex;align-items:flex-start;flex:1}
+.list-layout .body{flex:1;min-width:0;transition:all .25s}
 
 .pvp{
+  width:340px;flex-shrink:0;
   background:var(--sur);border-left:1px solid var(--brd);
   position:sticky;top:108px;height:calc(100vh - 108px);
   display:flex;flex-direction:column;overflow:hidden;
@@ -184,7 +183,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
     animation:pvp-up .22s ease;
   }
   @keyframes pvp-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .table-pvp-wrap{position:relative}
+  .list-layout{position:relative}
 }
 @media(max-width:639px){
   .card{overflow-x:auto}
