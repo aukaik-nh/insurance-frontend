@@ -40,15 +40,17 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         </div>
       )}
 
-      {/* ข้อมูลหลัก */}
-      <div className="pvp-body">
-        <div className="pvp-sec">
-          <Row label="เลขกรมธรรม์"  value={p.policy_number} />
-          <Row label="บ.ประกัน"      value={p.company_code} />
-          <Row label="ชื่อ"          value={p.insured_name} />
-          <Row label="ทะเบียน"       value={p.license_plate} />
-          <Row label="คุ้มครองเริ่ม" value={p.coverage_start} />
-          <Row label="คุ้มครองสิ้นสุด" value={p.coverage_end} />
+      {/* ข้อมูลย่อ 2 บรรทัด */}
+      <div style={{ padding: "6px 12px", borderTop: "1px solid var(--brd)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 3 }}>
+        <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--t1)" }}>
+          <span style={{ color: "var(--t3)", flexShrink: 0 }}>เลขที่</span>
+          <span style={{ fontWeight: 600 }}>{p.policy_number || "-"}</span>
+          <span style={{ color: "var(--t3)", flexShrink: 0, marginLeft: "auto" }}>ทะเบียน</span>
+          <span style={{ fontWeight: 600 }}>{p.license_plate || "-"}</span>
+        </div>
+        <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--t1)" }}>
+          <span style={{ color: "var(--t3)", flexShrink: 0 }}>คุ้มครอง</span>
+          <span>{p.coverage_start || "-"} – {p.coverage_end || "-"}</span>
         </div>
       </div>
 
