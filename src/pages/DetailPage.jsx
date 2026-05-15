@@ -4,6 +4,7 @@ import api from "../api"
 import { Ico } from "../icons"
 import { getStatus, baht } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
+import { PolicyForm } from "../components/PolicyForm"
 
 export function DetailPage() {
   const navigate  = useNavigate()
@@ -15,6 +16,10 @@ export function DetailPage() {
   const [editName, setEditName] = useState(false)
   const [name, setName]         = useState(p0?.pdf_filename || "")
   const [savingName, setSavingName] = useState(false)
+
+  const [editMode, setEditMode]   = useState(false)
+  const [editVals, setEditVals]   = useState({})
+  const [saving, setSaving]       = useState(false)
 
   if (!p) {
     return (
@@ -32,6 +37,7 @@ export function DetailPage() {
 
   const st = getStatus(p.coverage_end)
 
+  /* ── PDF filename save ── */
   const saveName = async () => {
     setSavingName(true)
     try {
@@ -41,6 +47,24 @@ export function DetailPage() {
     } catch (e) {
       alert("เปลี่ยนชื่อไฟล์ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setSavingName(false) }
+  }
+
+  /* ── Edit mode ── */
+  const startEdit = () => {
+    setEditVals({ ...p })
+    setEditMode(true)
+  }
+  const cancelEdit = () => setEditMode(false)
+
+  const saveEdit = async () => {
+    setSaving(true)
+    try {
+      await api.put(`/policies/${p.id}`, editVals)
+      setP({ ...p, ...editVals })
+      setEditMode(false)
+    } catch (e) {
+      alert("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+    } finally { setSaving(false) }
   }
 
   const pdfBase        = `${api.defaults.baseURL}/policies/${p.id}/pdf`
@@ -78,102 +102,128 @@ export function DetailPage() {
               {p.insured_name || ""}{p.insured_name && p.license_plate ? "  ·  " : ""}{p.license_plate || ""}
             </div>
           </div>
-          {hasPdfInDb && (
-            <div className="page-hd-right">
-              <button className="btn btn-w" onClick={() => setPdfFull(true)}>
-                <Ico n="expand" s={14} /> ดู PDF
-              </button>
-              <a className="btn btn-b" href={pdfDownloadUrl}>
-                <Ico n="download" s={14} /> ดาวน์โหลด
-              </a>
-            </div>
-          )}
+          <div className="page-hd-right">
+            {editMode ? (
+              <>
+                <button className="btn btn-w" onClick={cancelEdit} disabled={saving}>
+                  <Ico n="x" s={14} /> ยกเลิก
+                </button>
+                <button className="btn btn-b" onClick={saveEdit} disabled={saving}>
+                  <Ico n="check" s={14} /> {saving ? "กำลังบันทึก…" : "บันทึก"}
+                </button>
+              </>
+            ) : (
+              <>
+                {hasPdfInDb && (
+                  <>
+                    <button className="btn btn-w" onClick={() => setPdfFull(true)}>
+                      <Ico n="expand" s={14} /> ดู PDF
+                    </button>
+                    <a className="btn btn-b" href={pdfDownloadUrl}>
+                      <Ico n="download" s={14} /> ดาวน์โหลด
+                    </a>
+                  </>
+                )}
+                <button className="btn btn-w" onClick={startEdit}>
+                  <Ico n="pen" s={14} /> แก้ไข
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="page-body">
           <div className="detail-split">
 
-            {/* left: info cards */}
+            {/* left: info cards or edit form */}
             <div>
-              {/* ผู้เอาประกัน */}
-              <div className="info-card">
-                <div className="info-card-hd"><Ico n="person" s={16} /><span className="info-card-title">ผู้เอาประกัน</span></div>
-                <div className="info-card-bd">
-                  <div className="info-row" style={{ marginBottom: 12 }}>
-                    <F label="ชื่อ-นามสกุล"          value={p.insured_name} />
-                    <F label="ชื่อตัวแทน / นายหน้า"  value={p.broker_name} />
-                  </div>
-                  <div className="info-row fw">
-                    <F label="ที่อยู่" value={p.insured_address} />
-                  </div>
+              {editMode ? (
+                <div className="info-card" style={{ padding: "18px 18px 8px" }}>
+                  <PolicyForm values={editVals} onChange={setEditVals} />
                 </div>
-              </div>
-
-              {/* รถยนต์ */}
-              <div className="info-card">
-                <div className="info-card-hd"><Ico n="car" s={16} /><span className="info-card-title">ข้อมูลรถยนต์</span></div>
-                <div className="info-card-bd">
-                  <div className="info-row" style={{ marginBottom: 12 }}>
-                    <F label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
-                    <F label="ปีรถ" value={p.car_year} />
-                  </div>
-                  <div className="info-row">
-                    <div className="info-field">
-                      <div className="info-label">ทะเบียนรถ</div>
-                      <div className="info-val">
-                        {p.license_plate ? <span className="plate">{p.license_plate}</span> : "—"}
+              ) : (
+                <>
+                  {/* ผู้เอาประกัน */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="person" s={16} /><span className="info-card-title">ผู้เอาประกัน</span></div>
+                    <div className="info-card-bd">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
+                        <F label="ชื่อ-นามสกุล"          value={p.insured_name} />
+                        <F label="ชื่อตัวแทน / นายหน้า"  value={p.broker_name} />
+                      </div>
+                      <div className="info-row fw">
+                        <F label="ที่อยู่" value={p.insured_address} />
                       </div>
                     </div>
-                    <F label="เลขตัวถัง" value={p.chassis_no} mono />
                   </div>
-                </div>
-              </div>
 
-              {/* ระยะเวลาคุ้มครอง */}
-              <div className="info-card">
-                <div className="info-card-hd"><Ico n="cal" s={16} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
-                <div className="info-card-bd">
-                  <div className="info-row">
-                    <F label="วันเริ่มต้น" value={p.coverage_start} />
-                    <F label="วันสิ้นสุด"  value={p.coverage_end} />
-                  </div>
-                </div>
-              </div>
-
-              {/* เบี้ยประกัน */}
-              <div className="info-card">
-                <div className="info-card-hd"><Ico n="banknote" s={16} /><span className="info-card-title">เบี้ยประกัน</span></div>
-                <div className="info-card-bd">
-                  <div className="info-row" style={{ marginBottom: 12 }}>
-                    <F label="เบี้ยสุทธิ"  value={`${baht(p.net_premium)} ฿`} />
-                    <F label="อากรแสตมป์"  value={`${baht(p.stamp_duty)} ฿`} />
-                  </div>
-                  <div className="info-row">
-                    <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={`${baht(p.vat)} ฿`} />
-                    <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 9, padding: "10px 13px" }}>
-                      <div className="info-label">รวมเบี้ยประกัน</div>
-                      <div className="info-val hi">{baht(p.total_premium)} ฿</div>
+                  {/* รถยนต์ */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="car" s={16} /><span className="info-card-title">ข้อมูลรถยนต์</span></div>
+                    <div className="info-card-bd">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
+                        <F label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
+                        <F label="ปีรถ" value={p.car_year} />
+                      </div>
+                      <div className="info-row">
+                        <div className="info-field">
+                          <div className="info-label">ทะเบียนรถ</div>
+                          <div className="info-val">
+                            {p.license_plate ? <span className="plate">{p.license_plate}</span> : "—"}
+                          </div>
+                        </div>
+                        <F label="เลขตัวถัง" value={p.chassis_no} mono />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* หมายเหตุ */}
-              {p.notes && (
-                <div className="info-card">
-                  <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">หมายเหตุ</span></div>
-                  <div className="info-card-bd">
-                    <div className="info-val" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{p.notes}</div>
+                  {/* ระยะเวลาคุ้มครอง */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="cal" s={16} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
+                    <div className="info-card-bd">
+                      <div className="info-row">
+                        <F label="วันเริ่มต้น" value={p.coverage_start} />
+                        <F label="วันสิ้นสุด"  value={p.coverage_end} />
+                      </div>
+                    </div>
                   </div>
-                </div>
+
+                  {/* เบี้ยประกัน */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="banknote" s={16} /><span className="info-card-title">เบี้ยประกัน</span></div>
+                    <div className="info-card-bd">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
+                        <F label="เบี้ยสุทธิ"  value={`${baht(p.net_premium)} ฿`} />
+                        <F label="อากรแสตมป์"  value={`${baht(p.stamp_duty)} ฿`} />
+                      </div>
+                      <div className="info-row">
+                        <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={`${baht(p.vat)} ฿`} />
+                        <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 9, padding: "10px 13px" }}>
+                          <div className="info-label">รวมเบี้ยประกัน</div>
+                          <div className="info-val hi">{baht(p.total_premium)} ฿</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* หมายเหตุ — always shown */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">หมายเหตุ</span></div>
+                    <div className="info-card-bd">
+                      {p.notes
+                        ? <div className="info-val" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{p.notes}</div>
+                        : <div className="info-val" style={{ color: "var(--t3)", fontStyle: "italic" }}>ไม่มีหมายเหตุ</div>
+                      }
+                    </div>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* right: PDF ทั้งหมด (sticky) */}
+            {/* right: PDF (sticky) */}
             <div className="detail-aside">
               {hasPdfInDb ? (
                 <div className="pdf-preview-wrap">
-                  {/* header: ชื่อไฟล์ + ปุ่ม */}
                   <div className="pdf-preview-bar" style={{ flexDirection: "column", alignItems: "stretch", gap: 8, padding: "12px 14px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Ico n="doc" s={13} />
