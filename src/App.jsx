@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Fragment } from "react"
 import api from "./api"
 
 
@@ -6,193 +6,257 @@ import api from "./api"
    STYLES
 ═══════════════════════════════════════════ */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --w:240px;
-  --bg:#F1F5F9;
-  --sur:#fff;
-  --sur2:#F8FAFC;
-  --brd:#E2E8F0;
-  --brd2:#CBD5E1;
-  --blue:#2563EB;
-  --blue-h:#1D4ED8;
-  --blue-bg:#EFF6FF;
-  --blue-mid:#BFDBFE;
-  --green:#059669;
-  --green-bg:#F0FDF4;
-  --green-brd:#BBF7D0;
-  --amber:#B45309;
-  --amber-bg:#FFFBEB;
-  --amber-brd:#FDE68A;
-  --red:#DC2626;
-  --red-bg:#FEF2F2;
-  --red-brd:#FECACA;
-  --t1:#111827;
-  --t2:#4B5563;
-  --t3:#9CA3AF;
-  --sh0:0 1px 2px rgba(0,0,0,.05);
-  --sh1:0 1px 3px rgba(0,0,0,.10),0 1px 2px rgba(0,0,0,.06);
-  --sh2:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
-  --sh3:0 20px 40px rgba(0,0,0,.18);
+  --w:264px;
+  --bg:#F0F4F8;
+  --sur:#FFFFFF;
+  --sur2:#F7F9FC;
+  --brd:#E3E8EF;
+  --brd2:#C8D3DF;
+  --blue:#1E6FE5;
+  --blue-h:#1558C0;
+  --blue-bg:#EEF4FF;
+  --blue-mid:#BDD3FF;
+  --green:#0D9C6B;
+  --green-bg:#EDFAF4;
+  --green-brd:#A7EDD2;
+  --amber:#C07000;
+  --amber-bg:#FFFAEB;
+  --amber-brd:#FBDC87;
+  --red:#D93025;
+  --red-bg:#FEF2F1;
+  --red-brd:#FDCCC9;
+  --t1:#0F172A;
+  --t2:#475569;
+  --t3:#94A3B8;
+  --sh0:0 1px 3px rgba(15,23,42,.06);
+  --sh1:0 2px 6px rgba(15,23,42,.09),0 1px 2px rgba(15,23,42,.05);
+  --sh2:0 4px 12px rgba(15,23,42,.10),0 2px 4px rgba(15,23,42,.06);
+  --sh3:0 20px 50px rgba(15,23,42,.20),0 4px 12px rgba(15,23,42,.08);
+  --r:10px;
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.5}
 ::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px}
+::-webkit-scrollbar-thumb{background:#C8D3DF;border-radius:99px}
+::-webkit-scrollbar-track{background:transparent}
 
 /* ── LAYOUT ── */
-.app{display:flex;min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh}
 
-/* ── SIDEBAR ── */
+/* ── TOPNAV ── */
 .sb{
-  width:var(--w);background:var(--sur);
-  position:fixed;inset:0 auto 0 0;
-  display:flex;flex-direction:column;
-  border-right:1px solid var(--brd);
-  z-index:100;transition:transform .25s cubic-bezier(.4,0,.2,1);
+  width:100%;background:var(--sur);
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;
+  border-bottom:1px solid var(--brd);
+  box-shadow:var(--sh0);padding:0 20px;height:56px;gap:0;
 }
-.sb-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(17,24,39,.45);z-index:99;
-  backdrop-filter:blur(2px);
-}
-.sb-overlay.show{display:block}
-
+.sb-overlay{display:none}
 .sb-logo{
-  padding:16px 16px;border-bottom:1px solid var(--brd);
   display:flex;align-items:center;gap:10px;
+  padding:0 16px 0 0;border-right:1px solid var(--brd);
+  margin-right:8px;height:100%;flex-shrink:0;
 }
 .sb-mark{
-  width:32px;height:32px;background:var(--blue);
+  width:32px;height:32px;
+  background:linear-gradient(135deg,#1E6FE5 0%,#0F4FC9 100%);
   border-radius:8px;display:flex;align-items:center;
   justify-content:center;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(30,111,229,.30);
 }
-.sb-brand{font-size:14.5px;font-weight:700;color:var(--t1);letter-spacing:-.3px}
-.sb-tagline{font-size:10px;color:var(--t3);margin-top:1px}
+.sb-brand{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.2px;line-height:1.2}
+.sb-tagline{display:none}
 
-.sb-nav{padding:10px 8px;flex:1;overflow-y:auto}
-.sb-grp{
-  font-size:10px;font-weight:600;letter-spacing:.9px;
-  text-transform:uppercase;color:var(--t3);
-  padding:12px 10px 5px;
+.sb-nav{
+  display:flex;align-items:center;flex:1;gap:2px;
+  padding:0;overflow:visible;
 }
+.sb-grp{display:none}
 .sb-item{
-  display:flex;align-items:center;gap:9px;
-  padding:8px 10px;border-radius:7px;
+  display:flex;align-items:center;gap:7px;
+  padding:7px 13px;border-radius:8px;
   cursor:pointer;color:var(--t2);font-size:13.5px;
-  font-weight:500;transition:all .12s;margin-bottom:1px;
+  font-weight:500;transition:all .13s;
+  position:relative;height:36px;
 }
 .sb-item:hover{background:var(--sur2);color:var(--t1)}
 .sb-item.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.sb-item.on::before{
+  content:'';position:absolute;left:8px;right:8px;bottom:-10px;
+  height:2px;border-radius:2px 2px 0 0;
+  background:var(--blue);
+}
 .sb-item.on svg{stroke:var(--blue)}
 .sb-chip{
-  margin-left:auto;background:#FEE2E2;color:#DC2626;
+  background:#FECDCA;color:#D93025;
   border-radius:99px;padding:1px 7px;
-  font-size:11px;font-weight:700;line-height:1.6;
+  font-size:11px;font-weight:700;line-height:1.5;
 }
 .sb-item.on .sb-chip{background:var(--blue-mid);color:var(--blue-h)}
 
-.sb-foot{
-  padding:14px 16px;border-top:1px solid var(--brd);
-  display:flex;align-items:center;gap:7px;
-}
-.sb-dot{width:6px;height:6px;border-radius:50%;background:#10B981;flex-shrink:0}
-.sb-status-txt{font-size:11.5px;color:var(--t3)}
+.sb-divider{width:1px;height:24px;background:var(--brd);margin:0 8px;flex-shrink:0}
+
+.sb-foot{display:none}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:#10B981;flex-shrink:0;box-shadow:0 0 0 2px rgba(16,185,129,.2)}
+.sb-status-txt{font-size:12px;color:var(--t3)}
 
 /* ── MAIN ── */
-.main{margin-left:var(--w);flex:1;display:flex;flex-direction:column;min-width:0}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
 
-/* ── TOPBAR ── */
+/* ── PAGE SUBTITLE BAR (แทน topbar เดิม) ── */
 .top{
-  height:60px;background:var(--sur);border-bottom:1px solid var(--brd);
-  position:sticky;top:0;z-index:50;
+  height:52px;background:var(--sur);border-bottom:1px solid var(--brd);
   display:flex;align-items:center;padding:0 24px;gap:12px;
-  box-shadow:var(--sh0);
 }
-.ham{
-  display:none;width:36px;height:36px;border-radius:8px;
-  background:none;border:1px solid var(--brd);
-  cursor:pointer;align-items:center;justify-content:center;
-  color:var(--t2);flex-shrink:0;transition:all .12s;
-}
-.ham:hover{background:var(--sur2);color:var(--t1)}
+.ham{display:none}
 .top-l{flex:1;min-width:0}
-.top-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.top-sub{font-size:12px;color:var(--t3);margin-top:1px}
+.top-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.top-sub{font-size:12px;color:var(--t3);margin-top:1px;font-weight:400}
 
 .srch{position:relative;flex-shrink:0}
-.srch svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
 .srch input{
-  padding:8px 12px 8px 34px;background:var(--sur2);
-  border:1px solid var(--brd);border-radius:8px;
-  font-size:13.5px;font-family:'Inter',sans-serif;
-  color:var(--t1);outline:none;width:256px;transition:all .15s;
+  padding:6px 11px 6px 30px;background:var(--sur2);
+  border:1.5px solid var(--brd);border-radius:9px;
+  font-size:13px;font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  color:var(--t1);outline:none;width:190px;transition:all .15s;
 }
-.srch input:focus{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(37,99,235,.09)}
+.srch input:focus{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(30,111,229,.10)}
 .srch input::placeholder{color:var(--t3)}
+
+/* ── list + preview layout ── */
+.list-layout{display:flex;align-items:flex-start;flex:1}
+.list-layout .body{flex:1;min-width:0;transition:all .25s}
+
+/* ── preview panel ── */
+.pvp{
+  width:340px;flex-shrink:0;
+  background:var(--sur);border-left:1px solid var(--brd);
+  position:sticky;top:108px;height:calc(100vh - 108px);
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:pvp-in .2s ease;
+}
+@keyframes pvp-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.pvp-hd{
+  padding:14px 16px 12px;border-bottom:1px solid var(--brd);
+  display:flex;align-items:flex-start;gap:10px;flex-shrink:0;
+}
+.pvp-title{font-size:15px;font-weight:700;color:var(--t1);line-height:1.3}
+.pvp-close{
+  background:none;border:1px solid var(--brd);border-radius:8px;
+  width:30px;height:30px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;
+  color:var(--t3);flex-shrink:0;transition:all .15s;
+}
+.pvp-close:hover{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
+.pvp-body{flex:1;overflow-y:auto;padding:10px 14px}
+.pvp-sec{margin-bottom:12px}
+.pvp-sec-title{
+  font-size:10px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.5px;
+  padding:6px 0 4px;border-bottom:1px solid var(--brd);margin-bottom:4px;
+}
+.pvp-row{display:flex;flex-direction:column;padding:5px 0;border-bottom:1px solid var(--sur2)}
+.pvp-row:last-child{border-bottom:none}
+.pvp-lbl{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.3px}
+.pvp-val{font-size:13px;color:var(--t1);margin-top:1px;word-break:break-word;font-weight:500}
+.pvp-foot{padding:12px 14px;border-top:1px solid var(--brd);flex-shrink:0}
+.pvp-val{font-size:13.5px;color:var(--t1);margin-top:2px;word-break:break-word}
+.pvp-foot{padding:12px 16px;border-top:1px solid var(--brd);flex-shrink:0}
+
+/* highlight active row */
+tr.tr-active td{background:var(--blue-bg) !important}
+
+/* ── big search bar ── */
+.big-srch-wrap{margin-bottom:20px}
+.big-srch{
+  display:flex;align-items:center;gap:12px;
+  background:var(--sur);border:2px solid var(--brd);
+  border-radius:12px;padding:11px 18px;
+  box-shadow:var(--sh1);transition:all .2s;
+}
+.big-srch:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,111,229,.10)}
+.big-srch svg{color:var(--t3);flex-shrink:0;transition:color .2s}
+.big-srch:focus-within svg{color:var(--blue)}
+.big-srch input{
+  flex:1;border:none;outline:none;font-size:15px;
+  font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  color:var(--t1);background:transparent;
+}
+.big-srch input::placeholder{color:var(--t3)}
+.big-srch-clr{
+  background:var(--sur2);border:1px solid var(--brd);
+  border-radius:6px;padding:3px 7px;cursor:pointer;
+  display:flex;align-items:center;color:var(--t3);
+  transition:all .15s;flex-shrink:0;
+}
+.big-srch-clr:hover{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
 
 /* ── BUTTONS ── */
 .btn{
   display:inline-flex;align-items:center;gap:7px;
-  padding:8px 16px;border-radius:8px;border:none;
-  cursor:pointer;font-size:13.5px;font-weight:600;
-  font-family:'Inter',sans-serif;transition:all .12s;
-  white-space:nowrap;line-height:1;flex-shrink:0;
+  padding:9px 17px;border-radius:9px;border:none;
+  cursor:pointer;font-size:14px;font-weight:600;
+  font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  transition:all .13s;white-space:nowrap;line-height:1;flex-shrink:0;
 }
-.btn-b{background:var(--blue);color:#fff}
-.btn-b:hover{background:var(--blue-h)}
-.btn-b:active{transform:scale(.98)}
-.btn-b:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-w{background:var(--sur);color:var(--t2);border:1px solid var(--brd)}
-.btn-w:hover{background:var(--sur2);border-color:var(--brd2)}
+.btn-b{background:var(--blue);color:#fff;box-shadow:0 1px 3px rgba(30,111,229,.30)}
+.btn-b:hover{background:var(--blue-h);box-shadow:0 2px 6px rgba(30,111,229,.35)}
+.btn-b:active{transform:scale(.97)}
+.btn-b:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-w{background:var(--sur);color:var(--t2);border:1.5px solid var(--brd)}
+.btn-w:hover{background:var(--sur2);border-color:var(--brd2);color:var(--t1)}
 .btn-w:disabled{opacity:.5;cursor:not-allowed}
 
 /* ── BODY ── */
 .body{padding:22px 24px}
 
 /* ── STATS ── */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .sc{
   background:var(--sur);border:1px solid var(--brd);
-  border-radius:12px;padding:18px 20px;
+  border-radius:14px;padding:18px 20px;
   box-shadow:var(--sh0);display:flex;
-  align-items:flex-start;gap:14px;transition:box-shadow .15s;
+  align-items:flex-start;gap:14px;
+  transition:box-shadow .15s,transform .15s;
 }
-.sc:hover{box-shadow:var(--sh1)}
+.sc:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
 .sc-ico{
-  width:40px;height:40px;border-radius:10px;
+  width:44px;height:44px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.sc-ico.bl{background:#EFF6FF;color:#2563EB}
-.sc-ico.gr{background:#F0FDF4;color:#059669}
-.sc-ico.am{background:#FFFBEB;color:#B45309}
-.sc-ico.pu{background:#F5F3FF;color:#7C3AED}
+.sc-ico.bl{background:#E8F0FE;color:#1E6FE5}
+.sc-ico.gr{background:#E6F9F0;color:#0D9C6B}
+.sc-ico.am{background:#FFF7E0;color:#C07000}
+.sc-ico.pu{background:#F2EEFF;color:#6C3CE0}
 .sc-bd{min-width:0}
-.sc-lbl{font-size:12px;font-weight:500;color:var(--t3);margin-bottom:6px}
-.sc-val{font-size:26px;font-weight:700;color:var(--t1);letter-spacing:-.5px;line-height:1}
-.sc-sub{font-size:12px;color:var(--t3);margin-top:4px}
+.sc-lbl{font-size:12.5px;font-weight:500;color:var(--t3);margin-bottom:5px;line-height:1.3}
+.sc-val{font-size:28px;font-weight:700;color:var(--t1);letter-spacing:-.5px;line-height:1;font-family:'Sarabun',sans-serif}
+.sc-sub{font-size:12px;color:var(--t3);margin-top:5px;font-weight:400}
 
 /* ── CARD ── */
-.card{background:var(--sur);border:1px solid var(--brd);border-radius:12px;overflow:hidden;box-shadow:var(--sh0)}
-.card-hd{padding:14px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:14px;font-weight:600;color:var(--t1)}
-.card-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.card{background:var(--sur);border:1px solid var(--brd);border-radius:14px;overflow:hidden;box-shadow:var(--sh0)}
+.card-hd{padding:15px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:15px;font-weight:600;color:var(--t1)}
+.card-sub{font-size:12.5px;color:var(--t3);margin-top:2px;font-weight:400}
 
 /* ── TABLE ── */
 table{width:100%;border-collapse:collapse}
 thead{background:var(--sur2)}
-th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--brd);white-space:nowrap}
+th{padding:11px 16px;text-align:left;font-size:11.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--brd);white-space:nowrap;font-family:'Sarabun',sans-serif}
 tbody tr{border-bottom:1px solid var(--brd);transition:background .1s;cursor:pointer}
 tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:#F5F9FF}
-td{padding:12px 16px;font-size:13.5px;color:var(--t2)}
+tbody tr:hover{background:#EEF4FF}
+td{padding:13px 16px;font-size:14px;color:var(--t2);line-height:1.4}
 td.tw{color:var(--t1);font-weight:600}
-td.tm{font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;color:var(--t1);font-weight:500;letter-spacing:.2px}
+td.tm{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:13px;color:var(--t1);font-weight:500;letter-spacing:.3px}
 td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--t1)}
 
 /* ── BADGE / PLATE ── */
-.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
-.bdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .b-on{background:var(--green-bg);color:var(--green);border:1px solid var(--green-brd)}
 .b-on .bdot{background:var(--green)}
 .b-soon{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-brd)}
@@ -200,118 +264,173 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .b-off{background:var(--red-bg);color:var(--red);border:1px solid var(--red-brd)}
 .b-off .bdot{background:var(--red)}
 .plate{
-  display:inline-block;background:var(--sur2);
-  border:1px solid var(--brd2);border-radius:5px;
-  padding:2px 8px;font-size:12.5px;font-weight:600;
-  color:var(--t1);letter-spacing:.4px;
-  font-family:'SF Mono','Fira Code',monospace;
+  display:inline-block;background:#F1F5F9;
+  border:1.5px solid var(--brd2);border-radius:6px;
+  padding:3px 9px;font-size:13px;font-weight:700;
+  color:var(--t1);letter-spacing:.5px;
+  font-family:'SF Mono','Fira Code','Consolas',monospace;
 }
 
 /* ── PAGINATION ── */
-.pg{padding:12px 20px;border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:var(--sur2);flex-wrap:wrap;gap:8px}
-.pg-info{font-size:12.5px;color:var(--t3)}
+.pg{padding:13px 20px;border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;background:var(--sur2);flex-wrap:wrap;gap:8px}
+.pg-info{font-size:13px;color:var(--t3)}
 .pg-btns{display:flex;gap:4px}
-.pg-btn{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--brd);background:var(--sur);color:var(--t2);transition:all .12s;font-family:'Inter',sans-serif;font-size:13px}
+.pg-btn{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid var(--brd);background:var(--sur);color:var(--t2);transition:all .12s;font-family:'Sarabun',sans-serif;font-size:13.5px}
 .pg-btn:hover:not(:disabled){background:var(--blue-bg);border-color:var(--blue-mid);color:var(--blue)}
 .pg-btn.cur{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700}
 .pg-btn:disabled{opacity:.3;cursor:default}
 
 /* ── MODAL ── */
-.ov{position:fixed;inset:0;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);padding:16px}
-.modal{background:var(--sur);border:1px solid var(--brd);border-radius:16px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh3);width:100%}
-.modal-hd{padding:20px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--sur);border-bottom:1px solid var(--brd);padding-bottom:16px;z-index:10}
-.modal-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
-.modal-sub{font-size:12.5px;color:var(--t3);margin-top:3px}
-.modal-bd{padding:20px}
-.xbtn{width:30px;height:30px;border-radius:7px;background:var(--sur2);border:1px solid var(--brd);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(5px);padding:16px}
+.modal{background:var(--sur);border:1px solid var(--brd);border-radius:18px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh3);width:100%}
+.modal-hd{padding:22px 22px 0;display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--sur);border-bottom:1px solid var(--brd);padding-bottom:16px;z-index:10}
+.modal-title{font-size:17px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
+.modal-sub{font-size:13px;color:var(--t3);margin-top:3px;font-weight:400}
+.modal-bd{padding:22px}
+.xbtn{width:32px;height:32px;border-radius:8px;background:var(--sur2);border:1.5px solid var(--brd);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
 .xbtn:hover{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
 
 /* ── SECTION HEADER ── */
-.shd{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--blue-bg);border:1px solid var(--blue-mid);margin-bottom:12px}
+.shd{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:9px;background:var(--blue-bg);border:1px solid var(--blue-mid);margin-bottom:12px}
 .shd svg{color:var(--blue);flex-shrink:0}
-.shd-lbl{font-size:12px;font-weight:600;color:var(--blue)}
+.shd-lbl{font-size:12.5px;font-weight:600;color:var(--blue)}
 
 /* ── FORM GRID ── */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fi{background:var(--sur2);border:1px solid var(--brd);border-radius:8px;padding:10px 12px}
+.fi{background:var(--sur2);border:1.5px solid var(--brd);border-radius:9px;padding:10px 13px}
 .fi.fw{grid-column:1/-1}
-.fi label{display:block;font-size:10.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.fi-v{font-size:13.5px;color:var(--t1);font-weight:500}
-.fi-v.hi{font-size:17px;font-weight:700;color:var(--blue)}
-.fi input{width:100%;border:1.5px solid var(--brd2);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;color:var(--t1);background:var(--sur);outline:none;transition:all .15s;margin-top:2px}
-.fi input:focus{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.fi label{display:block;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.fi-v{font-size:14px;color:var(--t1);font-weight:500;line-height:1.4}
+.fi-v.hi{font-size:18px;font-weight:700;color:var(--blue)}
+.fi input{width:100%;border:1.5px solid var(--brd2);border-radius:8px;padding:8px 11px;font-size:14px;font-family:'Sarabun','Noto Sans Thai',sans-serif;color:var(--t1);background:var(--sur);outline:none;transition:all .15s;margin-top:2px}
+.fi input:focus{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(30,111,229,.09)}
 
 /* ── DROP ZONE ── */
-.drop{border:2px dashed var(--brd2);border-radius:12px;padding:32px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--sur2);margin-bottom:16px}
+.drop{border:2px dashed var(--brd2);border-radius:14px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--sur2);margin-bottom:16px}
 .drop:hover,.drop.drag{border-color:var(--blue);background:var(--blue-bg)}
-.drop-ic{width:48px;height:48px;border-radius:14px;background:#E2E8F0;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:all .2s}
+.drop-ic{width:52px;height:52px;border-radius:14px;background:#DDE5EF;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all .2s}
 .drop:hover .drop-ic,.drop.drag .drop-ic{background:var(--blue-mid)}
 .drop:hover .drop-ic svg,.drop.drag .drop-ic svg{stroke:var(--blue)}
-.drop-main{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:4px}
-.drop-hint{font-size:12.5px;color:var(--t3)}
-.drop-fname{font-size:13px;font-weight:600;color:var(--blue);margin-top:6px}
+.drop-main{font-size:14.5px;font-weight:600;color:var(--t1);margin-bottom:5px}
+.drop-hint{font-size:13px;color:var(--t3)}
+.drop-fname{font-size:13.5px;font-weight:600;color:var(--blue);margin-top:8px}
 
 /* ── BANNERS ── */
-.bnr{border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.bnr{border-radius:11px;padding:13px 16px;display:flex;align-items:center;gap:13px;margin-bottom:20px}
 .bnr.am{background:var(--amber-bg);border:1px solid var(--amber-brd)}
 .bnr.er{background:var(--red-bg);border:1px solid var(--red-brd)}
 .bnr-body{flex:1;min-width:0}
-.bnr-t{font-size:13.5px;font-weight:600}
-.bnr-s{font-size:12.5px;margin-top:2px}
-.am .bnr-t{color:#92400E}.am .bnr-s{color:var(--amber)}.am svg{color:var(--amber)}
+.bnr-t{font-size:14px;font-weight:600}
+.bnr-s{font-size:13px;margin-top:3px}
+.am .bnr-t{color:#7C4A00}.am .bnr-s{color:var(--amber)}.am svg{color:var(--amber)}
 .er .bnr-t{color:var(--red)}.er svg{color:var(--red)}
 
 /* ── LOADING / EMPTY ── */
-.ldg{text-align:center;padding:60px 20px}
-.spin{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--brd);border-top-color:var(--blue);animation:spin .65s linear infinite;margin:0 auto 14px}
+.ldg{text-align:center;padding:64px 20px}
+.spin{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--brd);border-top-color:var(--blue);animation:spin .65s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.ldg-t{font-size:13.5px;font-weight:500;color:var(--t2)}
-.ldg-s{font-size:12px;color:var(--t3);margin-top:4px}
-.empty{text-align:center;padding:60px 20px}
-.empty svg{margin:0 auto 14px;display:block;stroke:var(--t3)}
-.empty-t{font-size:14.5px;font-weight:600;color:var(--t2);margin-bottom:4px}
-.empty-s{font-size:12.5px;color:var(--t3)}
+.ldg-t{font-size:14px;font-weight:500;color:var(--t2)}
+.ldg-s{font-size:13px;color:var(--t3);margin-top:4px}
+.empty{text-align:center;padding:64px 20px}
+.empty svg{margin:0 auto 16px;display:block;stroke:var(--t3)}
+.empty-t{font-size:15px;font-weight:600;color:var(--t2);margin-bottom:5px}
+.empty-s{font-size:13px;color:var(--t3)}
 
 /* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--sur);border:1px solid var(--brd);border-radius:10px;padding:12px 16px;font-size:13.5px;font-weight:500;z-index:400;box-shadow:var(--sh3);display:flex;align-items:center;gap:10px;max-width:320px;animation:tIn .2s ease;color:var(--t1)}
-.toast.ok{border-left:3px solid var(--green)}
-.toast.er{border-left:3px solid var(--red)}
-@keyframes tIn{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.toast{position:fixed;bottom:26px;right:26px;background:var(--sur);border:1.5px solid var(--brd);border-radius:12px;padding:13px 17px;font-size:14px;font-weight:500;z-index:400;box-shadow:var(--sh3);display:flex;align-items:center;gap:10px;max-width:340px;animation:tIn .22s ease;color:var(--t1)}
+.toast.ok{border-left:4px solid var(--green)}
+.toast.er{border-left:4px solid var(--red)}
+@keyframes tIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
 
 /* ── PDF PREVIEW ── */
 .pdf-preview-wrap{
   display:flex;flex-direction:column;
-  border:1px solid var(--brd);border-radius:10px;
+  border:1.5px solid var(--brd);border-radius:12px;
   overflow:hidden;background:var(--sur2);
 }
 .pdf-preview-bar{
-  padding:8px 12px;background:var(--sur);
+  padding:9px 13px;background:var(--sur);
   border-bottom:1px solid var(--brd);
   display:flex;align-items:center;gap:8px;
-  font-size:12px;font-weight:600;color:var(--t2);
+  font-size:12.5px;font-weight:600;color:var(--t2);
   flex-shrink:0;
 }
-.pdf-preview-bar svg{color:var(--blue)}
+.pdf-preview-bar > svg:first-child{color:var(--blue)}
 .pdf-preview-bar .pdf-fname{
   flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .pdf-preview-bar .pdf-size{
-  font-size:11px;font-weight:400;color:var(--t3);flex-shrink:0;
+  font-size:11.5px;font-weight:400;color:var(--t3);flex-shrink:0;
 }
+.pdf-zoom-btn{
+  width:30px;height:30px;border-radius:7px;
+  background:var(--sur2);border:1.5px solid var(--brd);
+  color:var(--t2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .12s;
+}
+.pdf-zoom-btn:hover{background:var(--blue-bg);border-color:var(--blue-mid);color:var(--blue)}
+.pdf-zoom-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── PDF LIGHTBOX (full screen viewer) ── */
+.pdf-lb-ov{
+  position:fixed;inset:0;background:rgba(10,18,36,.90);
+  display:flex;flex-direction:column;
+  z-index:500;backdrop-filter:blur(10px);
+  animation:fadeIn .18s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.pdf-lb-bar{
+  height:58px;background:rgba(255,255,255,.05);
+  border-bottom:1px solid rgba(255,255,255,.09);
+  display:flex;align-items:center;gap:10px;padding:0 20px;
+  color:#E2E8F0;flex-shrink:0;
+}
+.pdf-lb-bar .pdf-lb-name{
+  flex:1;font-size:14px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pdf-lb-bar .pdf-lb-size{font-size:12px;color:#94A3B8;font-weight:400}
+.pdf-lb-btn{
+  height:36px;padding:0 13px;border-radius:8px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);
+  color:#fff;font-size:13px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .12s;font-family:'Sarabun','Noto Sans Thai',sans-serif;
+}
+.pdf-lb-btn:hover{background:rgba(255,255,255,.18)}
+.pdf-lb-btn.close{background:rgba(217,48,37,.18);border-color:rgba(217,48,37,.30)}
+.pdf-lb-btn.close:hover{background:rgba(217,48,37,.32)}
+.pdf-lb-zoom{
+  font-size:12.5px;font-variant-numeric:tabular-nums;
+  color:#E2E8F0;min-width:48px;text-align:center;
+  padding:0 6px;
+}
+.pdf-lb-body{
+  flex:1;overflow:auto;padding:18px;
+  display:flex;align-items:flex-start;justify-content:center;
+  background:transparent;
+}
+.pdf-lb-frame-wrap{
+  background:#fff;border-radius:8px;
+  box-shadow:0 30px 60px rgba(0,0,0,.5);
+  transition:width .15s ease;
+}
+.pdf-lb-frame{display:block;border:none;width:100%;height:100%}
 .pdf-iframe{width:100%;border:none;display:block}
 .pdf-placeholder{
   display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:10px;padding:40px 20px;
+  justify-content:center;gap:12px;padding:48px 20px;
   color:var(--t3);text-align:center;
 }
-.pdf-placeholder .ph-title{font-size:13px;font-weight:600;color:var(--t2)}
-.pdf-placeholder .ph-hint{font-size:12px}
+.pdf-placeholder .ph-title{font-size:14px;font-weight:600;color:var(--t2)}
+.pdf-placeholder .ph-hint{font-size:13px}
 
 /* ── 2-COL MODAL LAYOUT ── */
 .modal-split{display:flex;gap:18px;align-items:flex-start}
 .modal-split .split-form{flex:1;min-width:0}
 .modal-split .split-preview{
-  width:360px;flex-shrink:0;
+  width:370px;flex-shrink:0;
   position:sticky;top:0;
 }
 @media(max-width:860px){
@@ -335,22 +454,228 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 @media(max-width:639px){
   .stats{grid-template-columns:1fr 1fr;gap:10px}
   .sc{padding:14px;gap:10px}
-  .sc-ico{width:36px;height:36px;border-radius:9px}
-  .sc-val{font-size:22px}
+  .sc-ico{width:38px;height:38px;border-radius:10px}
+  .sc-val{font-size:23px}
   .sc-sub{display:none}
   .srch{display:none}
   .body{padding:12px}
   .top-sub{display:none}
   .btn-b .btn-txt{display:none}
-  .btn-b{padding:8px 10px}
+  .btn-b{padding:9px 11px}
   .card-hd{padding:12px 14px}
-  th,td{padding:10px 12px;font-size:13px}
+  th,td{padding:10px 12px;font-size:13.5px}
   .pg{padding:10px 14px}
   .modal-bd{padding:16px}
   .modal-hd{padding:16px 16px 0;padding-bottom:14px}
   .fg{grid-template-columns:1fr}
   .fi.fw{grid-column:unset}
-  .drop{padding:24px 16px}
+  .drop{padding:26px 16px}
+}
+
+/* ════════════════════════════════════════
+   PAGE VIEWS  (แทน popup modal)
+════════════════════════════════════════ */
+.page-wrap{display:flex;flex-direction:column;min-height:calc(100vh - 62px)}
+.page-hd{
+  padding:14px 24px;background:var(--sur);
+  border-bottom:1px solid var(--brd);
+  display:flex;align-items:center;gap:14px;
+  position:sticky;top:56px;z-index:40;box-shadow:var(--sh0);
+  flex-wrap:wrap;
+}
+.page-back{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:9px;
+  border:1.5px solid var(--brd);background:var(--sur);
+  color:var(--t2);cursor:pointer;font-size:14px;font-weight:500;
+  transition:all .13s;font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  flex-shrink:0;
+}
+.page-back:hover{background:var(--sur2);color:var(--t1);border-color:var(--brd2)}
+.page-hd-div{width:1px;height:26px;background:var(--brd);flex-shrink:0}
+.page-hd-info{min-width:0}
+.page-title{font-size:17px;font-weight:700;color:var(--t1);letter-spacing:-.2px;line-height:1.3}
+.page-sub{font-size:13px;color:var(--t3);margin-top:1px;font-weight:400}
+.page-hd-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.page-body{padding:24px;flex:1}
+
+/* ── DETAIL PAGE ── */
+.detail-split{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:flex-start}
+.detail-aside{position:sticky;top:calc(62px + 55px + 12px)}
+.info-card{background:var(--sur);border:1px solid var(--brd);border-radius:14px;box-shadow:var(--sh0);margin-bottom:16px;overflow:hidden}
+.info-card-hd{display:flex;align-items:center;gap:10px;padding:13px 18px;background:var(--sur2);border-bottom:1px solid var(--brd)}
+.info-card-hd svg{color:var(--blue)}
+.info-card-title{font-size:13.5px;font-weight:600;color:var(--t1)}
+.info-card-bd{padding:16px 18px}
+.info-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info-row.fw{grid-template-columns:1fr}
+.info-field{padding:0;margin-bottom:0}
+.info-label{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.info-val{font-size:14.5px;color:var(--t1);font-weight:500;line-height:1.4;word-break:break-word}
+.info-val.hi{font-size:20px;font-weight:700;color:var(--blue)}
+.info-val.mono{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:13.5px;letter-spacing:.3px}
+
+/* ── UPLOAD PAGE ── */
+.upload-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
+.upload-aside{position:sticky;top:calc(56px + 52px + 12px)}
+.upload-aside .pdf-preview-wrap{box-shadow:var(--sh1)}
+
+/* compact horizontal drop zone */
+.drop-h{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:0 32px;border:2px dashed var(--brd2);
+  border-radius:14px;cursor:pointer;
+  transition:height .3s ease, min-height .3s ease, padding .3s ease, background .2s, border-color .2s;
+  background:var(--sur2);height:calc(50vh - 80px);min-height:220px;
+  text-align:center;overflow:hidden;
+}
+.drop-h:hover,.drop-h.drag{border-color:var(--blue);background:var(--blue-bg)}
+.drop-h-ic{
+  width:64px;height:64px;border-radius:16px;background:#DDE5EF;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;
+}
+.drop-h:hover .drop-h-ic,.drop-h.drag .drop-h-ic{background:var(--blue-mid)}
+.drop-h:hover .drop-h-ic svg,.drop-h.drag .drop-h-ic svg{stroke:var(--blue)}
+.drop-h-info{flex:1;min-width:0;display:flex;flex-direction:column}
+.drop-h-main,.drop-h-name{font-size:16px;font-weight:600;color:var(--t1)}
+.drop-h-hint{font-size:13.5px;color:var(--t3);margin-top:4px}
+.drop-h-info{display:flex;flex-direction:column;align-items:center}
+.drop-h.has-file{
+  border-style:solid;border-color:var(--green-brd);background:var(--green-bg);
+  height:auto !important;min-height:unset !important;flex-direction:row;
+  padding:13px 18px;text-align:left;gap:14px;
+}
+.drop-h.has-file .drop-h-ic{
+  width:44px;height:44px;border-radius:11px;background:rgba(13,156,107,.12);flex-shrink:0;
+}
+.drop-h.has-file .drop-h-ic svg{stroke:var(--green)}
+.drop-h.has-file .drop-h-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drop-h.has-file .drop-h-hint{font-size:12.5px}
+.drop-h-badge{
+  background:var(--sur2);color:var(--t3);border:1px solid var(--brd2);
+  border-radius:7px;padding:3px 10px;font-size:12px;font-weight:600;flex-shrink:0;
+}
+.drop-h-badge.ok{background:var(--green-bg);color:var(--green);border-color:var(--green-brd)}
+
+/* ── drop wrapper ── */
+.drop-wrap{
+  border:2px dashed var(--brd2);border-radius:14px;
+  background:var(--sur2);overflow:hidden;transition:border-color .2s,background .2s;
+}
+.drop-wrap.has-file{border-style:solid;border-color:var(--green-brd);background:var(--green-bg)}
+.drop-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;cursor:pointer;user-select:none;gap:12px;
+}
+.drop-bar:hover{background:rgba(15,23,42,.03)}
+.drop-wrap.has-file .drop-bar:hover{background:rgba(13,156,107,.06)}
+.drop-bar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.drop-bar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.drop-toggle{
+  background:none;border:none;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:7px;color:var(--t3);transition:all .15s;
+}
+.drop-toggle:hover{background:var(--brd);color:var(--t1)}
+.drop-body{
+  border-top:1px dashed var(--brd2);
+  display:flex;align-items:center;justify-content:center;
+  min-height:240px;cursor:pointer;
+}
+.drop-body-inner{
+  display:flex;flex-direction:column;align-items:center;
+  gap:12px;padding:36px 32px;text-align:center;pointer-events:none;
+}
+.drop-body-inner button{pointer-events:all}
+.drop-wrap:not(.has-file) .drop-body:hover,.drop-wrap:not(.has-file) .drop-body.drag{
+  background:var(--blue-bg);
+}
+.drop-wrap:not(.has-file) .drop-body:hover .drop-h-ic,
+.drop-wrap:not(.has-file) .drop-body.drag .drop-h-ic{background:var(--blue-mid)}
+.drop-wrap:not(.has-file) .drop-body:hover .drop-h-ic svg,
+.drop-wrap:not(.has-file) .drop-body.drag .drop-h-ic svg{stroke:var(--blue)}
+
+/* ── notes card ── */
+.notes-card{
+  border:1.5px solid var(--brd);border-radius:12px;
+  overflow:hidden;background:var(--sur);
+}
+.notes-card-hd{
+  display:flex;align-items:center;gap:7px;
+  padding:9px 14px;border-bottom:1px solid var(--brd);
+  background:var(--sur2);
+  font-size:12px;font-weight:600;color:var(--t2);
+}
+.notes-ta{
+  width:100%;border:none;outline:none;resize:vertical;
+  padding:12px 14px;font-size:14px;min-height:90px;
+  font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  color:var(--t1);background:var(--sur);line-height:1.6;
+}
+.notes-ta::placeholder{color:var(--t3)}
+
+/* ── form panel (collapsible) ── */
+.form-panel{
+  border:1.5px solid var(--brd);border-radius:14px;
+  background:var(--sur);overflow:hidden;
+}
+.form-panel-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;cursor:pointer;user-select:none;gap:12px;
+  transition:background .15s;
+}
+.form-panel-bar:hover{background:var(--sur2)}
+.form-panel-body{
+  border-top:1px solid var(--brd);
+  padding:18px 16px;position:relative;
+}
+
+/* form loading overlay */
+.form-loading-wrap{position:relative}
+.form-overlay{
+  position:absolute;inset:0;
+  background:rgba(247,249,252,.82);
+  backdrop-filter:blur(3px);
+  border-radius:12px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;z-index:20;
+}
+.form-overlay-t{font-size:14.5px;font-weight:600;color:var(--t2)}
+.form-overlay-s{font-size:13px;color:var(--t3)}
+
+/* filename inline input */
+.fname-row{
+  display:flex;align-items:center;gap:8px;
+  background:var(--sur);border:1.5px solid var(--brd);
+  border-radius:10px;padding:9px 13px;
+}
+.fname-row label{font-size:12px;font-weight:600;color:var(--t3);white-space:nowrap;flex-shrink:0}
+.fname-row input{
+  flex:1;border:none;outline:none;font-size:14px;
+  font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  color:var(--t1);background:transparent;min-width:0;
+}
+.fname-row input::placeholder{color:var(--t3)}
+.fname-row button{
+  background:none;border:none;cursor:pointer;font-size:12px;
+  color:var(--blue);padding:0;white-space:nowrap;flex-shrink:0;
+}
+.fname-row button:hover{text-decoration:underline}
+
+@media(max-width:1100px){
+  .upload-split{grid-template-columns:320px 1fr}
+}
+@media(max-width:860px){
+  .detail-split,.upload-split{grid-template-columns:1fr}
+  .detail-aside,.upload-aside{position:static}
+  .upload-aside .pdf-iframe{height:400px !important}
+}
+@media(max-width:639px){
+  .page-hd{padding:10px 14px;gap:10px}
+  .page-body{padding:14px}
+  .page-title{font-size:15.5px}
+  .info-row{grid-template-columns:1fr}
 }
 `
 
@@ -367,6 +692,8 @@ const P = {
   x:        "M6 18L18 6M6 6l12 12",
   chevL:    "M15.75 19.5L8.25 12l7.5-7.5",
   chevR:    "M8.25 4.5l7.5 7.5-7.5 7.5",
+  chevU:    "M4.5 15.75l7.5-7.5 7.5 7.5",
+  chevD:    "M19.5 8.25l-7.5 7.5-7.5-7.5",
   chevLL:   "M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5",
   chevRR:   "M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5",
   warn:     "M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z",
@@ -382,6 +709,14 @@ const P = {
   arrowR:   "M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3",
   save:     "M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z",
   menu:     "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5",
+  expand:   "M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15",
+  zoomIn:   "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0zM10.5 7.5v6m3-3h-6",
+  zoomOut:  "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0zM13.5 10.5h-6",
+  open:     "M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25",
+  pen:      "M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10",
+  refresh:  "M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99",
+  download: "M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3",
+  bell:     "M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0",
 }
 
 function Ico({ n, s = 16, sw = 1.75 }) {
@@ -427,7 +762,7 @@ function Toast({ msg, type, onClose }) {
 ═══════════════════════════════════════════ */
 const F_SECS = [
   { label: "ข้อมูลกรมธรรม์",    ico: "doc",      keys: ["policy_number", "broker_name"] },
-  { label: "ผู้เอาประกัน",      ico: "person",   keys: ["insured_name", "insured_address"] },
+  { label: "ผู้เอาประกัน",      ico: "person",   keys: ["insured_name", "phone", "insured_address"] },
   { label: "ข้อมูลรถ",          ico: "car",      keys: ["license_plate", "chassis_no", "car_make", "car_model", "car_year"] },
   { label: "ระยะเวลาคุ้มครอง",  ico: "cal",      keys: ["coverage_start", "coverage_end"] },
   { label: "เบี้ยประกัน",       ico: "banknote", keys: ["net_premium", "stamp_duty", "vat", "total_premium"] },
@@ -435,24 +770,297 @@ const F_SECS = [
 const F_LBL = {
   policy_number: "เลขกรมธรรม์",       broker_name:    "ชื่อตัวแทน",
   insured_name:  "ชื่อผู้เอาประกัน",  insured_address: "ที่อยู่",
+  phone:         "เบอร์โทรศัพท์",
   license_plate: "ทะเบียนรถ",         chassis_no:     "เลขตัวถัง",
   car_make:      "ยี่ห้อรถ",          car_model:      "รุ่นรถ",          car_year: "ปีรถ",
   coverage_start:"วันเริ่มคุ้มครอง",  coverage_end:   "วันสิ้นสุดคุ้มครอง",
   net_premium:   "เบี้ยสุทธิ",        stamp_duty:     "อากรแสตมป์",
   vat:           "ภาษีมูลค่าเพิ่ม",   total_premium:  "รวมเบี้ยประกัน",
+  notes:         "หมายเหตุ",
 }
 
-function UploadModal({ onClose, onSuccess }) {
-  const [file, setFile]       = useState(null)
-  const [fileUrl, setFileUrl] = useState(null)   // object URL สำหรับ PDF preview
-  const [drag, setDrag]       = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [parsed, setParsed]   = useState(null)
-  const [saving, setSaving]   = useState(false)
-  const [err, setErr]         = useState("")
+/* ═══════════════════════════════════════════
+   PDF LIGHTBOX (Full-screen PDF viewer พร้อม zoom)
+═══════════════════════════════════════════ */
+function PdfLightbox({ src, filename, sizeKB, onClose }) {
+  const [zoom, setZoom] = useState(100)   // % ของขนาด iframe
+  const ZOOMS = [50, 75, 100, 125, 150, 175, 200, 250, 300]
+
+  // ESC = ปิด, +/− = zoom in/out, 0 = reset
+  useEffect(() => {
+    const fn = e => {
+      if (e.key === "Escape") onClose()
+      else if (e.key === "+" || e.key === "=") setZoom(z => Math.min(300, z + 25))
+      else if (e.key === "-" || e.key === "_") setZoom(z => Math.max(50, z - 25))
+      else if (e.key === "0") setZoom(100)
+    }
+    window.addEventListener("keydown", fn)
+    return () => window.removeEventListener("keydown", fn)
+  }, [])
+
+  const stepZoom = (dir) => {
+    const idx = ZOOMS.findIndex(z => z >= zoom)
+    if (dir > 0) setZoom(ZOOMS[Math.min(ZOOMS.length - 1, idx + 1)] ?? 300)
+    else         setZoom(ZOOMS[Math.max(0, idx - 1)] ?? 50)
+  }
+
+  return (
+    <div className="pdf-lb-ov" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="pdf-lb-bar">
+        <Ico n="doc" s={16} />
+        <div className="pdf-lb-name">
+          {filename || "PDF Preview"}
+          {sizeKB && <span className="pdf-lb-size">  ·  {sizeKB} KB</span>}
+        </div>
+
+        <button className="pdf-lb-btn" onClick={() => stepZoom(-1)} title="ย่อ (−)">
+          <Ico n="zoomOut" s={15} />
+        </button>
+        <span className="pdf-lb-zoom">{zoom}%</span>
+        <button className="pdf-lb-btn" onClick={() => stepZoom(+1)} title="ขยาย (+)">
+          <Ico n="zoomIn" s={15} />
+        </button>
+        <button className="pdf-lb-btn" onClick={() => setZoom(100)} title="รีเซ็ต (0)">100%</button>
+
+        <a className="pdf-lb-btn" href={src} target="_blank" rel="noreferrer" title="เปิดในแท็บใหม่">
+          <Ico n="open" s={15} /> แท็บใหม่
+        </a>
+        <button className="pdf-lb-btn close" onClick={onClose} title="ปิด (Esc)">
+          <Ico n="x" s={15} /> ปิด
+        </button>
+      </div>
+
+      <div className="pdf-lb-body">
+        <div className="pdf-lb-frame-wrap"
+          style={{ width: `${zoom * 8}px`, height: `calc(100vh - 88px)` }}>
+          {src ? (
+            <iframe className="pdf-lb-frame" src={src} title="PDF Fullscreen" />
+          ) : (
+            <div className="pdf-placeholder" style={{ height: "100%" }}>
+              <Ico n="doc" s={40} sw={1} />
+              <div className="ph-title">ยังไม่มีไฟล์</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── ฟอร์มกรอกข้อมูลกรมธรรม์ (ใช้ซ้ำทั้ง upload + manual) ── */
+function PolicyForm({ values, onChange }) {
+  return (
+    <>
+      {F_SECS.map(sec => (
+        <div key={sec.label} style={{ marginBottom: 18 }}>
+          <div className="shd">
+            <Ico n={sec.ico} s={13} />
+            <span className="shd-lbl">{sec.label}</span>
+          </div>
+          <div className="fg">
+            {sec.keys.map(k => {
+              const isDate = k === "coverage_start" || k === "coverage_end"
+              const isWide = k === "insured_address"
+              return (
+                <div key={k} className={`fi${isWide ? " fw" : ""}`}>
+                  <label>{F_LBL[k]}</label>
+                  <input
+                    placeholder={
+                      isDate ? "YYYY-MM-DD หรือ DD/MM/YYYY"
+                      : k === "policy_number" ? "เช่น 10-72-69/006797"
+                      : k === "license_plate" ? "เช่น 1กก 1234"
+                      : k === "phone" ? "เช่น 081-234-5678"
+                      : ""
+                    }
+                    value={values[k] ?? ""}
+                    onChange={e => onChange({ ...values, [k]: e.target.value })}
+                  />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* ── หมายเหตุ card ── */}
+      <div className="notes-card">
+        <div className="notes-card-hd">
+          <Ico n="doc" s={13} />
+          <span>หมายเหตุ</span>
+        </div>
+        <textarea
+          className="notes-ta"
+          rows={4}
+          placeholder="บันทึกข้อความเพิ่มเติม เช่น รายละเอียดพิเศษ, ข้อตกลง, หรือข้อมูลอื่น…"
+          value={values.notes ?? ""}
+          onChange={e => onChange({ ...values, notes: e.target.value })}
+        />
+      </div>
+    </>
+  )
+}
+
+/* ── กรอกข้อมูลเอง (page) ── */
+function ManualPage({ onBack, onSuccess }) {
+  const [data, setData]     = useState({})
+  const [saving, setSaving] = useState(false)
+  const [err, setErr]       = useState("")
+
+  const doSave = async () => {
+    if (!data.policy_number?.toString().trim()) {
+      setErr("กรุณากรอก 'เลขกรมธรรม์' ก่อน")
+      return
+    }
+    setSaving(true); setErr("")
+    try {
+      await api.post("/save-policy", data)
+      onSuccess({ ok: true })
+    } catch (e) {
+      setErr("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+      setSaving(false)
+    }
+  }
+
+  const filled = Object.values(data).filter(v => v != null && v !== "").length
+
+  return (
+    <div className="page-wrap">
+      {/* ── PAGE HEADER ── */}
+      <div className="page-hd">
+        <button className="page-back" onClick={onBack}>
+          <Ico n="chevL" s={15} /> กลับ
+        </button>
+        <div className="page-hd-div" />
+        <div className="page-hd-info">
+          <div className="page-title">กรอกข้อมูลกรมธรรม์ด้วยตนเอง</div>
+          <div className="page-sub">กรอกเฉพาะช่องที่ทราบ · กรอกแล้ว {filled} ช่อง</div>
+        </div>
+        <div className="page-hd-right">
+          <button className="btn btn-b" onClick={doSave} disabled={saving}>
+            <Ico n="save" s={14} />
+            {saving ? "กำลังบันทึก..." : "บันทึกลงฐานข้อมูล"}
+          </button>
+        </div>
+      </div>
+
+      <div className="page-body" style={{ maxWidth: 720 }}>
+        {err && (
+          <div className="bnr er" style={{ marginBottom: 18 }}>
+            <Ico n="warn" s={18} />
+            <div className="bnr-body"><div className="bnr-t">{err}</div></div>
+            <button onClick={() => setErr("")}
+              style={{ background:"none",border:"none",cursor:"pointer",color:"var(--red)",display:"flex" }}>
+              <Ico n="x" s={14} />
+            </button>
+          </div>
+        )}
+        <PolicyForm values={data} onChange={setData} />
+        <div style={{ display:"flex", gap:10, justifyContent:"flex-end", marginTop:8 }}>
+          <button className="btn btn-w" onClick={onBack}>ยกเลิก</button>
+          <button className="btn btn-b" onClick={doSave} disabled={saving}>
+            <Ico n="save" s={14} />
+            {saving ? "กำลังบันทึก..." : "บันทึกลงฐานข้อมูล"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const PDF_H = "calc(100vh - 230px)"
+
+function PdfPreview({ fileUrl, file, filename, onFullscreen }) {
+  return (
+    <div className="pdf-preview-wrap">
+      <div className="pdf-preview-bar">
+        <Ico n="doc" s={13} />
+        <span className="pdf-fname">{file ? (filename || file.name) : "ยังไม่เลือกไฟล์"}</span>
+        {file && <span className="pdf-size">{(file.size / 1024).toFixed(0)} KB</span>}
+        <button className="pdf-zoom-btn" onClick={onFullscreen}
+          disabled={!fileUrl} title="เต็มจอ">
+          <Ico n="expand" s={14} />
+        </button>
+      </div>
+      {fileUrl ? (
+        <iframe className="pdf-iframe" src={fileUrl} title="PDF Preview"
+          style={{ height: PDF_H }} />
+      ) : (
+        <div className="pdf-placeholder" style={{ height: PDF_H, minHeight: 320 }}>
+          <Ico n="doc" s={44} sw={1} />
+          <div className="ph-title">ยังไม่มีไฟล์</div>
+          <div className="ph-hint">วาง PDF เพื่อดูตัวอย่าง</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FormPanel({ open, onToggle, loading, parsed, setParsed, file, filename, setFilename }) {
+  return (
+    <div className="form-panel">
+      {/* หัวแผง */}
+      <div className="form-panel-bar" onClick={onToggle}>
+        <div className="drop-bar-left">
+          <div className="drop-h-ic" style={{ width:36,height:36,borderRadius:9,background:"var(--blue-bg)" }}>
+            <Ico n="doc" s={17} sw={1.8} style={{ stroke:"var(--blue)" }} />
+          </div>
+          <div>
+            <div className="drop-h-name" style={{ fontSize:14 }}>ข้อมูลกรมธรรม์</div>
+            <div className="drop-h-hint" style={{ fontSize:12.5 }}>
+              {loading ? "กำลังดึงข้อมูลจาก PDF…" : open ? "คลิกเพื่อย่อ" : "คลิกเพื่อขยาย"}
+            </div>
+          </div>
+        </div>
+        <div className="drop-bar-right" onClick={e => e.stopPropagation()}>
+          {loading && <div className="spin" style={{ width:18,height:18,borderWidth:2 }} />}
+          <button className="drop-toggle" title={open ? "ย่อ" : "ขยาย"}
+            onClick={e => { e.stopPropagation(); onToggle() }}>
+            <Ico n={open ? "chevU" : "chevD"} s={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* เนื้อหา */}
+      {open && (
+        <div className="form-panel-body">
+          {loading && (
+            <div className="form-overlay">
+              <div style={{ textAlign:"center" }}>
+                <div className="spin" style={{ margin:"0 auto 10px" }} />
+                <div style={{ fontWeight:600, color:"var(--t1)" }}>AI กำลังอ่าน PDF…</div>
+                <div style={{ fontSize:13, color:"var(--t3)", marginTop:4 }}>อาจใช้เวลา 5–10 วินาที</div>
+              </div>
+            </div>
+          )}
+          {parsed.pdf_size != null && (
+            <div className="fi fw" style={{ background:"var(--blue-bg)", borderColor:"var(--blue-mid)", marginBottom:14 }}>
+              <label>ขนาดไฟล์</label>
+              <span className="fi-v">{(parsed.pdf_size / 1024).toFixed(0)} KB</span>
+            </div>
+          )}
+          <PolicyForm values={parsed} onChange={setParsed} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function UploadPage({ onBack, onSuccess }) {
+  const [file, setFile]         = useState(null)
+  const [fileUrl, setFileUrl]   = useState(null)
+  const [filename, setFilename] = useState("")
+  const [drag, setDrag]         = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [parsed, setParsed]     = useState({})
+  const [hasData, setHasData]   = useState(false)
+  const [saving, setSaving]     = useState(false)
+  const [err, setErr]           = useState("")
+  const [aiWarn, setAiWarn]     = useState(null)  // "rate_limit" | "error" | null
+  const [pdfFull, setPdfFull]   = useState(false)
+  const [dropOpen, setDropOpen] = useState(true)   // ย่อ/ขยาย drop zone
+  const [formOpen, setFormOpen] = useState(true)   // ย่อ/ขยาย form panel
   const ref = useRef()
 
-  // สร้าง / revoke object URL เมื่อ file เปลี่ยน
   useEffect(() => {
     if (!file) { setFileUrl(null); return }
     const url = URL.createObjectURL(file)
@@ -460,22 +1068,24 @@ function UploadModal({ onClose, onSuccess }) {
     return () => URL.revokeObjectURL(url)
   }, [file])
 
-  const pick = f => {
+  // เลือก / drop ไฟล์ → วิเคราะห์ทันที
+  const pick = async f => {
     if (!f) return
-    if (f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))
-      { setFile(f); setErr(""); setParsed(null) }
-    else setErr("กรุณาเลือกไฟล์ PDF เท่านั้น")
-  }
-
-  const doRead = async () => {
-    if (!file) return
-    setLoading(true); setErr("")
+    if (!(f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))) {
+      setErr("กรุณาเลือกไฟล์ PDF เท่านั้น"); return
+    }
+    setFile(f); setErr(""); setHasData(false)
+    setFilename(f.name); setDropOpen(false)
+    // วิเคราะห์อัตโนมัติ
+    setLoading(true)
     const form = new FormData()
-    form.append("file", file)
+    form.append("file", f)
     try {
       const res = await api.post("/upload-pdf", form)
       if (!res.data?.parsed) throw new Error("ไม่พบข้อมูลใน PDF")
-      setParsed(res.data.parsed)   // ← auto-fill ฟอร์มทันที
+      setParsed({ ...res.data.parsed, pdf_filename: f.name })
+      setHasData(true)
+      setAiWarn(res.data.used_ai === false ? (res.data.ai_error || "error") : null)
     } catch (e) {
       setErr("อ่าน PDF ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setLoading(false) }
@@ -484,237 +1094,400 @@ function UploadModal({ onClose, onSuccess }) {
   const doSave = async () => {
     setSaving(true); setErr("")
     try {
-      await api.post("/save-policy", parsed)
-      onSuccess({ ok: true }); onClose()
+      await api.post("/save-policy", { ...parsed, pdf_filename: filename || parsed.pdf_filename })
+      onSuccess({ ok: true })
     } catch (e) {
       setErr("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
       setSaving(false)
     }
   }
 
-  // ── PDF Preview panel (ใช้ซ้ำทั้ง step 1 และ 2)
-  const PdfPreview = ({ height = 420 }) => (
-    <div className="pdf-preview-wrap">
-      <div className="pdf-preview-bar">
-        <Ico n="doc" s={13} />
-        <span className="pdf-fname">{file ? file.name : "ยังไม่เลือกไฟล์"}</span>
-        {file && (
-          <span className="pdf-size">{(file.size / 1024).toFixed(0)} KB</span>
-        )}
-      </div>
-      {fileUrl ? (
-        <iframe
-          className="pdf-iframe"
-          src={fileUrl}
-          title="PDF Preview"
-          style={{ height }}
-        />
-      ) : (
-        <div className="pdf-placeholder" style={{ height }}>
-          <Ico n="doc" s={36} sw={1} />
-          <div className="ph-title">PDF Preview</div>
-          <div className="ph-hint">เลือกไฟล์ PDF เพื่อดูตัวอย่าง</div>
-        </div>
-      )}
-    </div>
-  )
-
   return (
-    <div className="ov" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: parsed ? 980 : 760 }}>
-        <div className="modal-hd">
-          <div>
-            <div className="modal-title">อัปโหลด PDF กรมธรรม์</div>
-            <div className="modal-sub">
-              {parsed
-                ? "ตรวจสอบและแก้ไขข้อมูลที่สแกนได้ก่อนบันทึก"
-                : "ระบบจะดึงข้อมูลจากไฟล์ PDF อัตโนมัติ"}
+    <>
+      {pdfFull && (
+        <PdfLightbox src={fileUrl} filename={file?.name}
+          sizeKB={file ? (file.size/1024).toFixed(0) : null}
+          onClose={() => setPdfFull(false)} />
+      )}
+      <div className="page-wrap">
+        {/* ── PAGE HEADER ── */}
+        <div className="page-hd">
+          <button className="page-back" onClick={onBack}>
+            <Ico n="chevL" s={15} /> กลับ
+          </button>
+          <div className="page-hd-div" />
+          <div className="page-hd-info">
+            <div className="page-title">อัปโหลด PDF กรมธรรม์</div>
+            <div className="page-sub">
+              {loading ? "กำลังวิเคราะห์ด้วย AI…"
+                : hasData ? "ตรวจสอบและแก้ไขข้อมูลก่อนบันทึก"
+                : "วาง PDF แล้วระบบจะดึงข้อมูลอัตโนมัติ"}
             </div>
           </div>
-          <button className="xbtn" onClick={onClose}><Ico n="x" s={14} /></button>
+          <div className="page-hd-right">
+            <button className="btn btn-b" onClick={doSave} disabled={!hasData || saving}>
+              <Ico n="save" s={14} />
+              {saving ? "กำลังบันทึก..." : "บันทึกลงฐานข้อมูล"}
+            </button>
+          </div>
         </div>
 
-        <div className="modal-bd">
+        <div className="page-body">
           {err && (
             <div className="bnr er" style={{ marginBottom: 16 }}>
               <Ico n="warn" s={18} />
               <div className="bnr-body"><div className="bnr-t">{err}</div></div>
               <button onClick={() => setErr("")}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)", display: "flex" }}>
+                style={{ background:"none",border:"none",cursor:"pointer",color:"var(--red)",display:"flex" }}>
                 <Ico n="x" s={14} />
               </button>
             </div>
           )}
 
-          {/* ══ STEP 1: เลือกไฟล์ + PDF preview ══ */}
-          {!parsed && !loading && (
-            <div className="modal-split">
-              {/* ซ้าย: drop zone + ปุ่ม */}
-              <div className="split-form">
-                <div
-                  className={`drop${drag ? " drag" : ""}`}
-                  onDragOver={e => { e.preventDefault(); setDrag(true) }}
-                  onDragLeave={() => setDrag(false)}
-                  onDrop={e => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]) }}
-                  onClick={() => ref.current.click()}
-                >
-                  <div className="drop-ic"><Ico n="upload" s={22} /></div>
-                  {file ? (
-                    <>
-                      <div className="drop-main">เลือกไฟล์แล้ว</div>
-                      <div className="drop-fname">{file.name}</div>
-                      <div className="drop-hint" style={{ marginTop: 4 }}>คลิกเพื่อเปลี่ยนไฟล์</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="drop-main">ลากไฟล์มาวางที่นี่</div>
-                      <div className="drop-hint">หรือคลิกเพื่อเลือกไฟล์ PDF</div>
-                    </>
+          <div className="upload-split">
+            {/* ── ซ้าย: drop zone กะทัดรัด + form ── */}
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+
+              {/* ── ชื่อไฟล์ (บนสุด — แสดงเมื่อมีไฟล์) ── */}
+              {file && (
+                <div className="fname-row">
+                  <label>ชื่อไฟล์</label>
+                  <input value={filename} onChange={e => setFilename(e.target.value)} placeholder={file.name} />
+                  {filename !== file.name && (
+                    <button onClick={() => setFilename(file.name)}>รีเซ็ต</button>
                   )}
-                  <input ref={ref} type="file" accept=".pdf" style={{ display: "none" }}
-                    onChange={e => pick(e.target.files[0])} />
                 </div>
+              )}
 
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  <button className="btn btn-w" onClick={onClose}>ยกเลิก</button>
-                  <button className="btn btn-b" onClick={doRead} disabled={!file}>
-                    <Ico n="upload" s={14} />อ่านและวิเคราะห์ PDF
-                  </button>
-                </div>
-              </div>
-
-              {/* ขวา: PDF preview */}
-              <div className="split-preview">
-                <PdfPreview height={340} />
-              </div>
-            </div>
-          )}
-
-          {/* ══ LOADING ══ */}
-          {loading && (
-            <div className="ldg" style={{ padding: "56px 0" }}>
-              <div className="spin" />
-              <div className="ldg-t">กำลังวิเคราะห์ไฟล์ PDF</div>
-              <div className="ldg-s">อาจใช้เวลาสักครู่...</div>
-            </div>
-          )}
-
-          {/* ══ STEP 2: ฟอร์ม auto-fill + PDF preview ══ */}
-          {parsed && (
-            <div className="modal-split">
-              {/* ซ้าย: ฟอร์ม */}
-              <div className="split-form">
-                {F_SECS.map(sec => (
-                  <div key={sec.label} style={{ marginBottom: 18 }}>
-                    <div className="shd">
-                      <Ico n={sec.ico} s={13} />
-                      <span className="shd-lbl">{sec.label}</span>
-                    </div>
-                    <div className="fg">
-                      {sec.keys.map(k => (
-                        <div key={k} className={`fi${k === "insured_address" ? " fw" : ""}`}>
-                          <label>{F_LBL[k]}</label>
-                          <input
-                            value={parsed[k] ?? ""}
-                            onChange={e => setParsed({ ...parsed, [k]: e.target.value })}
-                          />
+              {/* ── แผง 1: Drop zone ── */}
+              <div className={`drop-wrap${file ? " has-file" : ""}`}>
+                {file ? (
+                  <div className="drop-bar" onClick={() => ref.current.click()} style={{ cursor:"pointer" }}>
+                    <div className="drop-bar-left">
+                      <div className="drop-h-ic" style={{ width:36,height:36,borderRadius:9 }}>
+                        <Ico n="doc" s={17} />
+                      </div>
+                      <div>
+                        <div className="drop-h-name" style={{ fontSize:14 }}>{filename || file.name}</div>
+                        <div className="drop-h-hint" style={{ fontSize:12.5 }}>
+                          {loading ? "กำลังวิเคราะห์…" : `${(file.size/1024).toFixed(0)} KB · คลิกเพื่อเปลี่ยนไฟล์`}
                         </div>
-                      ))}
+                      </div>
+                    </div>
+                    <div className="drop-bar-right">
+                      {loading
+                        ? <div className="spin" style={{ width:18,height:18,borderWidth:2 }} />
+                        : <span className="drop-h-badge ok">✓</span>}
                     </div>
                   </div>
-                ))}
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button className="btn btn-b" onClick={doSave} disabled={saving}>
-                    <Ico n="save" s={14} />
-                    {saving ? "กำลังบันทึก..." : "บันทึกลงฐานข้อมูล"}
-                  </button>
-                  <button className="btn btn-w" onClick={() => setParsed(null)}>เลือกไฟล์ใหม่</button>
-                </div>
+                ) : (
+                  <div className="drop-body"
+                    onDragOver={e => { e.preventDefault(); setDrag(true) }}
+                    onDragLeave={() => setDrag(false)}
+                    onDrop={e => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]) }}
+                    onClick={() => !loading && ref.current.click()}
+                  >
+                    <div className={`drop-body-inner${drag ? " drag" : ""}`}>
+                      <div className="drop-h-ic" style={{ width:64,height:64,borderRadius:16 }}>
+                        <Ico n="upload" s={28} />
+                      </div>
+                      <span className="drop-h-name" style={{ fontSize:16 }}>ลากไฟล์ PDF มาวางที่นี่</span>
+                      <span className="drop-h-hint" style={{ fontSize:13.5 }}>หรือคลิกเพื่อเลือกไฟล์ · รองรับ PDF เท่านั้น</span>
+                    </div>
+                  </div>
+                )}
+                <input ref={ref} type="file" accept=".pdf" style={{ display:"none" }}
+                  onChange={e => pick(e.target.files[0])} />
               </div>
 
-              {/* ขวา: PDF preview (sticky ระหว่าง scroll ฟอร์ม) */}
-              <div className="split-preview">
-                <PdfPreview height={560} />
-              </div>
+              {/* ── แจ้งเตือน AI ไม่ทำงาน ── */}
+              {aiWarn && (
+                <div className="bnr er" style={{ marginBottom: 16 }}>
+                  <Ico n="bell" s={18} />
+                  <div className="bnr-body">
+                    <div className="bnr-t">
+                      {aiWarn === "rate_limit"
+                        ? "AI ถึง limit รายวันแล้ว — ข้อมูลนี้อ่านด้วย OCR (ไม่ใช่ AI)"
+                        : "AI ทำงานไม่ได้ — ข้อมูลนี้อ่านด้วย OCR (ไม่ใช่ AI)"}
+                    </div>
+                    <div className="bnr-s" style={{ color:"var(--red)" }}>
+                      กรุณาตรวจสอบและแก้ไขข้อมูลด้านล่างก่อนบันทึก
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── แผง 2: กรอกข้อมูล (collapsible) ── */}
+              <FormPanel
+                open={formOpen} onToggle={() => setFormOpen(o => !o)}
+                loading={loading} parsed={parsed} setParsed={setParsed}
+                file={file} filename={filename} setFilename={setFilename}
+              />
             </div>
-          )}
+
+            {/* ── ขวา: PDF preview ── */}
+            <div className="upload-aside">
+              <PdfPreview fileUrl={fileUrl} file={file} filename={filename} onFullscreen={() => setPdfFull(true)} />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
 /* ═══════════════════════════════════════════
-   DETAIL MODAL
+   DETAIL PAGE  (full-page, ไม่ใช้ popup)
 ═══════════════════════════════════════════ */
-function DetailModal({ p, onClose }) {
+function DetailPage({ p, onBack, onUpdated }) {
+  const [pdfFull, setPdfFull]   = useState(false)
+  const [editName, setEditName] = useState(false)
+  const [name, setName]         = useState(p.pdf_filename || "")
+  const [savingName, setSavingName] = useState(false)
   const st = getStatus(p.coverage_end)
-  const Row = ({ label, value, hi }) => (
-    <div className="fi">
-      <label>{label}</label>
-      <span className={`fi-v${hi ? " hi" : ""}`}>{value || "—"}</span>
+
+  const saveName = async () => {
+    setSavingName(true)
+    try {
+      await api.put(`/policies/${p.id}`, { pdf_filename: name.trim() || null })
+      p.pdf_filename = name.trim()
+      setEditName(false)
+      onUpdated?.()
+    } catch (e) {
+      alert("เปลี่ยนชื่อไฟล์ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+    } finally { setSavingName(false) }
+  }
+
+  const pdfBase        = `${api.defaults.baseURL}/policies/${p.id}/pdf`
+  const pdfViewUrl     = pdfBase
+  const pdfDownloadUrl = `${pdfBase}?download=1`
+  const hasPdfInDb     = !!p.pdf_filename || !!p.pdf_size
+
+  const F = ({ label, value, hi, mono }) => (
+    <div className="info-field">
+      <div className="info-label">{label}</div>
+      <div className={`info-val${hi ? " hi" : ""}${mono ? " mono" : ""}`}>{value || "—"}</div>
     </div>
   )
+
   return (
-    <div className="ov" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: 600 }}>
-        <div className="modal-hd">
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <div className="modal-title">{p.policy_number || "—"}</div>
+    <>
+      {pdfFull && (
+        <PdfLightbox src={pdfViewUrl} filename={p.pdf_filename}
+          sizeKB={p.pdf_size ? (p.pdf_size/1024).toFixed(0) : null}
+          onClose={() => setPdfFull(false)} />
+      )}
+
+      <div className="page-wrap">
+        {/* ── PAGE HEADER ── */}
+        <div className="page-hd">
+          <button className="page-back" onClick={onBack}>
+            <Ico n="chevL" s={15} /> กลับ
+          </button>
+          <div className="page-hd-div" />
+          <div className="page-hd-info">
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div className="page-title">{p.policy_number || "—"}</div>
               <span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span>
             </div>
-            <div className="modal-sub">รายละเอียดกรมธรรม์ประกันภัยรถยนต์</div>
-          </div>
-          <button className="xbtn" onClick={onClose}><Ico n="x" s={14} /></button>
-        </div>
-        <div className="modal-bd">
-
-          <div className="shd"><Ico n="person" s={13} /><span className="shd-lbl">ผู้เอาประกัน</span></div>
-          <div className="fg" style={{ marginBottom: 18 }}>
-            <Row label="ชื่อ-นามสกุล"  value={p.insured_name} />
-            <Row label="ชื่อตัวแทน"    value={p.broker_name} />
-            <div className="fi fw"><label>ที่อยู่</label><span className="fi-v">{p.insured_address || "—"}</span></div>
-          </div>
-
-          <div className="shd"><Ico n="car" s={13} /><span className="shd-lbl">ข้อมูลรถยนต์</span></div>
-          <div className="fg" style={{ marginBottom: 18 }}>
-            <Row label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join(" ")} />
-            <Row label="ปีรถ"          value={p.car_year} />
-            <Row label="ทะเบียนรถ"     value={p.license_plate} />
-            <Row label="เลขตัวถัง"     value={p.chassis_no} />
-          </div>
-
-          <div className="shd"><Ico n="cal" s={13} /><span className="shd-lbl">ระยะเวลาคุ้มครอง</span></div>
-          <div className="fg" style={{ marginBottom: 18 }}>
-            <Row label="วันเริ่มต้น"   value={p.coverage_start} />
-            <Row label="วันสิ้นสุด"    value={p.coverage_end} />
-          </div>
-
-          <div className="shd"><Ico n="banknote" s={13} /><span className="shd-lbl">เบี้ยประกัน</span></div>
-          <div className="fg" style={{ marginBottom: 20 }}>
-            <Row label="เบี้ยสุทธิ"             value={`${baht(p.net_premium)} ฿`} />
-            <Row label="อากรแสตมป์"             value={`${baht(p.stamp_duty)} ฿`} />
-            <Row label="ภาษีมูลค่าเพิ่ม (VAT)"  value={`${baht(p.vat)} ฿`} />
-            <div className="fi" style={{ background: "var(--blue-bg)", borderColor: "var(--blue-mid)" }}>
-              <label>รวมเบี้ยประกัน</label>
-              <span className="fi-v hi">{baht(p.total_premium)} ฿</span>
+            <div className="page-sub">
+              {p.insured_name || ""}{p.insured_name && p.license_plate ? "  ·  " : ""}
+              {p.license_plate || ""}
             </div>
           </div>
+          {hasPdfInDb && (
+            <div className="page-hd-right">
+              <button className="btn btn-w" onClick={() => setPdfFull(true)}>
+                <Ico n="expand" s={14} /> ดู PDF
+              </button>
+              <a className="btn btn-b" href={pdfDownloadUrl}>
+                <Ico n="download" s={14} /> ดาวน์โหลด
+              </a>
+            </div>
+          )}
+        </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button className="btn btn-w" onClick={onClose}>ปิดหน้าต่าง</button>
+        <div className="page-body">
+          <div className="detail-split">
+
+            {/* ── ซ้าย: ข้อมูล ── */}
+            <div>
+              {/* ผู้เอาประกัน */}
+              <div className="info-card">
+                <div className="info-card-hd">
+                  <Ico n="person" s={16} />
+                  <span className="info-card-title">ผู้เอาประกัน</span>
+                </div>
+                <div className="info-card-bd">
+                  <div className="info-row" style={{ marginBottom:12 }}>
+                    <F label="ชื่อ-นามสกุล"   value={p.insured_name} />
+                    <F label="ชื่อตัวแทน / นายหน้า" value={p.broker_name} />
+                  </div>
+                  <div className="info-row fw">
+                    <F label="ที่อยู่"          value={p.insured_address} />
+                  </div>
+                </div>
+              </div>
+
+              {/* รถยนต์ */}
+              <div className="info-card">
+                <div className="info-card-hd">
+                  <Ico n="car" s={16} />
+                  <span className="info-card-title">ข้อมูลรถยนต์</span>
+                </div>
+                <div className="info-card-bd">
+                  <div className="info-row" style={{ marginBottom:12 }}>
+                    <F label="ยี่ห้อ / รุ่น"
+                      value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
+                    <F label="ปีรถ" value={p.car_year} />
+                  </div>
+                  <div className="info-row">
+                    <div className="info-field">
+                      <div className="info-label">ทะเบียนรถ</div>
+                      <div className="info-val">
+                        {p.license_plate
+                          ? <span className="plate">{p.license_plate}</span>
+                          : "—"}
+                      </div>
+                    </div>
+                    <F label="เลขตัวถัง" value={p.chassis_no} mono />
+                  </div>
+                </div>
+              </div>
+
+              {/* ระยะเวลาคุ้มครอง */}
+              <div className="info-card">
+                <div className="info-card-hd">
+                  <Ico n="cal" s={16} />
+                  <span className="info-card-title">ระยะเวลาคุ้มครอง</span>
+                </div>
+                <div className="info-card-bd">
+                  <div className="info-row">
+                    <F label="วันเริ่มต้น"  value={p.coverage_start} />
+                    <F label="วันสิ้นสุด"   value={p.coverage_end} />
+                  </div>
+                </div>
+              </div>
+
+              {/* เบี้ยประกัน */}
+              <div className="info-card">
+                <div className="info-card-hd">
+                  <Ico n="banknote" s={16} />
+                  <span className="info-card-title">เบี้ยประกัน</span>
+                </div>
+                <div className="info-card-bd">
+                  <div className="info-row" style={{ marginBottom:12 }}>
+                    <F label="เบี้ยสุทธิ"            value={`${baht(p.net_premium)} ฿`} />
+                    <F label="อากรแสตมป์"            value={`${baht(p.stamp_duty)} ฿`} />
+                  </div>
+                  <div className="info-row">
+                    <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={`${baht(p.vat)} ฿`} />
+                    <div className="info-field" style={{ background:"var(--blue-bg)",border:"1px solid var(--blue-mid)",borderRadius:9,padding:"10px 13px" }}>
+                      <div className="info-label">รวมเบี้ยประกัน</div>
+                      <div className="info-val hi">{baht(p.total_premium)} ฿</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PDF metadata */}
+              {hasPdfInDb && (
+                <div className="info-card">
+                  <div className="info-card-hd">
+                    <Ico n="doc" s={16} />
+                    <span className="info-card-title">ไฟล์ PDF กรมธรรม์</span>
+                  </div>
+                  <div className="info-card-bd">
+                    <div className="info-label" style={{ marginBottom:6 }}>ชื่อไฟล์</div>
+                    {editName ? (
+                      <div style={{ display:"flex",gap:7,alignItems:"center",marginBottom:10 }}>
+                        <input value={name} onChange={e => setName(e.target.value)} autoFocus
+                          placeholder="policy.pdf"
+                          style={{ flex:1,border:"1.5px solid var(--brd2)",borderRadius:8,padding:"7px 11px",fontSize:14,fontFamily:"inherit",color:"var(--t1)",outline:"none" }}
+                          onFocus={e => e.target.style.borderColor="var(--blue)"}
+                          onBlur={e => e.target.style.borderColor="var(--brd2)"}
+                        />
+                        <button className="btn btn-b" onClick={saveName} disabled={savingName}
+                          style={{ padding:"7px 13px",fontSize:13 }}>
+                          <Ico n="check" s={13} /> {savingName ? "..." : "บันทึก"}
+                        </button>
+                        <button className="btn btn-w"
+                          onClick={() => { setEditName(false); setName(p.pdf_filename||"") }}
+                          style={{ padding:"7px 11px",fontSize:13 }}>
+                          <Ico n="x" s={13} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display:"flex",alignItems:"center",gap:9,marginBottom:10 }}>
+                        <span className="info-val" style={{ flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
+                          {p.pdf_filename || "—"}
+                        </span>
+                        <button className="btn btn-w" onClick={() => setEditName(true)}
+                          style={{ padding:"6px 12px",fontSize:13 }}>
+                          <Ico n="pen" s={13} /> แก้ไขชื่อ
+                        </button>
+                      </div>
+                    )}
+                    {p.pdf_size && (
+                      <div style={{ fontSize:12,color:"var(--t3)" }}>
+                        {(p.pdf_size/1024).toFixed(0)} KB · เก็บในฐานข้อมูล
+                      </div>
+                    )}
+                    <div style={{ display:"flex",gap:8,flexWrap:"wrap",marginTop:14 }}>
+                      <button className="btn btn-w" onClick={() => setPdfFull(true)}>
+                        <Ico n="expand" s={14} /> เต็มจอ
+                      </button>
+                      <a className="btn btn-w" href={pdfViewUrl} target="_blank" rel="noreferrer">
+                        <Ico n="open" s={14} /> แท็บใหม่
+                      </a>
+                      <a className="btn btn-b" href={pdfDownloadUrl}>
+                        <Ico n="download" s={14} /> ดาวน์โหลด
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── ขวา: PDF preview (sticky) ── */}
+            <div className="detail-aside">
+              {hasPdfInDb ? (
+                <div className="pdf-preview-wrap">
+                  <div className="pdf-preview-bar">
+                    <Ico n="doc" s={13} />
+                    <span className="pdf-fname">{p.pdf_filename || "PDF"}</span>
+                    {p.pdf_size && <span className="pdf-size">{(p.pdf_size/1024).toFixed(0)} KB</span>}
+                    <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ">
+                      <Ico n="expand" s={14} />
+                    </button>
+                  </div>
+                  <iframe className="pdf-iframe" src={pdfViewUrl} title="PDF Preview"
+                    style={{ height: 560 }} />
+                </div>
+              ) : (
+                <div className="info-card" style={{ marginBottom:0 }}>
+                  <div className="info-card-bd">
+                    <div className="pdf-placeholder" style={{ height:220 }}>
+                      <Ico n="doc" s={36} sw={1} />
+                      <div className="ph-title">ไม่มีไฟล์ PDF</div>
+                      <div className="ph-hint">ยังไม่ได้เก็บ PDF ในฐานข้อมูล</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
 /* ═══════════════════════════════════════════
    POLICY TABLE
 ═══════════════════════════════════════════ */
-function PolicyTable({ rows, loading, total, page, pages, setPage, onRow }) {
+function PolicyTable({ rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset }) {
   if (loading) return (
     <div className="card">
       <div className="ldg"><div className="spin" /><div className="ldg-t">กำลังโหลดข้อมูล</div></div>
@@ -741,6 +1514,7 @@ function PolicyTable({ rows, loading, total, page, pages, setPage, onRow }) {
         <table>
           <thead>
             <tr>
+              <th style={{ width:40, textAlign:"center", color:"var(--t3)" }}>#</th>
               <th>เลขกรมธรรม์</th>
               <th>ผู้เอาประกัน</th>
               <th>ทะเบียน</th>
@@ -751,10 +1525,11 @@ function PolicyTable({ rows, loading, total, page, pages, setPage, onRow }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map(r => {
+            {rows.map((r, idx) => {
               const st = getStatus(r.coverage_end)
               return (
-                <tr key={r.id} onClick={() => onRow(r)}>
+                <tr key={r.id} onClick={() => onRow(r)} className={activeId === r.id ? "tr-active" : ""}>
+                  <td style={{ textAlign:"center", color:"var(--t3)", fontSize:12, fontVariantNumeric:"tabular-nums" }}>{pageOffset + idx + 1}</td>
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>
                   <td><span className="plate">{r.license_plate || "—"}</span></td>
@@ -783,28 +1558,135 @@ function PolicyTable({ rows, loading, total, page, pages, setPage, onRow }) {
 }
 
 /* ═══════════════════════════════════════════
+   PREVIEW PANEL
+═══════════════════════════════════════════ */
+function PreviewPanel({ p, onClose, onOpen }) {
+  const st = getStatus(p.coverage_end)
+  const fmtNum = v => v != null ? Number(v).toLocaleString("th-TH") : null
+  const rows = [
+    // ── ข้อมูลกรมธรรม์ ──
+    ["ใบคำขอ",            p.app_number],
+    ["เลขกรมธรรม์",       p.policy_number],
+    ["บริษัทประกัน",      p.company_code],
+    ["ประเภท",            p.policy_type],
+    ["ใหม่ / ต่ออายุ",    p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew],
+    // ── ผู้เอาประกัน ──
+    ["ผู้เอาประกัน",      p.insured_name],
+    ["เบอร์โทร",          p.phone],
+    ["ที่อยู่",            p.insured_address],
+    // ── ยานพาหนะ ──
+    ["ทะเบียนรถ",         p.license_plate ? `${p.license_plate}${p.license_province ? " " + p.license_province : ""}` : null],
+    ["ยี่ห้อ / รุ่น",     [p.car_make, p.car_model].filter(Boolean).join(" ")],
+    ["ปีรถ",              p.car_year],
+    ["เลขตัวถัง",         p.chassis_no],
+    // ── ระยะเวลาคุ้มครอง ──
+    ["แจ้งงาน",           p.date_notify],
+    ["คุ้มครองเริ่ม",     p.coverage_start],
+    ["คุ้มครองสิ้นสุด",   p.coverage_end],
+    ["วันรับกรมธรรม์",    p.date_policy_receive],
+    ["วันยกเลิก",         p.date_cancel],
+    // ── เบี้ยประกัน ──
+    ["ทุนเอาประกัน",      fmtNum(p.sum_insured)],
+    ["เบี้ยสุทธิ",        fmtNum(p.net_premium)],
+    ["อากร",              fmtNum(p.stamp_duty)],
+    ["ภาษี",              fmtNum(p.vat)],
+    ["รวมเบี้ย",          fmtNum(p.total_premium)],
+    // ── ตัวแทน ──
+    ["รหัสตัวแทน",        p.agent_code],
+    ["ชื่อตัวแทน",        p.broker_name],
+    ["หมายเหตุ",          p.notes],
+  ]
+  const secs = [
+    { title:"กรมธรรม์", fields:[
+      ["ใบคำขอ", p.app_number], ["เลขกรมธรรม์", p.policy_number],
+      ["บ.ประกัน", p.company_code], ["ประเภท", p.policy_type],
+      ["N/R", p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew],
+    ]},
+    { title:"ผู้เอาประกัน", fields:[
+      ["ชื่อ", p.insured_name], ["เบอร์โทร", p.phone], ["ที่อยู่", p.insured_address],
+    ]},
+    { title:"ยานพาหนะ", fields:[
+      ["ทะเบียน", p.license_plate ? `${p.license_plate}${p.license_province ? " "+p.license_province : ""}` : null],
+      ["ยี่ห้อ/รุ่น", [p.car_make, p.car_model].filter(Boolean).join(" ")],
+      ["ปีรถ", p.car_year], ["เลขตัวถัง", p.chassis_no],
+    ]},
+    { title:"ระยะเวลา", fields:[
+      ["แจ้งงาน", p.date_notify], ["คุ้มครองเริ่ม", p.coverage_start],
+      ["คุ้มครองสิ้นสุด", p.coverage_end], ["วันรับกรมธรรม์", p.date_policy_receive],
+      ["วันยกเลิก", p.date_cancel],
+    ]},
+    { title:"เบี้ยประกัน", fields:[
+      ["ทุนเอาประกัน", fmtNum(p.sum_insured)], ["เบี้ยสุทธิ", fmtNum(p.net_premium)],
+      ["อากร", fmtNum(p.stamp_duty)], ["ภาษี", fmtNum(p.vat)], ["รวมเบี้ย", fmtNum(p.total_premium)],
+    ]},
+    { title:"ตัวแทน", fields:[
+      ["รหัส", p.agent_code], ["ชื่อ", p.broker_name],
+    ]},
+  ]
+  return (
+    <div className="pvp">
+      <div className="pvp-hd">
+        <div style={{ flex:1, minWidth:0 }}>
+          <div className="pvp-title">{p.insured_name || "ไม่ระบุชื่อ"}</div>
+          <div style={{ marginTop:4 }}>
+            <span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span>
+          </div>
+        </div>
+        <button className="pvp-close" onClick={onClose}><Ico n="x" s={16} /></button>
+      </div>
+      <div className="pvp-body">
+        {secs.map(sec => {
+          const visible = sec.fields.filter(([,v]) => v != null && v !== "")
+          if (!visible.length) return null
+          return (
+            <div key={sec.title} className="pvp-sec">
+              <div className="pvp-sec-title">{sec.title}</div>
+              {visible.map(([lbl, val]) => (
+                <div key={lbl} className="pvp-row">
+                  <span className="pvp-lbl">{lbl}</span>
+                  <span className="pvp-val">{val}</span>
+                </div>
+              ))}
+            </div>
+          )
+        })}
+      </div>
+      <div className="pvp-foot">
+        <button className="btn btn-b" style={{ width:"100%", justifyContent:"center" }} onClick={onOpen}>
+          <Ico n="expand" s={14} /> ดูข้อมูลทั้งหมด
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════
    APP
 ═══════════════════════════════════════════ */
-const LIMIT = 15
+const LIMIT = 10
 
 export default function App() {
-  const [tab, setTab]         = useState("dashboard")
-  const [sbOpen, setSbOpen]   = useState(false)
-  const [rows, setRows]       = useState([])
-  const [total, setTotal]     = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [search, setSearch]   = useState("")
-  const [page, setPage]       = useState(1)
-  const [detail, setDetail]   = useState(null)
-  const [upload, setUpload]   = useState(false)
-  const [toast, setToast]     = useState(null)
+  const [tab, setTab]               = useState("dashboard")
+  const [sbOpen, setSbOpen]         = useState(false)
+  const [rows, setRows]             = useState([])
+  const [total, setTotal]           = useState(0)
+  const [loading, setLoading]       = useState(false)
+  const [search, setSearch]         = useState("")
+  const [page, setPage]             = useState(1)
+  // view: "list" | "upload" | "manual" | "detail"
+  const [view, setView]             = useState("list")
+  const [selectedPolicy, setSelectedPolicy] = useState(null)
+  const [previewPolicy, setPreviewPolicy]   = useState(null)  // preview panel
+  const [toast, setToast]           = useState(null)
 
   const notify = (msg, type = "success") => setToast({ msg, type })
+
+  const goBack = () => { setView("list"); setSelectedPolicy(null) }
 
   const load = async () => {
     setLoading(true)
     try {
-      const params = { page }
+      const params = { page, limit: LIMIT }
       if (search) params.search = search
       const res = await api.get("/policies", { params })
       setRows(res.data.data || [])
@@ -823,7 +1705,7 @@ export default function App() {
     return () => window.removeEventListener("resize", fn)
   }, [])
 
-  const nav = (id) => { setTab(id); setSbOpen(false) }
+  const nav = (id) => { setTab(id); setSbOpen(false); setView("list") }
 
   const expiring = rows.filter(r => {
     if (!r.coverage_end) return false
@@ -835,15 +1717,15 @@ export default function App() {
   const pages      = Math.ceil(total / LIMIT)
 
   const TAB = {
-    dashboard: { title: "แดชบอร์ด",         sub: "ภาพรวมกรมธรรม์ทั้งหมด" },
-    policies:  { title: "กรมธรรม์ทั้งหมด",  sub: `${total.toLocaleString()} รายการในระบบ` },
-    expiring:  { title: "ใกล้หมดอายุ",       sub: `${expiring.length} รายการต้องดำเนินการ` },
+    dashboard: { title: "ภาพรวมระบบ",        sub: "สรุปสถานะกรมธรรม์ประกันภัยรถยนต์" },
+    policies:  { title: "กรมธรรม์ทั้งหมด",   sub: `${total.toLocaleString()} รายการในระบบ` },
+    expiring:  { title: "กรมธรรม์ใกล้หมดอายุ", sub: `${expiring.length} รายการ · ต้องต่ออายุภายใน 30 วัน` },
   }
 
   const NAV = [
-    { id: "dashboard", ico: "grid",  label: "แดชบอร์ด" },
-    { id: "policies",  ico: "doc",   label: "กรมธรรม์ทั้งหมด" },
-    { id: "expiring",  ico: "clock", label: "ใกล้หมดอายุ", badge: expiring.length },
+    { id: "dashboard", ico: "grid",   label: "ภาพรวม" },
+    { id: "policies",  ico: "doc",    label: "กรมธรรม์ทั้งหมด" },
+    { id: "expiring",  ico: "bell",   label: "ใกล้หมดอายุ", badge: expiring.length },
   ]
 
   return (
@@ -851,128 +1733,173 @@ export default function App() {
       <style>{CSS}</style>
       <div className="app">
 
-        <div className={`sb-overlay${sbOpen ? " show" : ""}`} onClick={() => setSbOpen(false)} />
-
-        {/* ── SIDEBAR ── */}
-        <aside className={`sb${sbOpen ? " open" : ""}`}>
+        {/* ── TOPNAV ── */}
+        <header className="sb">
+          {/* โลโก้ */}
           <div className="sb-logo">
-            <div className="sb-mark"><Ico n="shield" s={17} /></div>
-            <div>
-              <div className="sb-brand">InsureManager</div>
-              <div className="sb-tagline">ระบบจัดการประกันภัยรถยนต์</div>
-            </div>
+            <div className="sb-mark"><Ico n="shield" s={16} /></div>
+            <div className="sb-brand">ประกันคุ้มภัย</div>
           </div>
 
+          {/* เมนูหลัก */}
           <nav className="sb-nav">
-            <div className="sb-grp">เมนูหลัก</div>
             {NAV.map(it => (
-              <div key={it.id} className={`sb-item${tab === it.id ? " on" : ""}`} onClick={() => nav(it.id)}>
-                <Ico n={it.ico} s={16} />
+              <div key={it.id} className={`sb-item${tab === it.id && view==="list" ? " on" : ""}`}
+                onClick={() => nav(it.id)}>
+                <Ico n={it.ico} s={15} />
                 <span>{it.label}</span>
                 {it.badge > 0 && <span className="sb-chip">{it.badge}</span>}
               </div>
             ))}
-            <div className="sb-grp" style={{ marginTop: 12 }}>จัดการข้อมูล</div>
-            <div className="sb-item" onClick={() => { setUpload(true); setSbOpen(false) }}>
-              <Ico n="upload" s={16} />
+            <div className="sb-divider" />
+            <div className={`sb-item${view==="upload" ? " on" : ""}`}
+              onClick={() => setView("upload")}>
+              <Ico n="upload" s={15} />
               <span>อัปโหลด PDF</span>
             </div>
           </nav>
 
-          <div className="sb-foot">
-            <div className="sb-dot" />
-            <span className="sb-status-txt">ระบบทำงานปกติ</span>
+          {/* Search + ปุ่ม */}
+          <div style={{ display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0 }}>
+            <div className="srch">
+              <Ico n="search" s={14} />
+              <input placeholder="ค้นหา เลขกรมธรรม์ / ชื่อ / ทะเบียน..." value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1) }} />
+            </div>
+            <div style={{ display:"flex",alignItems:"center",gap:6 }}>
+              <div className="sb-dot" />
+              <span className="sb-status-txt">ระบบพร้อมใช้งาน</span>
+            </div>
           </div>
-        </aside>
+        </header>
 
         {/* ── MAIN ── */}
         <main className="main">
           <div className="top">
-            <button className="ham" onClick={() => setSbOpen(o => !o)}>
-              <Ico n={sbOpen ? "x" : "menu"} s={18} />
-            </button>
-
             <div className="top-l">
-              <div className="top-title">{TAB[tab].title}</div>
-              <div className="top-sub">{TAB[tab].sub}</div>
+              <div className="top-title">{TAB[tab]?.title || ""}</div>
+              <div className="top-sub">{TAB[tab]?.sub || ""}</div>
             </div>
-
-            <div className="srch">
-              <Ico n="search" s={15} />
-              <input placeholder="ค้นหา เลขกรมธรรม์ / ชื่อ / ทะเบียน..." value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1) }} />
-            </div>
-
-            <button className="btn btn-b" onClick={() => setUpload(true)}>
-              <Ico n="upload" s={14} />
-              <span className="btn-txt">อัปโหลด PDF</span>
-            </button>
           </div>
 
-          <div className="body">
+          {/* ══ LIST VIEW ══ */}
+          {view === "list" && (
+            <div className={`list-layout${previewPolicy ? " has-pvp" : ""}`}>
+            <div className="body">
 
-            {tab === "dashboard" && (
-              <>
-                <div className="stats">
-                  {[
-                    { ico: "doc",    cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
-                    { ico: "shield", cls: "gr", lbl: "คุ้มครองอยู่",       val: active,                  sub: "ยังไม่หมดอายุ" },
-                    { ico: "clock",  cls: "am", lbl: "ใกล้หมดอายุ",        val: expiring.length,         sub: "ภายใน 30 วัน" },
-                    { ico: "cash",   cls: "pu", lbl: "เบี้ยรวม (หน้านี้)", val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท" },
-                  ].map(c => (
-                    <div key={c.lbl} className="sc">
-                      <div className={`sc-ico ${c.cls}`}><Ico n={c.ico} s={20} /></div>
-                      <div className="sc-bd">
-                        <div className="sc-lbl">{c.lbl}</div>
-                        <div className="sc-val">{c.val}</div>
-                        <div className="sc-sub">{c.sub}</div>
+              {tab === "dashboard" && (
+                <>
+                  <div className="stats">
+                    {[
+                      { ico: "doc",      cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
+                      { ico: "shield",   cls: "gr", lbl: "คุ้มครองอยู่",       val: active,                  sub: "ยังไม่หมดอายุ" },
+                      { ico: "bell",     cls: "am", lbl: "ใกล้หมดอายุ",        val: expiring.length,         sub: "ภายใน 30 วัน" },
+                      { ico: "banknote", cls: "pu", lbl: "เบี้ยรวม (หน้านี้)", val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท" },
+                    ].map(c => (
+                      <div key={c.lbl} className="sc">
+                        <div className={`sc-ico ${c.cls}`}><Ico n={c.ico} s={20} /></div>
+                        <div className="sc-bd">
+                          <div className="sc-lbl">{c.lbl}</div>
+                          <div className="sc-val">{c.val}</div>
+                          <div className="sc-sub">{c.sub}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {expiring.length > 0 && (
-                  <div className="bnr am">
-                    <Ico n="warn" s={18} />
-                    <div className="bnr-body">
-                      <div className="bnr-t">มี {expiring.length} กรมธรรม์ใกล้หมดอายุภายใน 30 วัน</div>
-                      <div className="bnr-s">กรุณาติดต่อลูกค้าเพื่อต่ออายุกรมธรรม์</div>
-                    </div>
-                    <button className="btn btn-w"
-                      style={{ fontSize: 12.5, padding: "6px 12px", flexShrink: 0 }}
-                      onClick={() => setTab("expiring")}>
-                      ดูรายการ <Ico n="arrowR" s={13} />
-                    </button>
+                    ))}
                   </div>
-                )}
 
+                  {expiring.length > 0 && (
+                    <div className="bnr am">
+                      <Ico n="bell" s={18} />
+                      <div className="bnr-body">
+                        <div className="bnr-t">มี {expiring.length} กรมธรรม์ใกล้หมดอายุภายใน 30 วัน</div>
+                        <div className="bnr-s">กรุณาติดต่อลูกค้าเพื่อต่ออายุกรมธรรม์</div>
+                      </div>
+                      <button className="btn btn-w"
+                        style={{ fontSize: 13, padding: "7px 13px", flexShrink: 0 }}
+                        onClick={() => setTab("expiring")}>
+                        ดูรายการ <Ico n="arrowR" s={13} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── ช่องค้นหาใหญ่ (ใต้แดชบอร์ด) ── */}
+                  <div className="big-srch-wrap">
+                    <div className="big-srch">
+                      <Ico n="search" s={18} />
+                      <input
+                        placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
+                        value={search}
+                        onChange={e => { setSearch(e.target.value); setPage(1) }}
+                      />
+                      {search && (
+                        <button className="big-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
+                          <Ico n="x" s={15} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <PolicyTable rows={rows} loading={loading} total={total}
+                    page={page} pages={pages} setPage={setPage}
+                    onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
+                    activeId={previewPolicy?.id} pageOffset={(page-1)*LIMIT} />
+                </>
+              )}
+
+              {tab === "policies" && (
                 <PolicyTable rows={rows} loading={loading} total={total}
-                  page={page} pages={pages} setPage={setPage} onRow={setDetail} />
-              </>
-            )}
+                  page={page} pages={pages} setPage={setPage}
+                  onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
+                  activeId={previewPolicy?.id} pageOffset={(page-1)*LIMIT} />
+              )}
 
-            {tab === "policies" && (
-              <PolicyTable rows={rows} loading={loading} total={total}
-                page={page} pages={pages} setPage={setPage} onRow={setDetail} />
-            )}
+              {tab === "expiring" && (
+                <PolicyTable rows={expiring} loading={false} total={expiring.length}
+                  page={1} pages={1} setPage={() => {}}
+                  onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
+                  activeId={previewPolicy?.id} pageOffset={0} />
+              )}
+            </div>
 
-            {tab === "expiring" && (
-              <PolicyTable rows={expiring} loading={false} total={expiring.length}
-                page={1} pages={1} setPage={() => {}} onRow={setDetail} />
+            {previewPolicy && (
+              <PreviewPanel
+                p={previewPolicy}
+                onClose={() => setPreviewPolicy(null)}
+                onOpen={() => { setSelectedPolicy(previewPolicy); setView("detail") }}
+              />
             )}
+            </div>
+          )}
 
-          </div>
+          {/* ══ UPLOAD PAGE ══ */}
+          {view === "upload" && (
+            <UploadPage
+              onBack={goBack}
+              onSuccess={r => {
+                if (r.ok) { notify("บันทึกกรมธรรม์เรียบร้อยแล้ว"); load(); goBack() }
+              }}
+            />
+          )}
+
+          {/* ══ MANUAL PAGE ══ */}
+          {view === "manual" && (
+            <ManualPage
+              onBack={goBack}
+              onSuccess={r => {
+                if (r.ok) { notify("บันทึกกรมธรรม์เรียบร้อยแล้ว"); load(); goBack() }
+              }}
+            />
+          )}
+
+          {/* ══ DETAIL PAGE ══ */}
+          {view === "detail" && selectedPolicy && (
+            <DetailPage p={selectedPolicy} onBack={goBack} onUpdated={load} />
+          )}
+
         </main>
       </div>
 
-      {upload && (
-        <UploadModal onClose={() => setUpload(false)} onSuccess={r => {
-          if (r.ok) { notify("บันทึกกรมธรรม์เรียบร้อยแล้ว"); load() }
-          else notify(r.error || "เกิดข้อผิดพลาด", "error")
-        }} />
-      )}
-      {detail && <DetailModal p={detail} onClose={() => setDetail(null)} />}
-      {toast  && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
     </>
   )
 }
