@@ -166,11 +166,7 @@ export function UploadPage() {
                 <div className="bnr am" style={{ marginBottom: 0 }}>
                   <Ico n="bell" s={18} />
                   <div className="bnr-body">
-                    <div className="bnr-t">
-                      {aiWarn === "ocr_fallback"
-                        ? "AI ไม่พร้อมใช้งาน — อ่านด้วย OCR แทน (อาจไม่แม่น)"
-                        : "AI ไม่พร้อมใช้งาน — กรุณากรอกข้อมูลด้วยตนเอง"}
-                    </div>
+                    <div className="bnr-t">AI ไม่พร้อมใช้งาน — กรุณากรอกข้อมูลด้วยตนเอง</div>
                     <div className="bnr-s">กรุณาตรวจสอบและแก้ไขข้อมูลก่อนบันทึก</div>
                   </div>
                 </div>
