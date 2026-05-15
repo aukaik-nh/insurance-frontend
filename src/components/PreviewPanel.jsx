@@ -1,5 +1,5 @@
 import { Ico } from "../icons"
-import { getStatus } from "../helpers"
+import { getStatus, fmtDate } from "../helpers"
 import api from "../api"
 
 export function PreviewPanel({ p, onClose, onOpen }) {
@@ -39,20 +39,6 @@ export function PreviewPanel({ p, onClose, onOpen }) {
           <span style={{ fontSize: 12 }}>ไม่มีไฟล์ PDF</span>
         </div>
       )}
-
-      {/* ข้อมูลย่อ 2 บรรทัด */}
-      <div style={{ padding: "6px 12px", borderTop: "1px solid var(--brd)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 3 }}>
-        <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--t1)" }}>
-          <span style={{ color: "var(--t3)", flexShrink: 0 }}>เลขที่</span>
-          <span style={{ fontWeight: 600 }}>{p.policy_number || "-"}</span>
-          <span style={{ color: "var(--t3)", flexShrink: 0, marginLeft: "auto" }}>ทะเบียน</span>
-          <span style={{ fontWeight: 600 }}>{p.license_plate || "-"}</span>
-        </div>
-        <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--t1)" }}>
-          <span style={{ color: "var(--t3)", flexShrink: 0 }}>คุ้มครอง</span>
-          <span>{p.coverage_start || "-"} – {p.coverage_end || "-"}</span>
-        </div>
-      </div>
 
       {/* footer */}
       <div className="pvp-foot">
