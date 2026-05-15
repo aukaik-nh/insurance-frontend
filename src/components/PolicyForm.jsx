@@ -12,15 +12,16 @@ export function PolicyForm({ values, onChange }) {
           </div>
           <div className="fg">
             {sec.keys.map(k => {
-              const isDate = k === "coverage_start" || k === "coverage_end"
+              const DATE_KEYS = ["coverage_start", "coverage_end", "date_notify", "date_cancel", "date_policy_receive"]
+              const isDate = DATE_KEYS.includes(k)
               const isWide = k === "insured_address"
               return (
                 <div key={k} className={`fi${isWide ? " fw" : ""}`}>
                   <label>{F_LBL[k]}</label>
                   <input
+                    type={isDate ? "date" : "text"}
                     placeholder={
-                      isDate            ? "YYYY-MM-DD หรือ DD/MM/YYYY"
-                      : k === "policy_number"  ? "เช่น 10-72-69/006797"
+                      k === "policy_number"  ? "เช่น 10-72-69/006797"
                       : k === "license_plate"  ? "เช่น 1กก 1234"
                       : k === "phone"          ? "เช่น 081-234-5678"
                       : ""
