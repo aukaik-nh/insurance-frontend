@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
-import { getStatus, baht } from "../helpers"
+import { getStatus, baht, fmtDate, policyTypeLabel } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
 import { PolicyForm } from "../components/PolicyForm"
 
@@ -11,8 +11,9 @@ export function DetailPage() {
   const { state }     = useLocation()
   const { id }        = useParams()
 
-  const [p, setP]           = useState(state?.policy || null)
-  const [loading, setLoading] = useState(!state?.policy)
+  const [p, setP]           = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [fetchErr, setFetchErr] = useState(false)
 
   const [pdfFull, setPdfFull]       = useState(false)
   const [editName, setEditName]     = useState(false)
@@ -25,12 +26,14 @@ export function DetailPage() {
   // fetch ข้อมูลล่าสุดจาก API เสมอ
   useEffect(() => {
     if (!id) return
+    setLoading(true)
+    setFetchErr(false)
     api.get(`/policies/${id}`)
       .then(res => {
         setP(res.data)
         setName(res.data.pdf_filename || "")
       })
-      .catch(() => {})
+      .catch(() => setFetchErr(true))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -43,11 +46,13 @@ export function DetailPage() {
     </div>
   )
 
-  if (!p) return (
+  if (fetchErr || (!loading && !p)) return (
     <div className="page-wrap">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, flexDirection: "column", gap: 16, padding: 40 }}>
         <Ico n="doc" s={40} sw={1} />
-        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--t2)" }}>ไม่พบข้อมูลกรมธรรม์</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--t2)" }}>
+          {fetchErr ? "โหลดข้อมูลไม่สำเร็จ" : "ไม่พบข้อมูลกรมธรรม์"}
+        </div>
         <button className="btn btn-w" onClick={() => navigate("/")}>
           <Ico n="chevL" s={14} /> กลับหน้าหลัก
         </button>
@@ -131,9 +136,9 @@ export function DetailPage() {
               <>
                 {hasPdfInDb && (
                   <>
-                    <button className="btn btn-w" onClick={() => setPdfFull(true)}>
-                      <Ico n="expand" s={14} /> ดู PDF
-                    </button>
+                    <a className="btn btn-w" href={pdfViewUrl} target="_blank" rel="noreferrer">
+                      <Ico n="open" s={14} /> ดู PDF
+                    </a>
                     <a className="btn btn-b" href={pdfDownloadUrl}>
                       <Ico n="download" s={14} /> ดาวน์โหลด
                     </a>
@@ -166,12 +171,12 @@ export function DetailPage() {
                         <F label="เลขใบคำขอ"      value={p.app_number} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="ประเภทกรมธรรม์" value={p.policy_type} />
+                        <F label="ประเภทกรมธรรม์" value={policyTypeLabel(p.policy_type)} />
                         <F label="ใหม่/ต่ออายุ"   value={p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew} />
                       </div>
                       <div className="info-row">
                         <F label="รหัสตัวแทน"           value={p.agent_code} />
-                        <F label="ชื่อตัวแทน / นายหน้า" value={p.broker_name} />
+                        <F label="ชื่อตัวแทน / นายหน้า" value={p.broker_name !== p.agent_code ? p.broker_name : null} />
                       </div>
                     </div>
                   </div>
@@ -219,16 +224,16 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="cal" s={16} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="วันเริ่มต้น" value={p.coverage_start} />
-                        <F label="วันสิ้นสุด"  value={p.coverage_end} />
+                        <F label="วันเริ่มต้น" value={fmtDate(p.coverage_start)} />
+                        <F label="วันสิ้นสุด"  value={fmtDate(p.coverage_end)} />
                       </div>
                       <div className="info-row">
-                        <F label="วันแจ้งงาน"     value={p.date_notify} />
-                        <F label="วันรับกรมธรรม์" value={p.date_policy_receive} />
+                        <F label="วันแจ้งงาน"     value={fmtDate(p.date_notify)} />
+                        <F label="วันรับกรมธรรม์" value={fmtDate(p.date_policy_receive)} />
                       </div>
                       {p.date_cancel && (
                         <div className="info-row" style={{ marginTop: 12 }}>
-                          <F label="วันยกเลิก" value={p.date_cancel} />
+                          <F label="วันยกเลิก" value={fmtDate(p.date_cancel)} />
                         </div>
                       )}
                     </div>
@@ -239,14 +244,14 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="banknote" s={16} /><span className="info-card-title">เบี้ยประกัน</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="เบี้ยสุทธิ" value={`${baht(p.net_premium)} ฿`} />
-                        <F label="อากรแสตมป์" value={`${baht(p.stamp_duty)} ฿`} />
+                        <F label="เบี้ยสุทธิ" value={p.net_premium ? `${baht(p.net_premium)} ฿` : null} />
+                        <F label="อากรแสตมป์" value={p.stamp_duty  ? `${baht(p.stamp_duty)} ฿`  : null} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={`${baht(p.vat)} ฿`} />
+                        <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={p.vat ? `${baht(p.vat)} ฿` : null} />
                         <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 9, padding: "10px 13px" }}>
                           <div className="info-label">รวมเบี้ยประกัน</div>
-                          <div className="info-val hi">{baht(p.total_premium)} ฿</div>
+                          <div className="info-val hi">{p.total_premium ? `${baht(p.total_premium)} ฿` : "—"}</div>
                         </div>
                       </div>
                       {(p.third_party_per_person || p.third_party_per_accident || p.own_damage) && (
