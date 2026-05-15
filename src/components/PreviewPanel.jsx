@@ -27,22 +27,21 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         <button className="pvp-close" onClick={onClose}><Ico n="x" s={16} /></button>
       </div>
 
-      {/* PDF preview */}
       {hasPdf ? (
         <iframe
           src={pdfUrl}
           title="PDF"
-          style={{ width: "100%", flex: 1, minHeight: 200, border: "none", display: "block", background: "#f5f5f5" }}
+          style={{ width: "100%", flex: 1, minHeight: 0, border: "none", display: "block", background: "#f5f5f5" }}
         />
       ) : (
-        <div style={{ flex: 1, minHeight: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--sur2)", color: "var(--t3)" }}>
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--sur2)", color: "var(--t3)" }}>
           <Ico n="doc" s={28} sw={1} />
           <span style={{ fontSize: 12 }}>ไม่มีไฟล์ PDF</span>
         </div>
       )}
 
       {/* ข้อมูลหลัก */}
-      <div className="pvp-body" style={{ padding: "12px 14px" }}>
+      <div className="pvp-body">
         <div className="pvp-sec">
           <Row label="เลขกรมธรรม์"  value={p.policy_number} />
           <Row label="บ.ประกัน"      value={p.company_code} />
