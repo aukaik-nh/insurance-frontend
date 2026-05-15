@@ -459,7 +459,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .page-hd-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 .page-body{padding:24px;flex:1}
 
-.detail-split{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:flex-start}
+.detail-split{display:grid;grid-template-columns:1fr 480px;gap:20px;align-items:flex-start}
 .detail-aside{position:sticky;top:calc(56px + 55px + 12px)}
 .info-card{background:var(--sur);border:1px solid var(--brd);border-radius:14px;box-shadow:var(--sh0);margin-bottom:16px;overflow:hidden}
 .info-card-hd{display:flex;align-items:center;gap:10px;padding:13px 18px;background:var(--sur2);border-bottom:1px solid var(--brd)}
