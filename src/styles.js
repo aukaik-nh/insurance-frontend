@@ -164,10 +164,11 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
 .srch input::placeholder{color:var(--t3)}
 
 .list-layout{display:flex;align-items:flex-start;flex:1}
-.list-layout .body{flex:1;min-width:0;transition:all .25s}
+.list-layout .body{flex:1;min-width:0;transition:flex .25s}
+.list-layout.has-pvp{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start}
+.list-layout.has-pvp .body{flex:unset;min-width:0}
 
 .pvp{
-  width:340px;flex-shrink:0;
   background:var(--sur);border-left:1px solid var(--brd);
   position:sticky;top:108px;height:calc(100vh - 108px);
   display:flex;flex-direction:column;overflow:hidden;
