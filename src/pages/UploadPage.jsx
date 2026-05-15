@@ -46,7 +46,7 @@ export function UploadPage() {
       if (!res.data?.parsed) throw new Error("ไม่พบข้อมูลใน PDF")
       setParsed({ ...res.data.parsed, pdf_filename: f.name })
       setHasData(true)
-      setAiWarn(res.data.used_ai === false ? (res.data.ai_error || "error") : null)
+      setAiWarn(res.data.used_ai === false ? (res.data.ai_error || null) : null)
     } catch (e) {
       setErr("อ่าน PDF ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setLoading(false) }
@@ -167,13 +167,11 @@ export function UploadPage() {
                   <Ico n="bell" s={18} />
                   <div className="bnr-body">
                     <div className="bnr-t">
-                      {aiWarn === "rate_limit"
-                        ? "AI ใช้งานครบโควต้าแล้ว — กรุณากรอกข้อมูลด้วยตนเอง"
-                        : "AI ทำงานไม่ได้ — กรุณากรอกข้อมูลด้วยตนเอง"}
+                      {aiWarn === "ocr_fallback"
+                        ? "AI ไม่พร้อมใช้งาน — อ่านด้วย OCR แทน (อาจไม่แม่น)"
+                        : "AI ไม่พร้อมใช้งาน — กรุณากรอกข้อมูลด้วยตนเอง"}
                     </div>
-                    <div className="bnr-s">
-                      PDF ถูกอัปโหลดแล้ว สามารถดูเอกสารด้านขวาและกรอกข้อมูลได้เลย
-                    </div>
+                    <div className="bnr-s">กรุณาตรวจสอบและแก้ไขข้อมูลก่อนบันทึก</div>
                   </div>
                 </div>
               )}
