@@ -339,7 +339,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .b-off{background:var(--red-bg);color:var(--red);border:1px solid var(--red-brd)}
 .b-off .bdot{background:var(--red)}
 .plate{
-  display:inline-block;background:#F1F5F9;
+  display:inline-block;background:var(--sur2);
   border:1.5px solid var(--brd2);border-radius:6px;
   padding:3px 9px;font-size:13px;font-weight:700;
   color:var(--t1);letter-spacing:.5px;
