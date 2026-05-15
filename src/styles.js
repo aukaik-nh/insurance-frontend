@@ -207,10 +207,10 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
 }
 .pvp-title{font-size:15px;font-weight:700;color:var(--t1);line-height:1.3}
 .pvp-close{
-  background:none;border:1px solid var(--brd);border-radius:8px;
-  width:30px;height:30px;cursor:pointer;display:flex;
+  background:var(--sur2);border:1.5px solid var(--brd);border-radius:8px;
+  width:34px;height:34px;cursor:pointer;display:flex;
   align-items:center;justify-content:center;
-  color:var(--t3);flex-shrink:0;transition:all .15s;margin-left:auto;
+  color:var(--t1);flex-shrink:0;transition:all .15s;margin-left:auto;
 }
 .pvp-close:hover{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
 .pvp-body{overflow-y:auto;padding:8px 12px;flex-shrink:0}
