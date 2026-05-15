@@ -163,7 +163,7 @@ export function UploadPage() {
               </div>
 
               {aiWarn && (
-                <div className="bnr er" style={{ marginBottom: 0 }}>
+                <div className="bnr am" style={{ marginBottom: 0 }}>
                   <Ico n="bell" s={18} />
                   <div className="bnr-body">
                     <div className="bnr-t">
