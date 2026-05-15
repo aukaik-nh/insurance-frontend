@@ -77,63 +77,62 @@ export function ListPage({ tab }) {
         </div>
       </div>
 
-      <div className={`list-layout${previewPolicy ? " has-pvp" : ""}`}>
-        <div className="body">
-
-          {tab === "dashboard" && (
-            <>
-              <div className="stats">
-                {[
-                  { ico: "doc",      cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
-                  { ico: "shield",   cls: "gr", lbl: "คุ้มครองอยู่",       val: active,                  sub: "ยังไม่หมดอายุ" },
-                  { ico: "bell",     cls: "am", lbl: "ใกล้หมดอายุ",        val: expiring.length,         sub: "ภายใน 30 วัน" },
-                  { ico: "banknote", cls: "pu", lbl: "เบี้ยรวม (หน้านี้)", val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท" },
-                ].map(c => (
-                  <div key={c.lbl} className="sc">
-                    <div className={`sc-ico ${c.cls}`}><Ico n={c.ico} s={20} /></div>
-                    <div className="sc-bd">
-                      <div className="sc-lbl">{c.lbl}</div>
-                      <div className="sc-val">{c.val}</div>
-                      <div className="sc-sub">{c.sub}</div>
-                    </div>
+      <div className="body">
+        {tab === "dashboard" && (
+          <>
+            <div className="stats">
+              {[
+                { ico: "doc",      cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
+                { ico: "shield",   cls: "gr", lbl: "คุ้มครองอยู่",       val: active,                  sub: "ยังไม่หมดอายุ" },
+                { ico: "bell",     cls: "am", lbl: "ใกล้หมดอายุ",        val: expiring.length,         sub: "ภายใน 30 วัน" },
+                { ico: "banknote", cls: "pu", lbl: "เบี้ยรวม (หน้านี้)", val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท" },
+              ].map(c => (
+                <div key={c.lbl} className="sc">
+                  <div className={`sc-ico ${c.cls}`}><Ico n={c.ico} s={20} /></div>
+                  <div className="sc-bd">
+                    <div className="sc-lbl">{c.lbl}</div>
+                    <div className="sc-val">{c.val}</div>
+                    <div className="sc-sub">{c.sub}</div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+
+            {expiring.length > 0 && (
+              <div className="bnr am">
+                <Ico n="bell" s={18} />
+                <div className="bnr-body">
+                  <div className="bnr-t">มี {expiring.length} กรมธรรม์ใกล้หมดอายุภายใน 30 วัน</div>
+                  <div className="bnr-s">กรุณาติดต่อลูกค้าเพื่อต่ออายุกรมธรรม์</div>
+                </div>
+                <button className="btn btn-w"
+                  style={{ fontSize: 13, padding: "7px 13px", flexShrink: 0 }}
+                  onClick={() => navigate("/expiring")}>
+                  ดูรายการ <Ico n="arrowR" s={13} />
+                </button>
               </div>
+            )}
 
-              {expiring.length > 0 && (
-                <div className="bnr am">
-                  <Ico n="bell" s={18} />
-                  <div className="bnr-body">
-                    <div className="bnr-t">มี {expiring.length} กรมธรรม์ใกล้หมดอายุภายใน 30 วัน</div>
-                    <div className="bnr-s">กรุณาติดต่อลูกค้าเพื่อต่ออายุกรมธรรม์</div>
-                  </div>
-                  <button className="btn btn-w"
-                    style={{ fontSize: 13, padding: "7px 13px", flexShrink: 0 }}
-                    onClick={() => navigate("/expiring")}>
-                    ดูรายการ <Ico n="arrowR" s={13} />
+            {/* big search */}
+            <div className="big-srch-wrap">
+              <div className="big-srch">
+                <Ico n="search" s={18} />
+                <input
+                  placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setPage(1) }}
+                />
+                {search && (
+                  <button className="big-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
+                    <Ico n="x" s={15} />
                   </button>
-                </div>
-              )}
-
-              {/* big search */}
-              <div className="big-srch-wrap">
-                <div className="big-srch">
-                  <Ico n="search" s={18} />
-                  <input
-                    placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
-                    value={search}
-                    onChange={e => { setSearch(e.target.value); setPage(1) }}
-                  />
-                  {search && (
-                    <button className="big-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
-                      <Ico n="x" s={15} />
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
-            </>
-          )}
+            </div>
+          </>
+        )}
 
+        <div className={`table-pvp-wrap${previewPolicy ? " has-pvp" : ""}`}>
           <PolicyTable
             rows={displayRows}
             loading={loading}
@@ -145,15 +144,15 @@ export function ListPage({ tab }) {
             activeId={previewPolicy?.id}
             pageOffset={tab === "expiring" ? 0 : (page - 1) * LIMIT}
           />
-        </div>
 
-        {previewPolicy && (
-          <PreviewPanel
-            p={previewPolicy}
-            onClose={() => setPreviewPolicy(null)}
-            onOpen={() => navigate(`/policies/${previewPolicy.id}`, { state: { policy: previewPolicy } })}
-          />
-        )}
+          {previewPolicy && (
+            <PreviewPanel
+              p={previewPolicy}
+              onClose={() => setPreviewPolicy(null)}
+              onOpen={() => navigate(`/policies/${previewPolicy.id}`, { state: { policy: previewPolicy } })}
+            />
+          )}
+        </div>
       </div>
     </>
   )

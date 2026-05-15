@@ -50,7 +50,7 @@ function Layout() {
         <header className="sb" style={{ position: "relative" }}>
           {/* โลโก้ */}
           <div className="sb-logo" style={{ cursor: "pointer" }} onClick={() => navTo("/")}>
-            <img src="/logo.png" alt="ประกันคุ้มภัย" style={{ height: 36, width: 36, objectFit: "contain" }} />
+            <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย" style={{ height: 52, width: 52, objectFit: "contain" }} />
             <div className="sb-brand">ประกันคุ้มภัย</div>
           </div>
 
