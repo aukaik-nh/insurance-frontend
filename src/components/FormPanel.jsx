@@ -27,22 +27,23 @@ export function FormPanel({ open, onToggle, loading, parsed, setParsed }) {
 
       {open && (
         <div className="form-panel-body">
-          {loading && (
-            <div className="form-overlay">
-              <div style={{ textAlign: "center" }}>
-                <div className="spin" style={{ margin: "0 auto 10px" }} />
-                <div style={{ fontWeight: 600, color: "var(--t1)" }}>AI กำลังอ่าน PDF…</div>
-                <div style={{ fontSize: 13, color: "var(--t3)", marginTop: 4 }}>อาจใช้เวลา 5–10 วินาที</div>
-              </div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "32px 20px" }}>
+              <div className="spin" style={{ margin: "0 auto 12px" }} />
+              <div style={{ fontWeight: 600, color: "var(--t1)" }}>AI กำลังอ่าน PDF…</div>
+              <div style={{ fontSize: 13, color: "var(--t3)", marginTop: 4 }}>อาจใช้เวลา 5–10 วินาที</div>
             </div>
+          ) : (
+            <>
+              {parsed.pdf_size != null && (
+                <div className="fi fw" style={{ background: "var(--blue-bg)", borderColor: "var(--blue-mid)", marginBottom: 14 }}>
+                  <label>ขนาดไฟล์</label>
+                  <span className="fi-v">{(parsed.pdf_size / 1024).toFixed(0)} KB</span>
+                </div>
+              )}
+              <PolicyForm values={parsed} onChange={setParsed} />
+            </>
           )}
-          {parsed.pdf_size != null && (
-            <div className="fi fw" style={{ background: "var(--blue-bg)", borderColor: "var(--blue-mid)", marginBottom: 14 }}>
-              <label>ขนาดไฟล์</label>
-              <span className="fi-v">{(parsed.pdf_size / 1024).toFixed(0)} KB</span>
-            </div>
-          )}
-          <PolicyForm values={parsed} onChange={setParsed} />
         </div>
       )}
     </div>

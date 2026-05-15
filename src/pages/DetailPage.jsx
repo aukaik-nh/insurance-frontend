@@ -158,73 +158,66 @@ export function DetailPage() {
                 </div>
               </div>
 
-              {/* PDF metadata */}
-              {hasPdfInDb && (
+              {/* หมายเหตุ */}
+              {p.notes && (
                 <div className="info-card">
-                  <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">ไฟล์ PDF กรมธรรม์</span></div>
+                  <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">หมายเหตุ</span></div>
                   <div className="info-card-bd">
-                    <div className="info-label" style={{ marginBottom: 6 }}>ชื่อไฟล์</div>
-                    {editName ? (
-                      <div style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 10 }}>
-                        <input value={name} onChange={e => setName(e.target.value)} autoFocus
-                          placeholder="policy.pdf"
-                          style={{ flex: 1, border: "1.5px solid var(--brd2)", borderRadius: 8, padding: "7px 11px", fontSize: 14, fontFamily: "inherit", color: "var(--t1)", outline: "none" }}
-                          onFocus={e => e.target.style.borderColor = "var(--blue)"}
-                          onBlur={e => e.target.style.borderColor = "var(--brd2)"}
-                        />
-                        <button className="btn btn-b" onClick={saveName} disabled={savingName}
-                          style={{ padding: "7px 13px", fontSize: 13 }}>
-                          <Ico n="check" s={13} /> {savingName ? "..." : "บันทึก"}
-                        </button>
-                        <button className="btn btn-w"
-                          onClick={() => { setEditName(false); setName(p.pdf_filename || "") }}
-                          style={{ padding: "7px 11px", fontSize: 13 }}>
-                          <Ico n="x" s={13} />
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
-                        <span className="info-val" style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {p.pdf_filename || "—"}
-                        </span>
-                        <button className="btn btn-w" onClick={() => setEditName(true)}
-                          style={{ padding: "6px 12px", fontSize: 13 }}>
-                          <Ico n="pen" s={13} /> แก้ไขชื่อ
-                        </button>
-                      </div>
-                    )}
-                    {p.pdf_size && (
-                      <div style={{ fontSize: 12, color: "var(--t3)" }}>
-                        {(p.pdf_size / 1024).toFixed(0)} KB · เก็บในฐานข้อมูล
-                      </div>
-                    )}
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
-                      <button className="btn btn-w" onClick={() => setPdfFull(true)}>
-                        <Ico n="expand" s={14} /> เต็มจอ
-                      </button>
-                      <a className="btn btn-w" href={pdfViewUrl} target="_blank" rel="noreferrer">
-                        <Ico n="open" s={14} /> แท็บใหม่
-                      </a>
-                      <a className="btn btn-b" href={pdfDownloadUrl}>
-                        <Ico n="download" s={14} /> ดาวน์โหลด
-                      </a>
-                    </div>
+                    <div className="info-val" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{p.notes}</div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* right: PDF preview (sticky) */}
+            {/* right: PDF ทั้งหมด (sticky) */}
             <div className="detail-aside">
               {hasPdfInDb ? (
                 <div className="pdf-preview-wrap">
-                  <div className="pdf-preview-bar">
-                    <Ico n="doc" s={13} />
-                    <span className="pdf-fname">{p.pdf_filename || "PDF"}</span>
-                    {p.pdf_size && <span className="pdf-size">{(p.pdf_size / 1024).toFixed(0)} KB</span>}
-                    <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ">
-                      <Ico n="expand" s={14} />
-                    </button>
+                  {/* header: ชื่อไฟล์ + ปุ่ม */}
+                  <div className="pdf-preview-bar" style={{ flexDirection: "column", alignItems: "stretch", gap: 8, padding: "12px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Ico n="doc" s={13} />
+                      {editName ? (
+                        <>
+                          <input value={name} onChange={e => setName(e.target.value)} autoFocus
+                            placeholder="policy.pdf"
+                            style={{ flex: 1, border: "1.5px solid var(--blue)", borderRadius: 7, padding: "5px 9px", fontSize: 13, fontFamily: "inherit", color: "var(--t1)", background: "var(--blue-bg)", outline: "none" }}
+                          />
+                          <button className="btn btn-b" onClick={saveName} disabled={savingName}
+                            style={{ padding: "5px 10px", fontSize: 12 }}>
+                            <Ico n="check" s={12} /> {savingName ? "..." : "บันทึก"}
+                          </button>
+                          <button className="btn btn-w"
+                            onClick={() => { setEditName(false); setName(p.pdf_filename || "") }}
+                            style={{ padding: "5px 8px", fontSize: 12 }}>
+                            <Ico n="x" s={12} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="pdf-fname">{p.pdf_filename || "PDF"}</span>
+                          {p.pdf_size && <span className="pdf-size">{(p.pdf_size / 1024).toFixed(0)} KB</span>}
+                          <button className="pdf-zoom-btn" onClick={() => setEditName(true)} title="แก้ไขชื่อ">
+                            <Ico n="pen" s={13} />
+                          </button>
+                          <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ">
+                            <Ico n="expand" s={14} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {!editName && (
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <a className="btn btn-w" href={pdfViewUrl} target="_blank" rel="noreferrer"
+                          style={{ flex: 1, justifyContent: "center", fontSize: 13, padding: "6px 10px" }}>
+                          <Ico n="open" s={13} /> แท็บใหม่
+                        </a>
+                        <a className="btn btn-b" href={pdfDownloadUrl}
+                          style={{ flex: 1, justifyContent: "center", fontSize: 13, padding: "6px 10px" }}>
+                          <Ico n="download" s={13} /> ดาวน์โหลด
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <iframe className="pdf-iframe" src={pdfViewUrl} title="PDF Preview"
                     style={{ height: 560 }} />

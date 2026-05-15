@@ -112,7 +112,8 @@ export function UploadPage() {
 
               {file && (
                 <div className="fname-row">
-                  <label>ชื่อไฟล์</label>
+                  <Ico n="pen" s={13} />
+                  <label>ชื่อไฟล์ <span style={{ color: "var(--blue)", fontWeight: 400, fontSize: 11 }}>(แก้ไขได้)</span></label>
                   <input value={filename} onChange={e => setFilename(e.target.value)} placeholder={file.name} />
                   {filename !== file.name && (
                     <button onClick={() => setFilename(file.name)}>รีเซ็ต</button>

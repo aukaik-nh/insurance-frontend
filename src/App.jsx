@@ -71,11 +71,6 @@ function Layout() {
               <Ico n="upload" s={15} />
               <span>อัปโหลด PDF</span>
             </div>
-            <div className={`sb-item${path === "/manual" ? " on" : ""}`}
-              onClick={() => navigate("/manual")}>
-              <Ico n="pen" s={15} />
-              <span>กรอกเอง</span>
-            </div>
           </nav>
 
           {/* Right area */}
@@ -115,11 +110,6 @@ function Layout() {
                 onClick={() => { navigate("/upload"); setMobileMenu(false) }}>
                 <Ico n="upload" s={18} />
                 <span>อัปโหลด PDF</span>
-              </div>
-              <div className={`mob-item${path === "/manual" ? " on" : ""}`}
-                onClick={() => { navigate("/manual"); setMobileMenu(false) }}>
-                <Ico n="pen" s={18} />
-                <span>กรอกเอง</span>
               </div>
               <div className="mob-divider" />
               <div className="mob-search">

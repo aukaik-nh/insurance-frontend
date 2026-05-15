@@ -37,9 +37,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
               <th>เลขกรมธรรม์</th>
               <th>ผู้เอาประกัน</th>
               <th>ทะเบียน</th>
-              <th>ยี่ห้อ / รุ่น</th>
               <th>วันหมดอายุ</th>
-              <th style={{ textAlign: "right" }}>เบี้ยรวม (฿)</th>
               <th>สถานะ</th>
             </tr>
           </thead>
@@ -54,9 +52,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>
                   <td><span className="plate">{r.license_plate || "—"}</span></td>
-                  <td>{[r.car_make, r.car_model].filter(Boolean).join(" ") || "—"}</td>
                   <td style={{ color: "var(--t3)", fontSize: 13 }}>{r.coverage_end || "—"}</td>
-                  <td className="tr">{r.total_premium ? Number(r.total_premium).toLocaleString("th-TH") : "—"}</td>
                   <td><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
                 </tr>
               )
