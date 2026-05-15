@@ -605,7 +605,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 }
 .drop-h:hover,.drop-h.drag{border-color:var(--blue);background:var(--blue-bg)}
 .drop-h-ic{
-  width:64px;height:64px;border-radius:16px;background:#DDE5EF;
+  width:64px;height:64px;border-radius:16px;background:var(--brd);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;
 }
 .drop-h:hover .drop-h-ic,.drop-h.drag .drop-h-ic{background:var(--blue-mid)}
@@ -652,9 +652,8 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 }
 .drop-toggle:hover{background:var(--brd);color:var(--t1)}
 .drop-body{
-  border-top:1px dashed var(--brd2);
   display:flex;align-items:center;justify-content:center;
-  min-height:240px;cursor:pointer;
+  min-height:220px;cursor:pointer;padding:16px;
 }
 .drop-body-inner{
   display:flex;flex-direction:column;align-items:center;
