@@ -143,13 +143,32 @@ export function DetailPage() {
                 </div>
               ) : (
                 <>
+                  {/* ข้อมูลกรมธรรม์ */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
+                    <div className="info-card-bd">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
+                        <F label="รหัสบริษัท"      value={p.company_code} />
+                        <F label="เลขใบคำขอ"       value={p.app_number} />
+                      </div>
+                      <div className="info-row" style={{ marginBottom: 12 }}>
+                        <F label="ประเภทกรมธรรม์"  value={p.policy_type} />
+                        <F label="ใหม่/ต่ออายุ"    value={p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew} />
+                      </div>
+                      <div className="info-row">
+                        <F label="รหัสตัวแทน"            value={p.agent_code} />
+                        <F label="ชื่อตัวแทน / นายหน้า"  value={p.broker_name} />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* ผู้เอาประกัน */}
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="person" s={16} /><span className="info-card-title">ผู้เอาประกัน</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="ชื่อ-นามสกุล"          value={p.insured_name} />
-                        <F label="ชื่อตัวแทน / นายหน้า"  value={p.broker_name} />
+                        <F label="ชื่อ-นามสกุล"   value={p.insured_name} />
+                        <F label="เบอร์โทรศัพท์"  value={p.phone} />
                       </div>
                       <div className="info-row fw">
                         <F label="ที่อยู่" value={p.insured_address} />
@@ -165,14 +184,18 @@ export function DetailPage() {
                         <F label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
                         <F label="ปีรถ" value={p.car_year} />
                       </div>
-                      <div className="info-row">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
                         <div className="info-field">
                           <div className="info-label">ทะเบียนรถ</div>
                           <div className="info-val">
                             {p.license_plate ? <span className="plate">{p.license_plate}</span> : "—"}
                           </div>
                         </div>
-                        <F label="เลขตัวถัง" value={p.chassis_no} mono />
+                        <F label="จังหวัดทะเบียน" value={p.license_province} />
+                      </div>
+                      <div className="info-row">
+                        <F label="เลขตัวถัง"         value={p.chassis_no} mono />
+                        <F label="ทุนเอาประกัน (฿)"  value={p.sum_insured ? `${baht(p.sum_insured)} ฿` : null} />
                       </div>
                     </div>
                   </div>
@@ -181,10 +204,19 @@ export function DetailPage() {
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="cal" s={16} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
                     <div className="info-card-bd">
-                      <div className="info-row">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
                         <F label="วันเริ่มต้น" value={p.coverage_start} />
                         <F label="วันสิ้นสุด"  value={p.coverage_end} />
                       </div>
+                      <div className="info-row">
+                        <F label="วันแจ้งงาน"       value={p.date_notify} />
+                        <F label="วันรับกรมธรรม์"   value={p.date_policy_receive} />
+                      </div>
+                      {p.date_cancel && (
+                        <div className="info-row" style={{ marginTop: 12 }}>
+                          <F label="วันยกเลิก" value={p.date_cancel} />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -196,13 +228,20 @@ export function DetailPage() {
                         <F label="เบี้ยสุทธิ"  value={`${baht(p.net_premium)} ฿`} />
                         <F label="อากรแสตมป์"  value={`${baht(p.stamp_duty)} ฿`} />
                       </div>
-                      <div className="info-row">
+                      <div className="info-row" style={{ marginBottom: 12 }}>
                         <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={`${baht(p.vat)} ฿`} />
                         <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 9, padding: "10px 13px" }}>
                           <div className="info-label">รวมเบี้ยประกัน</div>
                           <div className="info-val hi">{baht(p.total_premium)} ฿</div>
                         </div>
                       </div>
+                      {(p.third_party_per_person || p.third_party_per_accident || p.own_damage) && (
+                        <div className="info-row">
+                          <F label="บุคคลภายนอก/คน"   value={p.third_party_per_person  ? `${baht(p.third_party_per_person)} ฿`  : null} />
+                          <F label="บุคคลภายนอก/ครั้ง" value={p.third_party_per_accident ? `${baht(p.third_party_per_accident)} ฿` : null} />
+                          <F label="ความเสียหายต่อรถ"  value={p.own_damage               ? `${baht(p.own_damage)} ฿`               : null} />
+                        </div>
+                      )}
                     </div>
                   </div>
 
