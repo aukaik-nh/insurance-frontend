@@ -168,11 +168,11 @@ export function UploadPage() {
                   <div className="bnr-body">
                     <div className="bnr-t">
                       {aiWarn === "rate_limit"
-                        ? "AI ถึง limit รายวันแล้ว — ข้อมูลนี้อ่านด้วย OCR (ไม่ใช่ AI)"
-                        : "AI ทำงานไม่ได้ — ข้อมูลนี้อ่านด้วย OCR (ไม่ใช่ AI)"}
+                        ? "AI ใช้งานครบโควต้าแล้ว — กรุณากรอกข้อมูลด้วยตนเอง"
+                        : "AI ทำงานไม่ได้ — กรุณากรอกข้อมูลด้วยตนเอง"}
                     </div>
-                    <div className="bnr-s" style={{ color: "var(--red)" }}>
-                      กรุณาตรวจสอบและแก้ไขข้อมูลด้านล่างก่อนบันทึก
+                    <div className="bnr-s">
+                      PDF ถูกอัปโหลดแล้ว สามารถดูเอกสารด้านขวาและกรอกข้อมูลได้เลย
                     </div>
                   </div>
                 </div>
