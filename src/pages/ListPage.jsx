@@ -97,7 +97,6 @@ export function ListPage({ tab }) {
 
           {tab === "dashboard" && (
             <>
-              <img src="/image.png" alt="logo" style={{ maxWidth: "100%", marginBottom: 16 }} />
               <div className="stats">
                 {[
                   { ico: "doc",      cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
