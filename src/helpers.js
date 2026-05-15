@@ -11,6 +11,29 @@ export const baht = n => n
   ? Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   : "—"
 
+const MONTH_TH = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+                       "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
+
+// แปลง "2025-06-24" → "24 มิ.ย. 2568"  (พ.ศ.)
+export const fmtDate = iso => {
+  if (!iso) return null
+  const parts = String(iso).split("-")
+  if (parts.length < 3) return iso
+  const [y, m, d] = parts.map(Number)
+  if (!y || !m || !d || m > 12) return iso
+  return `${d} ${MONTH_TH[m]} ${y + 543}`
+}
+
+export const POLICY_TYPE_LABEL = {
+  M:       "ประกันรถยนต์",
+  P:       "พ.ร.บ.",
+  ASSET:   "ทรัพย์สิน",
+  TA:      "ประกันเดินทาง",
+  STY:     "ประกันรถยนต์",
+  โจรกรรม: "โจรกรรม",
+}
+export const policyTypeLabel = t => t ? (POLICY_TYPE_LABEL[t] || t) : null
+
 export const F_SECS = [
   {
     label: "ข้อมูลกรมธรรม์",
@@ -18,14 +41,14 @@ export const F_SECS = [
     keys: ["policy_number", "company_code", "app_number", "policy_type", "new_renew"],
   },
   {
-    label: "ตัวแทน / นายหน้า",
-    ico: "person",
-    keys: ["agent_code", "broker_name", "broker_license"],
-  },
-  {
     label: "ผู้เอาประกัน",
     ico: "person",
     keys: ["insured_name", "phone", "insured_address"],
+  },
+  {
+    label: "ตัวแทน / นายหน้า",
+    ico: "person",
+    keys: ["agent_code", "broker_name", "broker_license"],
   },
   {
     label: "ข้อมูลรถ",

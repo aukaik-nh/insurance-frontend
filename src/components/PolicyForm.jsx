@@ -1,6 +1,17 @@
 import { Ico } from "../icons"
 import { F_SECS, F_LBL } from "../helpers"
 
+const DATE_KEYS = ["coverage_start", "coverage_end", "date_notify", "date_cancel", "date_policy_receive"]
+
+// "2016-12-03" → "03/12/2559"
+function toThai(iso) {
+  if (!iso) return ""
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return iso
+  return `${m[3]}/${m[2]}/${parseInt(m[1]) + 543}`
+}
+
+
 export function PolicyForm({ values, onChange }) {
   return (
     <>
@@ -12,21 +23,22 @@ export function PolicyForm({ values, onChange }) {
           </div>
           <div className="fg">
             {sec.keys.map(k => {
-              const DATE_KEYS = ["coverage_start", "coverage_end", "date_notify", "date_cancel", "date_policy_receive"]
               const isDate = DATE_KEYS.includes(k)
               const isWide = k === "insured_address"
+              const rawVal = values[k] ?? ""
               return (
                 <div key={k} className={`fi${isWide ? " fw" : ""}`}>
                   <label>{F_LBL[k]}</label>
                   <input
-                    type={isDate ? "date" : "text"}
+                    type="text"
                     placeholder={
-                      k === "policy_number"  ? "เช่น 10-72-69/006797"
+                      isDate            ? "DD/MM/YYYY"
+                      : k === "policy_number"  ? "เช่น 10-72-69/006797"
                       : k === "license_plate"  ? "เช่น 1กก 1234"
                       : k === "phone"          ? "เช่น 081-234-5678"
                       : ""
                     }
-                    value={values[k] ?? ""}
+                    value={isDate ? toThai(rawVal) : rawVal}
                     onChange={e => onChange({ ...values, [k]: e.target.value })}
                   />
                 </div>
