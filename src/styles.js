@@ -213,6 +213,11 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
   color:var(--t1);flex-shrink:0;transition:all .15s;margin-left:auto;
 }
 .pvp-close:hover{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
+.pvp-backdrop{display:none}
+@media(max-width:767px){
+  .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
+  .pvp-close{width:44px;height:44px}
+}
 .pvp-body{overflow-y:auto;padding:8px 12px;flex-shrink:0}
 .pvp-sec{margin-bottom:4px}
 .pvp-sec-title{

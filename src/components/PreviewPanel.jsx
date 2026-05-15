@@ -15,6 +15,8 @@ export function PreviewPanel({ p, onClose, onOpen }) {
   ) : null
 
   return (
+    <>
+      <div className="pvp-backdrop" onClick={onClose} />
     <div className="pvp">
       {/* header */}
       <div className="pvp-hd">
@@ -61,5 +63,6 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         </button>
       </div>
     </div>
+    </>
   )
 }
