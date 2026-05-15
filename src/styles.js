@@ -165,7 +165,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
 
 .list-layout{display:flex;align-items:flex-start;flex:1}
 .list-layout .body{flex:1;min-width:0;transition:flex .25s}
-.list-layout.has-pvp{display:grid;grid-template-columns:1fr 1fr;align-items:flex-start}
+.list-layout.has-pvp{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
 .list-layout.has-pvp .body{flex:unset;min-width:0}
 
 .pvp{
@@ -173,6 +173,10 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
   position:sticky;top:108px;height:calc(100vh - 108px);
   display:flex;flex-direction:column;overflow:hidden;
   animation:pvp-in .2s ease;
+}
+.list-layout.has-pvp .pvp{
+  position:static;height:auto;min-height:unset;
+  border-radius:0 12px 12px 0;border:1px solid var(--brd);border-left:none;
 }
 @keyframes pvp-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 @media(max-width:767px){

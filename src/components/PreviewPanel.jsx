@@ -32,10 +32,10 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         <iframe
           src={pdfUrl}
           title="PDF"
-          style={{ width: "100%", height: 320, border: "none", display: "block", background: "#f5f5f5" }}
+          style={{ width: "100%", flex: 1, minHeight: 200, border: "none", display: "block", background: "#f5f5f5" }}
         />
       ) : (
-        <div style={{ height: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--sur2)", color: "var(--t3)" }}>
+        <div style={{ flex: 1, minHeight: 120, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--sur2)", color: "var(--t3)" }}>
           <Ico n="doc" s={28} sw={1} />
           <span style={{ fontSize: 12 }}>ไม่มีไฟล์ PDF</span>
         </div>
