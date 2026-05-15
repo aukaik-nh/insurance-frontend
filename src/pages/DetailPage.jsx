@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useLocation, useParams } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
 import { getStatus, baht } from "../helpers"
@@ -7,37 +7,56 @@ import { PdfLightbox } from "../components/PdfLightbox"
 import { PolicyForm } from "../components/PolicyForm"
 
 export function DetailPage() {
-  const navigate  = useNavigate()
-  const { state } = useLocation()
-  const p0        = state?.policy
+  const navigate      = useNavigate()
+  const { state }     = useLocation()
+  const { id }        = useParams()
 
-  const [p, setP]               = useState(p0)
-  const [pdfFull, setPdfFull]   = useState(false)
-  const [editName, setEditName] = useState(false)
-  const [name, setName]         = useState(p0?.pdf_filename || "")
+  const [p, setP]           = useState(state?.policy || null)
+  const [loading, setLoading] = useState(!state?.policy)
+
+  const [pdfFull, setPdfFull]       = useState(false)
+  const [editName, setEditName]     = useState(false)
+  const [name, setName]             = useState(state?.policy?.pdf_filename || "")
   const [savingName, setSavingName] = useState(false)
+  const [editMode, setEditMode]     = useState(false)
+  const [editVals, setEditVals]     = useState({})
+  const [saving, setSaving]         = useState(false)
 
-  const [editMode, setEditMode]   = useState(false)
-  const [editVals, setEditVals]   = useState({})
-  const [saving, setSaving]       = useState(false)
+  // fetch ข้อมูลล่าสุดจาก API เสมอ
+  useEffect(() => {
+    if (!id) return
+    api.get(`/policies/${id}`)
+      .then(res => {
+        setP(res.data)
+        setName(res.data.pdf_filename || "")
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [id])
 
-  if (!p) {
-    return (
-      <div className="page-wrap">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, flexDirection: "column", gap: 16, padding: 40 }}>
-          <Ico n="doc" s={40} sw={1} />
-          <div style={{ fontSize: 16, fontWeight: 600, color: "var(--t2)" }}>ไม่พบข้อมูลกรมธรรม์</div>
-          <button className="btn btn-w" onClick={() => navigate("/")}>
-            <Ico n="chevL" s={14} /> กลับหน้าหลัก
-          </button>
-        </div>
+  if (loading) return (
+    <div className="page-wrap">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: 12, padding: 40 }}>
+        <div className="spin" />
+        <div style={{ color: "var(--t2)" }}>กำลังโหลดข้อมูล…</div>
       </div>
-    )
-  }
+    </div>
+  )
+
+  if (!p) return (
+    <div className="page-wrap">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, flexDirection: "column", gap: 16, padding: 40 }}>
+        <Ico n="doc" s={40} sw={1} />
+        <div style={{ fontSize: 16, fontWeight: 600, color: "var(--t2)" }}>ไม่พบข้อมูลกรมธรรม์</div>
+        <button className="btn btn-w" onClick={() => navigate("/")}>
+          <Ico n="chevL" s={14} /> กลับหน้าหลัก
+        </button>
+      </div>
+    </div>
+  )
 
   const st = getStatus(p.coverage_end)
 
-  /* ── PDF filename save ── */
   const saveName = async () => {
     setSavingName(true)
     try {
@@ -49,11 +68,7 @@ export function DetailPage() {
     } finally { setSavingName(false) }
   }
 
-  /* ── Edit mode ── */
-  const startEdit = () => {
-    setEditVals({ ...p })
-    setEditMode(true)
-  }
+  const startEdit = () => { setEditVals({ ...p }); setEditMode(true) }
   const cancelEdit = () => setEditMode(false)
 
   const saveEdit = async () => {
@@ -135,7 +150,6 @@ export function DetailPage() {
         <div className="page-body">
           <div className="detail-split">
 
-            {/* left: info cards or edit form */}
             <div>
               {editMode ? (
                 <div className="info-card" style={{ padding: "18px 18px 8px" }}>
@@ -148,16 +162,16 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="รหัสบริษัท"      value={p.company_code} />
-                        <F label="เลขใบคำขอ"       value={p.app_number} />
+                        <F label="รหัสบริษัท"     value={p.company_code} />
+                        <F label="เลขใบคำขอ"      value={p.app_number} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="ประเภทกรมธรรม์"  value={p.policy_type} />
-                        <F label="ใหม่/ต่ออายุ"    value={p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew} />
+                        <F label="ประเภทกรมธรรม์" value={p.policy_type} />
+                        <F label="ใหม่/ต่ออายุ"   value={p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew} />
                       </div>
                       <div className="info-row">
-                        <F label="รหัสตัวแทน"            value={p.agent_code} />
-                        <F label="ชื่อตัวแทน / นายหน้า"  value={p.broker_name} />
+                        <F label="รหัสตัวแทน"           value={p.agent_code} />
+                        <F label="ชื่อตัวแทน / นายหน้า" value={p.broker_name} />
                       </div>
                     </div>
                   </div>
@@ -167,8 +181,8 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="person" s={16} /><span className="info-card-title">ผู้เอาประกัน</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="ชื่อ-นามสกุล"   value={p.insured_name} />
-                        <F label="เบอร์โทรศัพท์"  value={p.phone} />
+                        <F label="ชื่อ-นามสกุล"  value={p.insured_name} />
+                        <F label="เบอร์โทรศัพท์" value={p.phone} />
                       </div>
                       <div className="info-row fw">
                         <F label="ที่อยู่" value={p.insured_address} />
@@ -182,7 +196,7 @@ export function DetailPage() {
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
                         <F label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
-                        <F label="ปีรถ" value={p.car_year} />
+                        <F label="ปีรถ"           value={p.car_year} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 12 }}>
                         <div className="info-field">
@@ -194,8 +208,8 @@ export function DetailPage() {
                         <F label="จังหวัดทะเบียน" value={p.license_province} />
                       </div>
                       <div className="info-row">
-                        <F label="เลขตัวถัง"         value={p.chassis_no} mono />
-                        <F label="ทุนเอาประกัน (฿)"  value={p.sum_insured ? `${baht(p.sum_insured)} ฿` : null} />
+                        <F label="เลขตัวถัง"        value={p.chassis_no} mono />
+                        <F label="ทุนเอาประกัน (฿)" value={p.sum_insured ? `${baht(p.sum_insured)} ฿` : null} />
                       </div>
                     </div>
                   </div>
@@ -209,8 +223,8 @@ export function DetailPage() {
                         <F label="วันสิ้นสุด"  value={p.coverage_end} />
                       </div>
                       <div className="info-row">
-                        <F label="วันแจ้งงาน"       value={p.date_notify} />
-                        <F label="วันรับกรมธรรม์"   value={p.date_policy_receive} />
+                        <F label="วันแจ้งงาน"     value={p.date_notify} />
+                        <F label="วันรับกรมธรรม์" value={p.date_policy_receive} />
                       </div>
                       {p.date_cancel && (
                         <div className="info-row" style={{ marginTop: 12 }}>
@@ -225,8 +239,8 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="banknote" s={16} /><span className="info-card-title">เบี้ยประกัน</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 12 }}>
-                        <F label="เบี้ยสุทธิ"  value={`${baht(p.net_premium)} ฿`} />
-                        <F label="อากรแสตมป์"  value={`${baht(p.stamp_duty)} ฿`} />
+                        <F label="เบี้ยสุทธิ" value={`${baht(p.net_premium)} ฿`} />
+                        <F label="อากรแสตมป์" value={`${baht(p.stamp_duty)} ฿`} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 12 }}>
                         <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={`${baht(p.vat)} ฿`} />
@@ -245,7 +259,7 @@ export function DetailPage() {
                     </div>
                   </div>
 
-                  {/* หมายเหตุ — always shown */}
+                  {/* หมายเหตุ */}
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">หมายเหตุ</span></div>
                     <div className="info-card-bd">
@@ -259,7 +273,7 @@ export function DetailPage() {
               )}
             </div>
 
-            {/* right: PDF (sticky) */}
+            {/* right: PDF */}
             <div className="detail-aside">
               {hasPdfInDb ? (
                 <div className="pdf-preview-wrap">
