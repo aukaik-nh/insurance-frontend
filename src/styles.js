@@ -167,7 +167,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
 .list-layout .body{flex:1;min-width:0;transition:all .25s}
 
 .pvp{
-  width:440px;flex-shrink:0;
+  width:560px;flex-shrink:0;
   background:var(--sur);border-left:1px solid var(--brd);
   position:sticky;top:108px;height:calc(100vh - 108px);
   display:flex;flex-direction:column;overflow:hidden;
