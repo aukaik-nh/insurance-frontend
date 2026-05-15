@@ -37,6 +37,19 @@ const CSS = `
   --sh3:0 20px 50px rgba(15,23,42,.20),0 4px 12px rgba(15,23,42,.08);
   --r:10px;
 }
+body.dark{
+  --bg:#0F172A;--sur:#1E293B;--sur2:#162032;
+  --brd:#2D3F55;--brd2:#3D5166;
+  --t1:#F1F5F9;--t2:#94A3B8;--t3:#64748B;
+  --sh0:0 1px 3px rgba(0,0,0,.25);
+  --sh1:0 2px 6px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
+  --sh2:0 4px 12px rgba(0,0,0,.4),0 2px 4px rgba(0,0,0,.2);
+  --sh3:0 20px 50px rgba(0,0,0,.55),0 4px 12px rgba(0,0,0,.3);
+  --blue-bg:rgba(30,111,229,.15);--blue-mid:rgba(30,111,229,.35);
+  --green-bg:rgba(13,156,107,.12);--green-brd:rgba(13,156,107,.3);
+  --amber-bg:rgba(192,112,0,.12);--amber-brd:rgba(192,112,0,.3);
+  --red-bg:rgba(217,48,37,.12);--red-brd:rgba(217,48,37,.3);
+}
 body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.5}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:#C8D3DF;border-radius:99px}
@@ -54,6 +67,52 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:15px;background
   box-shadow:var(--sh0);padding:0 20px;height:56px;gap:0;
 }
 .sb-overlay{display:none}
+/* ── THEME TOGGLE ── */
+.theme-btn{
+  width:34px;height:34px;border-radius:8px;
+  background:none;border:1.5px solid var(--brd);
+  color:var(--t2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .12s;
+}
+.theme-btn:hover{background:var(--sur2);color:var(--t1)}
+/* ── HAMBURGER ── */
+.ham{
+  width:34px;height:34px;border-radius:8px;
+  background:none;border:1.5px solid var(--brd);
+  color:var(--t2);cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .12s;
+}
+.ham:hover{background:var(--sur2);color:var(--t1)}
+/* ── MOBILE MENU ── */
+.mob-menu{
+  display:none;position:absolute;top:56px;left:0;right:0;
+  background:var(--sur);border-bottom:2px solid var(--brd);
+  box-shadow:var(--sh2);z-index:99;
+  flex-direction:column;padding:8px 12px 12px;
+}
+.mob-menu.open{display:flex;animation:slideDown .18s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.mob-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:10px;cursor:pointer;
+  color:var(--t2);font-size:15px;font-weight:500;
+  transition:all .12s;
+}
+.mob-item:hover{background:var(--sur2);color:var(--t1)}
+.mob-item.on{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.mob-divider{height:1px;background:var(--brd);margin:6px 0}
+.mob-search{padding:8px 2px 4px;position:relative}
+.mob-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.mob-search input{
+  width:100%;padding:10px 14px 10px 36px;
+  border:1.5px solid var(--brd);border-radius:10px;
+  font-size:15px;font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  color:var(--t1);background:var(--sur2);outline:none;transition:all .15s;
+}
+.mob-search input:focus{border-color:var(--blue);background:var(--blue-bg)}
+.mob-search input::placeholder{color:var(--t3)}
 .sb-logo{
   display:flex;align-items:center;gap:10px;
   padding:0 16px 0 0;border-right:1px solid var(--brd);
@@ -442,14 +501,13 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
    RESPONSIVE
 ════════════════════════════════════════ */
 @media(max-width:1023px){
-  .sb{transform:translateX(-100%)}
-  .sb.open{transform:translateX(0);box-shadow:var(--sh3)}
-  .main{margin-left:0}
+  .sb-nav{display:none}
+  .srch{display:none}
   .ham{display:flex}
   .stats{grid-template-columns:1fr 1fr}
   .top{padding:0 16px}
   .body{padding:16px}
-  .srch input{width:200px}
+  .sb-status-txt{display:none}
 }
 @media(max-width:639px){
   .stats{grid-template-columns:1fr 1fr;gap:10px}
@@ -709,6 +767,8 @@ const P = {
   arrowR:   "M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3",
   save:     "M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z",
   menu:     "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5",
+  sun:      "M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z",
+  moon:     "M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998z",
   expand:   "M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15",
   zoomIn:   "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0zM10.5 7.5v6m3-3h-6",
   zoomOut:  "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0zM13.5 10.5h-6",
@@ -1668,6 +1728,8 @@ const LIMIT = 10
 export default function App() {
   const [tab, setTab]               = useState("dashboard")
   const [sbOpen, setSbOpen]         = useState(false)
+  const [darkMode, setDarkMode]     = useState(() => localStorage.getItem("theme") === "dark")
+  const [mobileMenu, setMobileMenu] = useState(false)
   const [rows, setRows]             = useState([])
   const [total, setTotal]           = useState(0)
   const [loading, setLoading]       = useState(false)
@@ -1678,6 +1740,11 @@ export default function App() {
   const [selectedPolicy, setSelectedPolicy] = useState(null)
   const [previewPolicy, setPreviewPolicy]   = useState(null)  // preview panel
   const [toast, setToast]           = useState(null)
+
+  useEffect(() => {
+    document.body.classList.toggle("dark", darkMode)
+    localStorage.setItem("theme", darkMode ? "dark" : "light")
+  }, [darkMode])
 
   const notify = (msg, type = "success") => setToast({ msg, type })
 
@@ -1705,7 +1772,7 @@ export default function App() {
     return () => window.removeEventListener("resize", fn)
   }, [])
 
-  const nav = (id) => { setTab(id); setSbOpen(false); setView("list") }
+  const nav = (id) => { setTab(id); setSbOpen(false); setMobileMenu(false); setView("list") }
 
   const expiring = rows.filter(r => {
     if (!r.coverage_end) return false
@@ -1734,14 +1801,14 @@ export default function App() {
       <div className="app">
 
         {/* ── TOPNAV ── */}
-        <header className="sb">
+        <header className="sb" style={{position:"relative"}}>
           {/* โลโก้ */}
           <div className="sb-logo">
             <div className="sb-mark"><Ico n="shield" s={16} /></div>
             <div className="sb-brand">ประกันคุ้มภัย</div>
           </div>
 
-          {/* เมนูหลัก */}
+          {/* เมนูหลัก (desktop) */}
           <nav className="sb-nav">
             {NAV.map(it => (
               <div key={it.id} className={`sb-item${tab === it.id && view==="list" ? " on" : ""}`}
@@ -1753,13 +1820,13 @@ export default function App() {
             ))}
             <div className="sb-divider" />
             <div className={`sb-item${view==="upload" ? " on" : ""}`}
-              onClick={() => setView("upload")}>
+              onClick={() => { setView("upload"); setMobileMenu(false) }}>
               <Ico n="upload" s={15} />
               <span>อัปโหลด PDF</span>
             </div>
           </nav>
 
-          {/* Search + ปุ่ม */}
+          {/* Right: Search + status + theme + hamburger */}
           <div style={{ display:"flex",alignItems:"center",gap:8,marginLeft:"auto",flexShrink:0 }}>
             <div className="srch">
               <Ico n="search" s={14} />
@@ -1770,7 +1837,39 @@ export default function App() {
               <div className="sb-dot" />
               <span className="sb-status-txt">ระบบพร้อมใช้งาน</span>
             </div>
+            <button className="theme-btn" onClick={() => setDarkMode(d => !d)}
+              title={darkMode ? "โหมดสว่าง" : "โหมดมืด"}>
+              <Ico n={darkMode ? "sun" : "moon"} s={16} />
+            </button>
+            <button className="ham" onClick={() => setMobileMenu(m => !m)}>
+              <Ico n="menu" s={18} />
+            </button>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenu && (
+            <div className="mob-menu open">
+              {NAV.map(it => (
+                <div key={it.id} className={`mob-item${tab === it.id && view==="list" ? " on" : ""}`}
+                  onClick={() => nav(it.id)}>
+                  <Ico n={it.ico} s={18} />
+                  <span>{it.label}</span>
+                  {it.badge > 0 && <span className="sb-chip">{it.badge}</span>}
+                </div>
+              ))}
+              <div className={`mob-item${view==="upload" ? " on" : ""}`}
+                onClick={() => { setView("upload"); setMobileMenu(false) }}>
+                <Ico n="upload" s={18} />
+                <span>อัปโหลด PDF</span>
+              </div>
+              <div className="mob-divider" />
+              <div className="mob-search">
+                <Ico n="search" s={15} />
+                <input placeholder="ค้นหา เลขกรมธรรม์ / ชื่อ / ทะเบียน..." value={search}
+                  onChange={e => { setSearch(e.target.value); setPage(1); setMobileMenu(false) }} />
+              </div>
+            </div>
+          )}
         </header>
 
         {/* ── MAIN ── */}
