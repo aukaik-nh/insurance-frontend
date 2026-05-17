@@ -34,6 +34,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
           <thead>
             <tr>
               <th style={{ width: 40, textAlign: "center", color: "var(--t3)" }}>#</th>
+              <th style={{ width: 40, textAlign: "center", color: "var(--t3)" }}>PDF</th>
               <th>เลขกรมธรรม์</th>
               <th>ผู้เอาประกัน</th>
               <th>ทะเบียน</th>
@@ -43,11 +44,23 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
           </thead>
           <tbody>
             {rows.map((r, idx) => {
-              const st = getStatus(r.coverage_end)
+              const st     = getStatus(r.coverage_end)
+              const hasPdf = !!(r.pdf_url || r.pdf_filename || r.pdf_size)
               return (
                 <tr key={r.id} onClick={() => onRow(r)} className={activeId === r.id ? "tr-active" : ""}>
                   <td style={{ textAlign: "center", color: "var(--t3)", fontSize: 12, fontVariantNumeric: "tabular-nums" }}>
                     {pageOffset + idx + 1}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    {hasPdf ? (
+                      <span title="มีไฟล์ PDF" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--blue)" }}>
+                        <Ico n="doc" s={15} />
+                      </span>
+                    ) : (
+                      <span title="ไม่มีไฟล์ PDF" style={{ color: "var(--t3)", opacity: 0.4 }}>
+                        <Ico n="doc" s={15} />
+                      </span>
+                    )}
                   </td>
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>

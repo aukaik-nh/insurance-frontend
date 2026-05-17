@@ -23,6 +23,10 @@ export function DetailPage() {
   const [editVals, setEditVals]     = useState({})
   const [saving, setSaving]         = useState(false)
 
+  const [relatedPdfs, setRelatedPdfs] = useState([])  // PDFs ของลูกค้าเดียวกัน (renewals)
+  const [activePdfId, setActivePdfId] = useState(null) // id ของ record ที่กำลังดู PDF
+  const [pdfListOpen, setPdfListOpen] = useState(true) // collapse/expand list
+
   // fetch ข้อมูลล่าสุดจาก API เสมอ
   useEffect(() => {
     if (!id) return
@@ -32,10 +36,29 @@ export function DetailPage() {
       .then(res => {
         setP(res.data)
         setName(res.data.pdf_filename || "")
+        setActivePdfId(res.data.id)
       })
       .catch(() => setFetchErr(true))
       .finally(() => setLoading(false))
   }, [id])
+
+  // fetch ลูกค้าเดียวกัน (search ทะเบียน) — กรองเฉพาะที่มี PDF
+  useEffect(() => {
+    if (!p?.license_plate) { setRelatedPdfs([]); return }
+    const plate = p.license_plate.trim()
+    if (!plate || plate === "OTHER" || plate === "—") { setRelatedPdfs([]); return }
+
+    api.get("/policies", { params: { search: plate, limit: 50 } })
+      .then(res => {
+        const all = res.data.data || []
+        const sameCustomer = all.filter(r =>
+          r.license_plate?.trim() === plate &&
+          (r.pdf_url || r.pdf_filename || r.pdf_size)  // มี PDF เท่านั้น
+        )
+        setRelatedPdfs(sameCustomer)
+      })
+      .catch(() => setRelatedPdfs([]))
+  }, [p?.id, p?.license_plate])
 
   if (loading) return (
     <div className="page-wrap">
@@ -87,10 +110,13 @@ export function DetailPage() {
     } finally { setSaving(false) }
   }
 
-  const pdfBase        = `${api.defaults.baseURL}/policies/${p.id}/pdf`
+  // ── PDF ที่กำลังแสดง (อาจเป็น p เองหรือ related) ──
+  const activePolicy   = relatedPdfs.find(r => r.id === activePdfId) || p
+  const pdfBase        = `${api.defaults.baseURL}/policies/${activePolicy.id}/pdf`
   const pdfViewUrl     = pdfBase
   const pdfDownloadUrl = `${pdfBase}?download=1`
-  const hasPdfInDb     = !!p.pdf_filename || !!p.pdf_size
+  const hasPdfInDb     = !!activePolicy.pdf_filename || !!activePolicy.pdf_size
+  const isLegacyPdf    = activePolicy.pdf_url && activePolicy.pdf_url.includes("drive.google.com")
 
   const F = ({ label, value, hi, mono }) => (
     <div className="info-field">
@@ -134,7 +160,7 @@ export function DetailPage() {
               </>
             ) : (
               <>
-                {hasPdfInDb && (
+                {hasPdfInDb && !isLegacyPdf && (
                   <>
                     <a className="btn btn-w" href={pdfViewUrl} target="_blank" rel="noreferrer">
                       <Ico n="open" s={14} /> ดู PDF
@@ -166,6 +192,13 @@ export function DetailPage() {
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={16} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
                     <div className="info-card-bd">
+                      {/* เลขกรมธรรม์ — เน้นพิเศษ */}
+                      <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 9, padding: "10px 14px", marginBottom: 14 }}>
+                        <div className="info-label">เลขกรมธรรม์</div>
+                        <div className="info-val hi" style={{ fontSize: 18, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", letterSpacing: 0.5 }}>
+                          {p.policy_number || "—"}
+                        </div>
+                      </div>
                       <div className="info-row" style={{ marginBottom: 12 }}>
                         <F label="รหัสบริษัท"     value={p.company_code} />
                         <F label="เลขใบคำขอ"      value={p.app_number} />
@@ -280,7 +313,125 @@ export function DetailPage() {
 
             {/* right: PDF */}
             <div className="detail-aside">
-              {hasPdfInDb ? (
+              {/* ── PDF tabs (เอกสารหลายปีของลูกค้าคนเดียวกัน) — collapsible ── */}
+              {relatedPdfs.length > 1 && (
+                <div className="info-card" style={{ marginBottom: 12 }}>
+                  <div
+                    className="info-card-hd"
+                    onClick={() => setPdfListOpen(o => !o)}
+                    style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <Ico n="doc" s={16} />
+                      <span className="info-card-title">
+                        เอกสาร PDF ทั้งหมด ({relatedPdfs.length} ฉบับ)
+                      </span>
+                    </div>
+                    <div style={{
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      width: 22, height: 22, borderRadius: 5,
+                      background: "var(--sur2)",
+                      transition: "transform 0.2s",
+                      transform: pdfListOpen ? "rotate(180deg)" : "rotate(0deg)"
+                    }}>
+                      <Ico n="chevD" s={14} />
+                    </div>
+                  </div>
+                  {pdfListOpen && (
+                    <div className="info-card-bd" style={{ paddingTop: 8 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {relatedPdfs.map(r => {
+                          const isExpanded = r.id === activePdfId
+                          const yearTH = r.coverage_start ? (parseInt(r.coverage_start.slice(0, 4)) + 543) : "?"
+                          const itemPdfUrl = `${api.defaults.baseURL}/policies/${r.id}/pdf`
+                          return (
+                            <div
+                              key={r.id}
+                              style={{
+                                border: `1.5px solid ${isExpanded ? "var(--blue)" : "var(--brd)"}`,
+                                borderRadius: 8,
+                                background: isExpanded ? "var(--blue-bg)" : "var(--sur)",
+                                overflow: "hidden",
+                                transition: "all 0.15s"
+                              }}
+                            >
+                              {/* Header — click to toggle */}
+                              <div
+                                onClick={() => setActivePdfId(isExpanded ? null : r.id)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 10,
+                                  padding: "8px 10px",
+                                  cursor: "pointer", userSelect: "none"
+                                }}
+                              >
+                                <Ico n="doc" s={14} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 13, fontWeight: isExpanded ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {r.pdf_filename || "PDF"}
+                                  </div>
+                                  <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 2 }}>
+                                    {r.policy_number || "—"} · ปี {yearTH}
+                                  </div>
+                                </div>
+                                <div style={{
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  width: 22, height: 22, borderRadius: 5,
+                                  background: isExpanded ? "var(--sur)" : "var(--sur2)",
+                                  transition: "transform 0.2s",
+                                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)"
+                                }}>
+                                  <Ico n="chevD" s={14} />
+                                </div>
+                              </div>
+
+                              {/* Inline PDF preview */}
+                              {isExpanded && (
+                                <div style={{ background: "var(--sur)", borderTop: "1px solid var(--brd)" }}>
+                                  <iframe
+                                    src={itemPdfUrl}
+                                    title={r.pdf_filename || "PDF"}
+                                    style={{ width: "100%", height: 480, border: "none", display: "block", background: "#f5f5f5" }}
+                                  />
+                                  <div style={{ display: "flex", gap: 6, padding: 8, background: "var(--sur2)" }}>
+                                    <a className="btn btn-w" href={itemPdfUrl} target="_blank" rel="noreferrer"
+                                      style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "5px 8px" }}>
+                                      <Ico n="open" s={12} /> แท็บใหม่
+                                    </a>
+                                    <a className="btn btn-b" href={`${itemPdfUrl}?download=1`}
+                                      style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "5px 8px" }}>
+                                      <Ico n="download" s={12} /> ดาวน์โหลด
+                                    </a>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isLegacyPdf ? (
+                <div className="info-card" style={{ marginBottom: 0 }}>
+                  <div className="info-card-bd">
+                    <div className="pdf-placeholder" style={{ height: 320, padding: 20 }}>
+                      <Ico n="warn" s={40} sw={1} />
+                      <div className="ph-title" style={{ marginTop: 12 }}>ไฟล์ PDF ไม่พร้อมใช้งาน</div>
+                      <div className="ph-hint" style={{ marginTop: 6, lineHeight: 1.6, maxWidth: 320 }}>
+                        ไฟล์ถูกเก็บใน Google Drive ที่ไม่สามารถเข้าถึงได้แล้ว<br />
+                        กรุณาอัปโหลดไฟล์ใหม่ผ่านเมนู "อัปโหลด PDF"
+                      </div>
+                      {p.pdf_filename && (
+                        <div style={{ marginTop: 12, fontSize: 12, color: "var(--t3)" }}>
+                          ชื่อไฟล์เดิม: <span style={{ fontWeight: 600 }}>{p.pdf_filename}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : hasPdfInDb ? (
                 <div className="pdf-preview-wrap">
                   <div className="pdf-preview-bar" style={{ flexDirection: "column", alignItems: "stretch", gap: 8, padding: "12px 14px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

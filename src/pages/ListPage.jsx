@@ -22,6 +22,7 @@ export function ListPage({ tab }) {
   const [total, setTotal]             = useState(0)
   const [loading, setLoading]         = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
+  const [pdfOnly, setPdfOnly]         = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -64,8 +65,12 @@ export function ListPage({ tab }) {
     expiring:  { title: "กรมธรรม์ใกล้หมดอายุ",  sub: `${expiring.length} รายการ · ต้องต่ออายุภายใน 30 วัน` },
   }
 
-  const displayRows = tab === "expiring" ? expiring : rows
-  const displayTotal = tab === "expiring" ? expiring.length : total
+  // filter เฉพาะที่มี PDF (ฝั่ง client — เฉพาะ rows หน้านี้)
+  const hasPdf = r => !!(r.pdf_url || r.pdf_filename || r.pdf_size)
+  const baseRows = tab === "expiring" ? expiring : rows
+  const displayRows = pdfOnly ? baseRows.filter(hasPdf) : baseRows
+  const pdfCount = rows.filter(hasPdf).length
+  const displayTotal = tab === "expiring" ? expiring.length : (pdfOnly ? pdfCount : total)
 
   return (
     <>
@@ -147,6 +152,22 @@ export function ListPage({ tab }) {
                 </div>
               </div>
             </>
+          )}
+
+          {tab !== "dashboard" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={() => setPdfOnly(v => !v)}
+                className={pdfOnly ? "btn btn-b" : "btn btn-w"}
+                style={{ fontSize: 13, padding: "6px 12px" }}
+              >
+                <Ico n="doc" s={13} />
+                {pdfOnly ? "แสดงทั้งหมด" : "เฉพาะที่มี PDF"}
+              </button>
+              <span style={{ fontSize: 12, color: "var(--t3)" }}>
+                หน้านี้มี PDF {pdfCount}/{rows.length} รายการ
+              </span>
+            </div>
           )}
 
           <PolicyTable

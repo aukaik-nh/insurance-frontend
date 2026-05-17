@@ -7,6 +7,7 @@ import { ListPage } from "./pages/ListPage"
 import { UploadPage } from "./pages/UploadPage"
 import { ManualPage } from "./pages/ManualPage"
 import { DetailPage } from "./pages/DetailPage"
+import { InvoicePage } from "./pages/InvoicePage"
 
 /* ── Layout shell (nav + outlet) ── */
 function Layout() {
@@ -72,6 +73,11 @@ function Layout() {
               <Ico n="upload" s={15} />
               <span>อัปโหลด PDF</span>
             </div>
+            <div className={`sb-item${path === "/invoice" ? " on" : ""}`}
+              onClick={() => navigate("/invoice")}>
+              <Ico n="banknote" s={15} />
+              <span>ใบแจ้งหนี้</span>
+            </div>
           </nav>
 
           {/* Right area */}
@@ -106,6 +112,11 @@ function Layout() {
                 <Ico n="upload" s={18} />
                 <span>อัปโหลด PDF</span>
               </div>
+              <div className={`mob-item${path === "/invoice" ? " on" : ""}`}
+                onClick={() => { navigate("/invoice"); setMobileMenu(false) }}>
+                <Ico n="banknote" s={18} />
+                <span>ใบแจ้งหนี้</span>
+              </div>
             </div>
           )}
         </header>
@@ -132,6 +143,7 @@ export default function App() {
           <Route path="expiring"    element={<ListPage tab="expiring" />} />
           <Route path="upload"      element={<UploadPage />} />
           <Route path="manual"      element={<ManualPage />} />
+          <Route path="invoice"     element={<InvoicePage />} />
           <Route path="policies/:id" element={<DetailPage />} />
         </Route>
       </Routes>
