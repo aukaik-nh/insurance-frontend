@@ -23,11 +23,24 @@ export function ListPage({ tab }) {
   const [loading, setLoading]         = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
   const [pdfOnly, setPdfOnly]         = useState(false)
+  const [sortKey, setSortKey]         = useState("created_at")
+  const [sortDir, setSortDir]         = useState("desc")   // "asc" | "desc"
+
+  // toggle sort: คลิก column เดิม → สลับ direction, คลิก column อื่น → ตั้ง asc
+  const onSort = (col) => {
+    if (sortKey === col) {
+      setSortDir(d => d === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(col)
+      setSortDir("asc")
+    }
+    setPage(1)
+  }
 
   const load = async () => {
     setLoading(true)
     try {
-      const params = { page, limit: LIMIT }
+      const params = { page, limit: LIMIT, sort: sortKey, order: sortDir }
       if (search) params.search = search
       const res = await api.get("/policies", { params })
       const data = res.data.data || []
@@ -46,7 +59,7 @@ export function ListPage({ tab }) {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [page, search])
+  useEffect(() => { load() }, [page, search, sortKey, sortDir])
 
   useEffect(() => { setPreviewPolicy(null) }, [tab])
 
@@ -180,6 +193,9 @@ export function ListPage({ tab }) {
             onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
             activeId={previewPolicy?.id}
             pageOffset={tab === "expiring" ? 0 : (page - 1) * LIMIT}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={onSort}
           />
         </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
@@ -26,8 +26,11 @@ export function DetailPage() {
   const [relatedPdfs, setRelatedPdfs] = useState([])  // PDFs ของลูกค้าเดียวกัน (renewals)
   const [activePdfId, setActivePdfId] = useState(null) // id ของ record ที่กำลังดู PDF
   const [pdfListOpen, setPdfListOpen] = useState(true) // collapse/expand list
+  const [uploadingPdf, setUploadingPdf] = useState(false)
+  const [refreshKey, setRefreshKey]     = useState(0)
+  const fileInputRef = useRef(null)
 
-  // fetch ข้อมูลล่าสุดจาก API เสมอ
+  // fetch ข้อมูลล่าสุดจาก API เสมอ — re-trigger ได้ด้วย refreshKey
   useEffect(() => {
     if (!id) return
     setLoading(true)
@@ -40,9 +43,10 @@ export function DetailPage() {
       })
       .catch(() => setFetchErr(true))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, refreshKey])
 
   // fetch ลูกค้าเดียวกัน (search ทะเบียน) — กรองเฉพาะที่มี PDF
+  // re-fetch เมื่อ refreshKey เปลี่ยน (หลัง upload/delete)
   useEffect(() => {
     if (!p?.license_plate) { setRelatedPdfs([]); return }
     const plate = p.license_plate.trim()
@@ -58,7 +62,7 @@ export function DetailPage() {
         setRelatedPdfs(sameCustomer)
       })
       .catch(() => setRelatedPdfs([]))
-  }, [p?.id, p?.license_plate])
+  }, [p?.id, p?.license_plate, p?.pdf_url, refreshKey])
 
   if (loading) return (
     <div className="page-wrap">
@@ -108,6 +112,44 @@ export function DetailPage() {
     } catch (e) {
       alert("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setSaving(false) }
+  }
+
+  // ── ลบ PDF (clear pdf_url + Storage) ──
+  const deletePdf = async () => {
+    if (!confirm(`ลบไฟล์ "${activePolicy.pdf_filename || 'PDF'}" ?\n\n(เก็บข้อมูลกรมธรรม์ไว้ แค่ลบไฟล์ PDF ออก)`)) return
+    try {
+      await api.delete(`/policies/${activePolicy.id}/pdf`)
+      // Force refresh ทั้ง flow
+      setRefreshKey(k => k + 1)
+    } catch (e) {
+      alert("ลบไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+    }
+  }
+
+  // ── อัปโหลด PDF ใส่ record ปัจจุบัน ──
+  const uploadPdf = async (file) => {
+    if (!file) return
+    if (!(file.type === "application/pdf" || file.name?.toLowerCase().endsWith(".pdf"))) {
+      alert("กรุณาเลือกไฟล์ PDF เท่านั้น")
+      return
+    }
+    setUploadingPdf(true)
+    try {
+      const form = new FormData()
+      form.append("file", file)
+      const uploadRes = await api.post("/upload-pdf-only", form)
+      const { pdf_url, pdf_filename, pdf_size } = uploadRes.data
+
+      await api.put(`/policies/${p.id}`, { pdf_url, pdf_filename, pdf_size })
+
+      // Force ทุก useEffect re-run → fetch ใหม่หมด, activePdfId reset เป็น current
+      setRefreshKey(k => k + 1)
+    } catch (e) {
+      alert("อัปโหลดไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+    } finally {
+      setUploadingPdf(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
   }
 
   // ── PDF ที่กำลังแสดง (อาจเป็น p เองหรือ related) ──
@@ -341,70 +383,35 @@ export function DetailPage() {
                     <div className="info-card-bd" style={{ paddingTop: 8 }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         {relatedPdfs.map(r => {
-                          const isExpanded = r.id === activePdfId
+                          const isActive = r.id === activePdfId
                           const yearTH = r.coverage_start ? (parseInt(r.coverage_start.slice(0, 4)) + 543) : "?"
-                          const itemPdfUrl = `${api.defaults.baseURL}/policies/${r.id}/pdf`
                           return (
-                            <div
+                            <button
                               key={r.id}
+                              onClick={() => setActivePdfId(r.id)}
                               style={{
-                                border: `1.5px solid ${isExpanded ? "var(--blue)" : "var(--brd)"}`,
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "8px 10px",
+                                border: `1.5px solid ${isActive ? "var(--blue)" : "var(--brd)"}`,
                                 borderRadius: 8,
-                                background: isExpanded ? "var(--blue-bg)" : "var(--sur)",
-                                overflow: "hidden",
+                                background: isActive ? "var(--blue-bg)" : "var(--sur)",
+                                cursor: "pointer", textAlign: "left",
                                 transition: "all 0.15s"
                               }}
                             >
-                              {/* Header — click to toggle */}
-                              <div
-                                onClick={() => setActivePdfId(isExpanded ? null : r.id)}
-                                style={{
-                                  display: "flex", alignItems: "center", gap: 10,
-                                  padding: "8px 10px",
-                                  cursor: "pointer", userSelect: "none"
-                                }}
-                              >
-                                <Ico n="doc" s={14} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ fontSize: 13, fontWeight: isExpanded ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {r.pdf_filename || "PDF"}
-                                  </div>
-                                  <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 2 }}>
-                                    {r.policy_number || "—"} · ปี {yearTH}
-                                  </div>
+                              <Ico n="doc" s={14} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {r.pdf_filename || "PDF"}
                                 </div>
-                                <div style={{
-                                  display: "flex", alignItems: "center", justifyContent: "center",
-                                  width: 22, height: 22, borderRadius: 5,
-                                  background: isExpanded ? "var(--sur)" : "var(--sur2)",
-                                  transition: "transform 0.2s",
-                                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)"
-                                }}>
-                                  <Ico n="chevD" s={14} />
+                                <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 2 }}>
+                                  {r.policy_number || "—"} · ปี {yearTH}
                                 </div>
                               </div>
-
-                              {/* Inline PDF preview */}
-                              {isExpanded && (
-                                <div style={{ background: "var(--sur)", borderTop: "1px solid var(--brd)" }}>
-                                  <iframe
-                                    src={itemPdfUrl}
-                                    title={r.pdf_filename || "PDF"}
-                                    style={{ width: "100%", height: 480, border: "none", display: "block", background: "#f5f5f5" }}
-                                  />
-                                  <div style={{ display: "flex", gap: 6, padding: 8, background: "var(--sur2)" }}>
-                                    <a className="btn btn-w" href={itemPdfUrl} target="_blank" rel="noreferrer"
-                                      style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "5px 8px" }}>
-                                      <Ico n="open" s={12} /> แท็บใหม่
-                                    </a>
-                                    <a className="btn btn-b" href={`${itemPdfUrl}?download=1`}
-                                      style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "5px 8px" }}>
-                                      <Ico n="download" s={12} /> ดาวน์โหลด
-                                    </a>
-                                  </div>
-                                </div>
+                              {isActive && (
+                                <span style={{ fontSize: 11, color: "var(--blue)", fontWeight: 600 }}>กำลังดู</span>
                               )}
-                            </div>
+                            </button>
                           )
                         })}
                       </div>
@@ -462,6 +469,12 @@ export function DetailPage() {
                           <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ">
                             <Ico n="expand" s={14} />
                           </button>
+                          <button className="pdf-zoom-btn"
+                            onClick={deletePdf}
+                            title="ลบไฟล์ PDF"
+                            style={{ color: "var(--red)" }}>
+                            <Ico n="trash" s={13} />
+                          </button>
                         </>
                       )}
                     </div>
@@ -478,18 +491,53 @@ export function DetailPage() {
                       </div>
                     )}
                   </div>
-                  <iframe className="pdf-iframe" src={pdfViewUrl} title="PDF Preview"
+                  <iframe
+                    key={`${activePolicy.id}-${activePolicy.pdf_filename || ""}`}
+                    className="pdf-iframe"
+                    src={pdfViewUrl}
+                    title="PDF Preview"
                     style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
                 </div>
               ) : (
-                <div className="info-card" style={{ marginBottom: 0 }}>
-                  <div className="info-card-bd">
-                    <div className="pdf-placeholder" style={{ height: 220 }}>
-                      <Ico n="doc" s={36} sw={1} />
-                      <div className="ph-title">ไม่มีไฟล์ PDF</div>
-                      <div className="ph-hint">ยังไม่ได้เก็บ PDF ในฐานข้อมูล</div>
-                    </div>
-                  </div>
+                <div
+                  onDragOver={e => { e.preventDefault() }}
+                  onDrop={e => { e.preventDefault(); uploadPdf(e.dataTransfer.files[0]) }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "12px 14px",
+                    border: "1.5px dashed var(--brd)",
+                    borderRadius: 10,
+                    background: "var(--sur)"
+                  }}
+                >
+                  {uploadingPdf ? (
+                    <>
+                      <div className="spin" style={{ width: 16, height: 16 }} />
+                      <div style={{ fontSize: 13, color: "var(--t2)" }}>กำลังอัปโหลด...</div>
+                    </>
+                  ) : (
+                    <>
+                      <Ico n="upload" s={18} sw={1.5} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t1)" }}>ยังไม่มีไฟล์ PDF</div>
+                        <div style={{ fontSize: 11.5, color: "var(--t3)" }}>ลากไฟล์มาวาง หรือคลิกปุ่ม</div>
+                      </div>
+                      <button
+                        className="btn btn-b"
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ fontSize: 12.5, padding: "6px 12px", flexShrink: 0 }}
+                      >
+                        <Ico n="upload" s={13} /> เลือกไฟล์
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf"
+                        style={{ display: "none" }}
+                        onChange={e => uploadPdf(e.target.files?.[0])}
+                      />
+                    </>
+                  )}
                 </div>
               )}
             </div>

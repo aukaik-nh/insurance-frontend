@@ -1,24 +1,42 @@
 import { useEffect, useState } from "react"
 import { Ico } from "../icons"
-import { getStatus, fmtDate } from "../helpers"
+import { getStatus, fmtDate, baht, policyTypeLabel } from "../helpers"
 import api from "../api"
+
+function PvpField({ label, value, multiline, mono, hi }) {
+  if (!value || value === "") return null
+  return (
+    <div style={{ display: "flex", gap: 10, padding: "5px 0", borderBottom: "1px solid var(--brd)", fontSize: 12 }}>
+      <span style={{ color: "var(--t3)", flexShrink: 0, minWidth: 78 }}>{label}</span>
+      <span style={{
+        color: hi ? "var(--blue)" : "var(--t1)",
+        fontWeight: hi ? 700 : 500,
+        fontFamily: mono ? "ui-monospace, Menlo, monospace" : "inherit",
+        whiteSpace: multiline ? "normal" : "nowrap",
+        overflow: multiline ? "visible" : "hidden",
+        textOverflow: "ellipsis",
+        wordBreak: "break-word",
+        textAlign: "right",
+        flex: 1,
+      }}>
+        {value}
+      </span>
+    </div>
+  )
+}
 
 export function PreviewPanel({ p, onClose, onOpen }) {
   const st           = getStatus(p.coverage_end)
-  const hasPdf       = !!p.pdf_filename || !!p.pdf_size
-  const isLegacyPdf  = p.pdf_url && p.pdf_url.includes("drive.google.com")
-  const pdfUrl       = `${api.defaults.baseURL}/policies/${p.id}/pdf`
 
   const [relatedPdfs, setRelatedPdfs] = useState([])
   const [activePdfId, setActivePdfId] = useState(p.id)
-  const [pdfListOpen, setPdfListOpen] = useState(false)  // default = collapsed
+  const [pdfListOpen, setPdfListOpen] = useState(true)  // เปิดอยู่ default
 
   useEffect(() => {
     setActivePdfId(p.id)
-    setPdfListOpen(false)
+    setPdfListOpen(true)
   }, [p.id])
 
-  // fetch records ทะเบียนเดียวกัน
   useEffect(() => {
     if (!p?.license_plate) { setRelatedPdfs([]); return }
     const plate = p.license_plate.trim()
@@ -56,7 +74,7 @@ export function PreviewPanel({ p, onClose, onOpen }) {
           <button className="pvp-close" onClick={onClose}><Ico n="x" s={16} /></button>
         </div>
 
-        {/* related PDFs (collapsible) */}
+        {/* related PDFs (collapsible list — click ปุ่ม → iframe ล่างเปลี่ยน) */}
         {relatedPdfs.length > 1 && (
           <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--brd)", flexShrink: 0, background: "var(--sur2)" }}>
             <div
@@ -65,7 +83,7 @@ export function PreviewPanel({ p, onClose, onOpen }) {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 600, color: "var(--t1)" }}>
                 <Ico n="doc" s={13} />
-                <span>เอกสาร PDF ทั้งหมด ({relatedPdfs.length} ฉบับ)</span>
+                <span>เอกสาร PDF ({relatedPdfs.length} ฉบับ)</span>
               </div>
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -78,7 +96,7 @@ export function PreviewPanel({ p, onClose, onOpen }) {
               </div>
             </div>
             {pdfListOpen && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8, maxHeight: 200, overflowY: "auto" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8, maxHeight: 180, overflowY: "auto" }}>
                 {relatedPdfs.map(r => {
                   const isActive = r.id === activePdfId
                   const yearTH = r.coverage_start ? (parseInt(r.coverage_start.slice(0, 4)) + 543) : "?"
@@ -114,7 +132,7 @@ export function PreviewPanel({ p, onClose, onOpen }) {
           </div>
         )}
 
-        {/* PDF preview */}
+        {/* PDF main preview (iframe ล่าง) */}
         {activeLegacy ? (
           <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, background: "var(--sur2)", color: "var(--t3)", padding: 20, textAlign: "center" }}>
             <Ico n="warn" s={32} sw={1} />
@@ -132,9 +150,34 @@ export function PreviewPanel({ p, onClose, onOpen }) {
             style={{ width: "100%", flex: 1, minHeight: 0, border: "none", display: "block", background: "#f5f5f5" }}
           />
         ) : (
-          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--sur2)", color: "var(--t3)" }}>
-            <Ico n="doc" s={28} sw={1} />
-            <span style={{ fontSize: 12 }}>ไม่มีไฟล์ PDF</span>
+          /* ไม่มี PDF → แสดงข้อมูลกรมธรรม์แทน */
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "var(--sur)", padding: "14px 14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, color: "var(--t3)", fontSize: 11.5 }}>
+              <Ico n="doc" s={13} sw={1} />
+              <span>ไม่มีไฟล์ PDF · แสดงข้อมูลแทน</span>
+            </div>
+
+            {/* เลขกรมธรรม์ (เน้น) */}
+            <div style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
+              <div style={{ fontSize: 10.5, color: "var(--t3)" }}>เลขกรมธรรม์</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--blue)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: 0.3, marginTop: 1 }}>
+                {p.policy_number || "—"}
+              </div>
+            </div>
+
+            {/* Field row helper */}
+            <PvpField label="ประเภท" value={policyTypeLabel(p.policy_type)} />
+            <PvpField label="ผู้เอาประกัน" value={p.insured_name} />
+            <PvpField label="โทรศัพท์" value={p.phone} />
+            <PvpField label="ที่อยู่" value={p.insured_address} multiline />
+            <PvpField label="ทะเบียนรถ" value={p.license_plate} />
+            <PvpField label="จังหวัด" value={p.license_province} />
+            <PvpField label="ยี่ห้อ/รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join(" ")} />
+            <PvpField label="ปีรถ" value={p.car_year} />
+            <PvpField label="เลขตัวถัง" value={p.chassis_no} mono />
+            <PvpField label="ทุนเอาประกัน" value={p.sum_insured ? `${baht(p.sum_insured)} ฿` : null} />
+            <PvpField label="เบี้ยรวม" value={p.total_premium ? `${baht(p.total_premium)} ฿` : null} hi />
+            <PvpField label="ตัวแทน" value={p.broker_name} />
           </div>
         )}
 

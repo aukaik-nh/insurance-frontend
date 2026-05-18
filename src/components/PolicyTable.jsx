@@ -1,7 +1,35 @@
 import { Ico } from "../icons"
-import { getStatus } from "../helpers"
+import { getStatus, fmtDate } from "../helpers"
 
-export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset }) {
+function SortHeader({ label, col, sortKey, sortDir, onSort, style }) {
+  const isActive = sortKey === col
+  return (
+    <th
+      onClick={() => onSort?.(col)}
+      style={{
+        cursor: onSort ? "pointer" : "default",
+        userSelect: "none",
+        ...style,
+      }}
+      title={onSort ? `เรียงตาม ${label}` : undefined}
+    >
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+        {label}
+        {onSort && (
+          <span style={{
+            display: "inline-flex", flexDirection: "column",
+            lineHeight: 0.85, fontSize: 8,
+          }}>
+            <span style={{ opacity: isActive && sortDir === "asc"  ? 1 : 0.25, color: isActive && sortDir === "asc"  ? "var(--blue)" : "var(--t3)" }}>▲</span>
+            <span style={{ opacity: isActive && sortDir === "desc" ? 1 : 0.25, color: isActive && sortDir === "desc" ? "var(--blue)" : "var(--t3)" }}>▼</span>
+          </span>
+        )}
+      </span>
+    </th>
+  )
+}
+
+export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset, sortKey, sortDir, onSort }) {
   if (loading) return (
     <div className="card">
       <div className="ldg">
@@ -35,10 +63,10 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
             <tr>
               <th style={{ width: 40, textAlign: "center", color: "var(--t3)" }}>#</th>
               <th style={{ width: 40, textAlign: "center", color: "var(--t3)" }}>PDF</th>
-              <th>เลขกรมธรรม์</th>
-              <th>ผู้เอาประกัน</th>
-              <th>ทะเบียน</th>
-              <th>วันหมดอายุ</th>
+              <SortHeader label="เลขกรมธรรม์"  col="policy_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="ผู้เอาประกัน" col="insured_name"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="ทะเบียน"      col="license_plate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="วันหมดอายุ"   col="coverage_end"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <th>สถานะ</th>
             </tr>
           </thead>
@@ -65,7 +93,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>
                   <td><span className="plate">{r.license_plate || "—"}</span></td>
-                  <td style={{ color: "var(--t3)", fontSize: 13 }}>{r.coverage_end || "—"}</td>
+                  <td style={{ color: "var(--t3)", fontSize: 13, whiteSpace: "nowrap" }}>{fmtDate(r.coverage_end) || "—"}</td>
                   <td><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
                 </tr>
               )
