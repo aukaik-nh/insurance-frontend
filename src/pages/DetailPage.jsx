@@ -42,16 +42,19 @@ export function DetailPage() {
   // fetch ข้อมูลล่าสุดจาก API เสมอ — re-trigger ได้ด้วย refreshKey
   useEffect(() => {
     if (!id) return
+    let cancelled = false
     setLoading(true)
     setFetchErr(false)
     api.get(`/policies/${id}`)
       .then(res => {
+        if (cancelled) return
         setP(res.data)
         setName(res.data.pdf_filename || "")
         setActivePdfId(res.data.id)
       })
-      .catch(() => setFetchErr(true))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!cancelled) setFetchErr(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [id, refreshKey])
 
   // reset doc tab เมื่อสลับ related policy
@@ -64,8 +67,10 @@ export function DetailPage() {
     const plate = p.license_plate.trim()
     if (!plate || plate === "OTHER" || plate === "—") { setRelatedPdfs([]); return }
 
+    let cancelled = false
     api.get("/policies", { params: { search: plate, limit: 50 } })
       .then(res => {
+        if (cancelled) return
         const all = res.data.data || []
         const sameCustomer = all.filter(r =>
           r.license_plate?.trim() === plate &&
@@ -73,7 +78,8 @@ export function DetailPage() {
         )
         setRelatedPdfs(sameCustomer)
       })
-      .catch(() => setRelatedPdfs([]))
+      .catch(() => { if (!cancelled) setRelatedPdfs([]) })
+    return () => { cancelled = true }
   }, [p?.id, p?.license_plate, p?.pdf_url, refreshKey])
 
   // ⚠️ usePdfBlob ต้องถูกเรียก *ก่อน* early return — Rules of Hooks

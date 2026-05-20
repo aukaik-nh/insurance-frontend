@@ -46,34 +46,38 @@ export function ListPage({ tab }) {
     setPage(1)
   }
 
-  const load = async () => {
+  // race-safe fetch — ใช้ ref กัน race condition จาก search/filter ที่กดเร็วๆ
+  useEffect(() => {
+    let cancelled = false
     setLoading(true)
-    try {
-      const params = { page, limit: LIMIT, sort: sortKey, order: sortDir }
-      if (search)   params.search    = search
-      if (status)   params.status    = status
-      if (dateFrom) params.date_from = dateFrom
-      if (dateTo)   params.date_to   = dateTo
-      if (hasPdf)   params.has_pdf   = hasPdf
+    const params = { page, limit: LIMIT, sort: sortKey, order: sortDir }
+    if (search)   params.search    = search
+    if (status)   params.status    = status
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo)   params.date_to   = dateTo
+    if (hasPdf)   params.has_pdf   = hasPdf
 
-      const res = await api.get("/policies", { params })
-      const data = res.data.data || []
-      setRows(data)
-      setTotal(res.data.total || 0)
+    api.get("/policies", { params })
+      .then(res => {
+        if (cancelled) return
+        const data = res.data.data || []
+        setRows(data)
+        setTotal(res.data.total || 0)
+        const expCnt = data.filter(r => {
+          if (!r.coverage_end) return false
+          const d = (new Date(r.coverage_end) - new Date()) / 86400000
+          return d >= 0 && d < 30
+        }).length
+        setExpiringCount(expCnt)
+      })
+      .catch(e => {
+        if (cancelled) return
+        notify("โหลดข้อมูลไม่สำเร็จ: " + (e.response?.data?.detail || e.message), "error")
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
 
-      const expCnt = data.filter(r => {
-        if (!r.coverage_end) return false
-        const d = (new Date(r.coverage_end) - new Date()) / 86400000
-        return d >= 0 && d < 30
-      }).length
-      setExpiringCount(expCnt)
-    } catch (e) {
-      notify("โหลดข้อมูลไม่สำเร็จ: " + (e.response?.data?.detail || e.message), "error")
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => { load() }, [page, search, sortKey, sortDir, status, dateFrom, dateTo, hasPdf])
+    return () => { cancelled = true }
+  }, [page, search, sortKey, sortDir, status, dateFrom, dateTo, hasPdf])
   useEffect(() => { setPreviewPolicy(null) }, [tab])
 
   const expiring = rows.filter(r => {

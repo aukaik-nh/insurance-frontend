@@ -43,8 +43,10 @@ export function PreviewPanel({ p, onClose, onOpen }) {
     const plate = p.license_plate.trim()
     if (!plate || plate === "OTHER" || plate === "—") { setRelatedPdfs([]); return }
 
+    let cancelled = false
     api.get("/policies", { params: { search: plate, limit: 50 } })
       .then(res => {
+        if (cancelled) return
         const all = res.data.data || []
         const sameCustomer = all.filter(r =>
           r.license_plate?.trim() === plate &&
@@ -52,7 +54,8 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         )
         setRelatedPdfs(sameCustomer)
       })
-      .catch(() => setRelatedPdfs([]))
+      .catch(() => { if (!cancelled) setRelatedPdfs([]) })
+    return () => { cancelled = true }
   }, [p?.id, p?.license_plate])
 
   const activePolicy = relatedPdfs.find(r => r.id === activePdfId) || p

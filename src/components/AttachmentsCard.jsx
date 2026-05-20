@@ -85,7 +85,22 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
     } finally { setLoading(false) }
   }
 
-  useEffect(() => { if (policyId) load() }, [policyId])
+  // race-safe: ถ้า policyId เปลี่ยนระหว่าง fetch → ignore ผลเก่า
+  useEffect(() => {
+    if (!policyId) return
+    let cancelled = false
+    setLoading(true)
+    api.get(`/policies/${policyId}/attachments`)
+      .then(res => {
+        if (cancelled) return
+        const data = res.data.data || []
+        setItems(data)
+        onItemsChange?.(data)
+      })
+      .catch(e => { if (!cancelled) console.error(e) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [policyId])
 
   // เลือกประเภท → เปิด file picker
   const pickType = (docType) => {
