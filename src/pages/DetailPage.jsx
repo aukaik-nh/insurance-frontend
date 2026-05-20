@@ -6,6 +6,7 @@ import { getStatus, baht, fmtDate, policyTypeLabel } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
 import { PolicyForm } from "../components/PolicyForm"
 import { AttachmentsCard } from "../components/AttachmentsCard"
+import { PremiumGrid } from "../components/PremiumGrid"
 import { usePdfBlob, downloadPdf, openPdfTab } from "../pdfUtils"
 
 export function DetailPage() {
@@ -457,41 +458,39 @@ export function DetailPage() {
                     </div>
                   </div>
 
-                  {/* เบี้ยประกัน */}
-                  <div className="info-card">
-                    <div className="info-card-hd"><Ico n="banknote" s={20} /><span className="info-card-title">เบี้ยประกัน</span></div>
-                    <div className="info-card-bd">
-                      <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="เบี้ยสุทธิ" value={p.net_premium ? `${baht(p.net_premium)} ฿` : null} />
-                        <F label="อากรแสตมป์" value={p.stamp_duty  ? `${baht(p.stamp_duty)} ฿`  : null} />
+                  {/* เบี้ยประกัน — ตารางคำนวณ (read-only) แสดง main + พ.ร.บ. คู่กัน */}
+                  <PremiumGrid
+                    readOnly
+                    title="เบี้ยประกัน"
+                    main={p}
+                    prb={(() => {
+                      const prbAtt = attachItems.find(a => a.doc_type === "prb")
+                      if (!prbAtt) return null
+                      return {
+                        net_premium:   prbAtt.net_premium,
+                        stamp_duty:    prbAtt.stamp_duty,
+                        vat:           prbAtt.vat,
+                        total_premium: prbAtt.total_premium,
+                      }
+                    })()}
+                  />
+
+                  {/* ความคุ้มครองเพิ่มเติม (ทุนเอาประกัน — เฉพาะกรมธรรม์รถยนต์) */}
+                  {(p.third_party_per_person || p.third_party_per_accident || p.own_damage) && (
+                    <div className="info-card">
+                      <div className="info-card-hd">
+                        <Ico n="shield" s={20} />
+                        <span className="info-card-title">ความคุ้มครองเพิ่มเติม</span>
                       </div>
-                      <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="ภาษีมูลค่าเพิ่ม (VAT)" value={p.vat ? `${baht(p.vat)} ฿` : null} />
-                        <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 10, padding: "14px 16px" }}>
-                          <div className="info-label">รวมเบี้ยประกัน</div>
-                          <div className="info-val hi">{p.total_premium ? `${baht(p.total_premium)} ฿` : "—"}</div>
-                        </div>
-                      </div>
-                      {(p.third_party_per_person || p.third_party_per_accident || p.own_damage) && (
+                      <div className="info-card-bd">
                         <div className="info-row">
                           <F label="บุคคลภายนอก/คน"   value={p.third_party_per_person  ? `${baht(p.third_party_per_person)} ฿`  : null} />
                           <F label="บุคคลภายนอก/ครั้ง" value={p.third_party_per_accident ? `${baht(p.third_party_per_accident)} ฿` : null} />
                           <F label="ความเสียหายต่อรถ"  value={p.own_damage               ? `${baht(p.own_damage)} ฿`               : null} />
                         </div>
-                      )}
-                      {(p.prepaid_tax_1pct != null || p.commission_pct != null || p.commission_baht != null
-                        || p.wht_10pct != null || p.rounding != null || p.collected_amount != null) && (
-                        <div className="info-row" style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--brd)" }}>
-                          <F label="1% (ภาษีล่วงหน้า)"        value={p.prepaid_tax_1pct  != null ? `${baht(p.prepaid_tax_1pct)} ฿` : null} />
-                          <F label="ค่าคอม %"                value={p.commission_pct    != null ? `${p.commission_pct}%`         : null} />
-                          <F label="ค่าคอม (บาท)"            value={p.commission_baht   != null ? `${baht(p.commission_baht)} ฿` : null} />
-                          <F label="ภาษี 10% (หัก ณ ที่จ่าย)" value={p.wht_10pct         != null ? `${baht(p.wht_10pct)} ฿`       : null} />
-                          <F label="ปัดเศษ"                   value={p.rounding          != null ? `${baht(p.rounding)} ฿`        : null} />
-                          <F label="เรียกเก็บ"  hi            value={p.collected_amount  != null ? `${baht(p.collected_amount)} ฿`: null} />
-                        </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* หมายเหตุ */}
                   <div className="info-card">
