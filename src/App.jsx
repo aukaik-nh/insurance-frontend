@@ -8,9 +8,10 @@ import { UploadPage } from "./pages/UploadPage"
 import { ManualPage } from "./pages/ManualPage"
 import { DetailPage } from "./pages/DetailPage"
 import { InvoicePage } from "./pages/InvoicePage"
+import { LoginPage } from "./pages/LoginPage"
 
 /* ── Layout shell (nav + outlet) ── */
-function Layout() {
+function Layout({ onLogout }) {
   const navigate  = useNavigate()
   const location  = useLocation()
 
@@ -128,13 +129,21 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
 
           {/* Right area */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
-<div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div className="sb-dot" />
               <span className="sb-status-txt">ระบบพร้อมใช้งาน</span>
             </div>
             <button className="theme-btn" onClick={() => setDarkMode(d => !d)}
               title={darkMode ? "โหมดสว่าง" : "โหมดมืด"}>
               <Ico n={darkMode ? "sun" : "moon"} s={20} />
+            </button>
+            {/* ── Logout ── */}
+            <button
+              className="theme-btn sb-logout"
+              onClick={onLogout}
+              title="ออกจากระบบ"
+            >
+              <Ico n="logout" s={19} />
             </button>
             <button className="ham" onClick={() => setMobileMenu(m => !m)}>
               <Ico n="menu" s={22} />
@@ -247,12 +256,34 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
   )
 }
 
-/* ── Root with BrowserRouter + Routes ── */
+/* ── Root with BrowserRouter + Auth gate ── */
 export default function App() {
+  const [token, setToken] = useState(() => localStorage.getItem("auth_token"))
+
+  const handleLogin = (t) => {
+    localStorage.setItem("auth_token", t)
+    setToken(t)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token")
+    setToken(null)
+  }
+
+  // หน้า login — แสดงนอก BrowserRouter (ไม่มี nav)
+  if (!token) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <LoginPage onLogin={handleLogin} />
+      </>
+    )
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout />}>
+        <Route element={<Layout onLogout={handleLogout} />}>
           <Route index              element={<ListPage tab="dashboard" />} />
           <Route path="policies"    element={<ListPage tab="policies" />} />
           <Route path="expiring"    element={<ListPage tab="expiring" />} />

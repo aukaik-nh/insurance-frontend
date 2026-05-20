@@ -652,6 +652,98 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .fname-row button{background:none;border:none;cursor:pointer;font-size:12px;color:var(--blue);padding:0;white-space:nowrap;flex-shrink:0;}
 .fname-row button:hover{text-decoration:underline}
 
+/* ═══════════════════════════════════════════════════════════
+   LOGIN PAGE
+   ═══════════════════════════════════════════════════════════ */
+.login-wrap{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);padding:20px;position:relative;overflow:hidden;
+}
+.login-bg-blob{
+  position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;opacity:.45;
+}
+.login-bg-blob-1{
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(30,111,229,.18) 0%,transparent 70%);
+  top:-120px;right:-100px;
+}
+.login-bg-blob-2{
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(13,156,107,.14) 0%,transparent 70%);
+  bottom:-80px;left:-80px;
+}
+.login-card{
+  width:100%;max-width:420px;
+  background:var(--sur);border:1px solid var(--brd);
+  border-radius:22px;padding:36px 36px 30px;
+  box-shadow:var(--sh3);
+  position:relative;z-index:1;
+  animation:login-in .3s cubic-bezier(.22,.68,0,1.2);
+}
+@keyframes login-in{
+  from{opacity:0;transform:translateY(24px) scale(.97)}
+  to{opacity:1;transform:none}
+}
+.login-brand{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.login-logo-wrap{
+  width:64px;height:64px;border-radius:18px;
+  background:var(--blue-bg);border:1.5px solid var(--blue-mid);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.login-app-name{font-size:22px;font-weight:800;color:var(--t1);letter-spacing:-.3px;line-height:1.2}
+.login-app-sub{font-size:14px;color:var(--t3);margin-top:5px;font-weight:400;line-height:1.4}
+.login-divider{height:1px;background:var(--brd);margin-bottom:26px}
+.login-field{display:flex;flex-direction:column;gap:8px}
+.login-label{font-size:14.5px;font-weight:700;color:var(--t2)}
+.login-input-wrap{
+  display:flex;align-items:center;
+  border:1.5px solid var(--brd);border-radius:12px;
+  background:var(--sur2);transition:border-color .15s,box-shadow .15s;
+  overflow:hidden;
+}
+.login-input-wrap:focus-within{
+  border-color:var(--blue);background:var(--sur);
+  box-shadow:0 0 0 3px rgba(30,111,229,.10);
+}
+.login-input-ico{
+  padding:0 0 0 15px;color:var(--t3);flex-shrink:0;
+  display:flex;align-items:center;pointer-events:none;
+}
+.login-input-wrap:focus-within .login-input-ico{color:var(--blue)}
+.login-input{
+  flex:1;border:none;outline:none;padding:14px 14px;
+  font-size:16px;font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  color:var(--t1);background:transparent;min-width:0;
+}
+.login-input::placeholder{color:var(--t3)}
+.login-input:disabled{opacity:.6;cursor:not-allowed}
+.login-eye{
+  background:none;border:none;cursor:pointer;
+  padding:0 13px;color:var(--t3);display:flex;align-items:center;
+  flex-shrink:0;transition:color .12s;height:100%;
+}
+.login-eye:hover{color:var(--blue)}
+.login-submit{
+  width:100%;justify-content:center;
+  padding:15px 22px;font-size:17px;border-radius:12px;
+  margin-top:4px;letter-spacing:.2px;
+}
+.login-footer{
+  margin-top:24px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;color:var(--t3);
+}
+/* logout button — ไม่แสดงในมือถือ (ใช้ mobile menu แทน) */
+.sb-logout{color:var(--t2)}
+.sb-logout:hover{background:var(--red-bg) !important;border-color:var(--red-brd) !important;color:var(--red) !important}
+@media(max-width:639px){
+  .login-card{padding:28px 22px 24px;border-radius:18px}
+  .login-app-name{font-size:19px}
+  .login-logo-wrap{width:52px;height:52px;border-radius:14px}
+  .login-submit{padding:14px 20px;font-size:16px}
+}
+/* ═══════════════════════════════════════════════════════════ */
+
 @media(max-width:1100px){.upload-split{grid-template-columns:320px 1fr}}
 @media(max-width:860px){
   .detail-split,.upload-split{grid-template-columns:1fr}
