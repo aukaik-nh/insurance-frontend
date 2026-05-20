@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Ico } from "../icons"
 import api from "../api"
+import { openPdfTab, downloadPdf } from "../pdfUtils"
 
 const DOC_TYPES = [
   {
@@ -272,12 +273,12 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
                           </span>
                         )}
                         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                          <a className="pdf-zoom-btn" href={viewUrl} target="_blank" rel="noreferrer" title="เปิดในแท็บใหม่">
+                          <button className="pdf-zoom-btn" onClick={() => openPdfTab(viewUrl)} title="เปิดในแท็บใหม่">
                             <Ico n="open" s={17} />
-                          </a>
-                          <a className="pdf-zoom-btn" href={dlUrl} title="ดาวน์โหลด">
+                          </button>
+                          <button className="pdf-zoom-btn" onClick={() => downloadPdf(dlUrl, att.pdf_filename || "attachment.pdf")} title="ดาวน์โหลด">
                             <Ico n="download" s={17} />
-                          </a>
+                          </button>
                           <button className="pdf-zoom-btn" onClick={() => del(att)} title="ลบ"
                             style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
                             <Ico n="trash" s={17} />

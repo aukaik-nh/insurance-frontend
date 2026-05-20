@@ -38,9 +38,9 @@ export function PdfLightbox({ src, filename, sizeKB, onClose }) {
           <Ico n="zoomIn" s={18} />
         </button>
         <button className="pdf-lb-btn" onClick={() => setZoom(100)} title="รีเซ็ต (0)">100%</button>
-        <a className="pdf-lb-btn" href={src} target="_blank" rel="noreferrer" title="เปิดในแท็บใหม่">
+        <button className="pdf-lb-btn" onClick={() => src && window.open(src, "_blank")} title="เปิดในแท็บใหม่" disabled={!src}>
           <Ico n="open" s={18} /> แท็บใหม่
-        </a>
+        </button>
         <button className="pdf-lb-btn close" onClick={onClose} title="ปิด (Esc)">
           <Ico n="x" s={18} /> ปิด
         </button>

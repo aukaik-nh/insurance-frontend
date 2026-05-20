@@ -6,6 +6,7 @@ import { getStatus, baht, fmtDate, policyTypeLabel } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
 import { PolicyForm } from "../components/PolicyForm"
 import { AttachmentsCard } from "../components/AttachmentsCard"
+import { usePdfBlob, downloadPdf, openPdfTab } from "../pdfUtils"
 
 export function DetailPage() {
   const navigate      = useNavigate()
@@ -212,6 +213,11 @@ export function DetailPage() {
   const currentDocDlUrl    = `${currentDocUrl}?download=1`
   const showDocTabs        = !viewingRelated && docTabs.length > 1
 
+  // Blob URL สำหรับ iframe (iframe ส่ง auth header ไม่ได้)
+  const { blobUrl: pdfBlobUrl, loading: pdfBlobLoading } = usePdfBlob(
+    hasPdfInDb && !isLegacyPdf ? currentDocUrl : null
+  )
+
   const F = ({ label, value, hi, mono }) => (
     <div className="info-field">
       <div className="info-label">{label}</div>
@@ -222,7 +228,7 @@ export function DetailPage() {
   return (
     <>
       {pdfFull && (
-        <PdfLightbox src={pdfViewUrl} filename={p.pdf_filename}
+        <PdfLightbox src={pdfBlobUrl} filename={p.pdf_filename}
           sizeKB={p.pdf_size ? (p.pdf_size / 1024).toFixed(0) : null}
           onClose={() => setPdfFull(false)} />
       )}
@@ -641,12 +647,12 @@ export function DetailPage() {
                         <button className="pdf-zoom-btn" onClick={() => setEditName(true)} title="แก้ไขชื่อ">
                           <Ico n="pen" s={17} />
                         </button>
-                        <a className="pdf-zoom-btn" href={currentDocUrl} target="_blank" rel="noreferrer" title="เปิดแท็บใหม่">
+                        <button className="pdf-zoom-btn" onClick={() => openPdfTab(currentDocUrl)} title="เปิดแท็บใหม่">
                           <Ico n="open" s={17} />
-                        </a>
-                        <a className="pdf-zoom-btn" href={currentDocDlUrl} title="ดาวน์โหลด">
+                        </button>
+                        <button className="pdf-zoom-btn" onClick={() => downloadPdf(currentDocDlUrl, activePolicy.pdf_filename || "policy.pdf")} title="ดาวน์โหลด">
                           <Ico n="download" s={17} />
-                        </a>
+                        </button>
                         <button className="pdf-zoom-btn" onClick={() => fileInputRef.current?.click()}
                           disabled={uploadingPdf} title="เปลี่ยนไฟล์ PDF">
                           {uploadingPdf
@@ -660,12 +666,19 @@ export function DetailPage() {
                       </>
                     )}
                   </div>
-                  <iframe
-                    key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
-                    className="pdf-iframe"
-                    src={currentDocUrl}
-                    title="PDF Preview"
-                    style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
+                  {pdfBlobLoading ? (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 14, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)" }}>
+                      <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
+                      <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>
+                    </div>
+                  ) : (
+                    <iframe
+                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
+                      className="pdf-iframe"
+                      src={pdfBlobUrl || ""}
+                      title="PDF Preview"
+                      style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
+                  )}
                 </div>
               ) : (
                 <div

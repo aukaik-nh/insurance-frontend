@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Ico } from "../icons"
 import { getStatus, fmtDate, baht, policyTypeLabel } from "../helpers"
 import api from "../api"
+import { usePdfBlob } from "../pdfUtils"
 
 function PvpField({ label, value, multiline, mono, hi }) {
   if (!value || value === "") return null
@@ -55,9 +56,14 @@ export function PreviewPanel({ p, onClose, onOpen }) {
   }, [p?.id, p?.license_plate])
 
   const activePolicy = relatedPdfs.find(r => r.id === activePdfId) || p
-  const activePdfUrl = `${api.defaults.baseURL}/policies/${activePolicy.id}/pdf`
+  const activePdfApiUrl = `${api.defaults.baseURL}/policies/${activePolicy.id}/pdf`
   const activeHasPdf = !!activePolicy.pdf_filename || !!activePolicy.pdf_size
   const activeLegacy = activePolicy.pdf_url && activePolicy.pdf_url.includes("drive.google.com")
+
+  // Blob URL — iframe ส่ง auth header ไม่ได้ ต้อง fetch เองแล้วใช้ blob
+  const { blobUrl: pdfBlobUrl, loading: pdfLoading } = usePdfBlob(
+    activeHasPdf && !activeLegacy ? activePdfApiUrl : null
+  )
 
   return (
     <>
@@ -143,12 +149,19 @@ export function PreviewPanel({ p, onClose, onOpen }) {
             </div>
           </div>
         ) : activeHasPdf ? (
-          <iframe
-            key={activePolicy.id}
-            src={activePdfUrl}
-            title="PDF"
-            style={{ width: "100%", flex: 1, minHeight: 0, border: "none", display: "block", background: "#f5f5f5" }}
-          />
+          pdfLoading ? (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, background: "var(--sur2)", color: "var(--t3)" }}>
+              <div className="spin" style={{ width: 28, height: 28, borderWidth: 2.5 }} />
+              <div style={{ fontSize: 14 }}>กำลังโหลด PDF…</div>
+            </div>
+          ) : (
+            <iframe
+              key={activePolicy.id}
+              src={pdfBlobUrl || ""}
+              title="PDF"
+              style={{ width: "100%", flex: 1, minHeight: 0, border: "none", display: "block", background: "#f5f5f5" }}
+            />
+          )
         ) : (
           /* ไม่มี PDF → แสดงข้อมูลกรมธรรม์แทน */
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "var(--sur)", padding: "18px 20px" }}>
