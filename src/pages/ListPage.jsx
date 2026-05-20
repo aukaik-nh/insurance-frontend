@@ -5,6 +5,7 @@ import { Ico } from "../icons"
 import { getStatus } from "../helpers"
 import { PolicyTable } from "../components/PolicyTable"
 import { PreviewPanel } from "../components/PreviewPanel"
+import { prefetchPdf } from "../pdfUtils"
 
 const LIMIT = 10
 
@@ -46,8 +47,7 @@ export function ListPage({ tab }) {
     setPage(1)
   }
 
-  // ⚡ prefetch: hover แถวในตาราง → ดึง detail + attachments ล่วงหน้า
-  // browser cache + axios จัดการให้ — request ซ้ำกัน 1 วินาทีไม่ยิงใหม่
+  // ⚡ prefetch: hover แถวในตาราง → ดึง detail + attachments + PDF blob ล่วงหน้า
   const prefetchedIds = useRef(new Set())
   const prefetchPolicy = (r) => {
     if (!r?.id || prefetchedIds.current.has(r.id)) return
@@ -56,6 +56,10 @@ export function ListPage({ tab }) {
     setTimeout(() => prefetchedIds.current.delete(r.id), 30_000)
     api.get(`/policies/${r.id}`).catch(() => {})
     api.get(`/policies/${r.id}/attachments`).catch(() => {})
+    // ถ้ามี PDF → prefetch blob ด้วย (เก็บใน module-level cache ของ pdfUtils)
+    if (r.pdf_filename || r.pdf_size) {
+      prefetchPdf(`${api.defaults.baseURL}/policies/${r.id}/pdf`)
+    }
   }
 
   // ⚡ debounce search — รอ 300ms หลังพิมพ์เสร็จ จึงค่อยยิง API (กัน request ฟุ่มเฟือยตอนพิมพ์เร็วๆ)
@@ -151,10 +155,10 @@ export function ListPage({ tab }) {
             <>
               <div className="stats">
                 {[
-                  { ico: "doc",      cls: "bl", lbl: "กรมธรรม์ทั้งหมด",   val: total.toLocaleString(),  sub: "รายการในระบบ" },
-                  { ico: "shield",   cls: "gr", lbl: "คุ้มครองอยู่",       val: active,                  sub: "ยังไม่หมดอายุ" },
-                  { ico: "bell",     cls: "am", lbl: "ใกล้หมดอายุ",        val: expiring.length,         sub: "ภายใน 30 วัน" },
-                  { ico: "banknote", cls: "pu", lbl: "เบี้ยรวม (หน้านี้)", val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท" },
+                  { ico: "doc",      cls: "bl", lbl: "กรมธรรม์",  val: total.toLocaleString(),  sub: "ทั้งหมดในระบบ" },
+                  { ico: "shield",   cls: "gr", lbl: "คุ้มครองอยู่", val: active,                  sub: "ยังไม่หมดอายุ" },
+                  { ico: "bell",     cls: "am", lbl: "ใกล้หมดอายุ", val: expiring.length,         sub: "ภายใน 30 วัน" },
+                  { ico: "banknote", cls: "pu", lbl: "เบี้ยรวม",   val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท (หน้านี้)" },
                 ].map(c => (
                   <div key={c.lbl} className="sc">
                     <div className="sc-bd">

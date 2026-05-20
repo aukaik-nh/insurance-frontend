@@ -263,12 +263,15 @@ export function DetailPage() {
 
   // pdfBlobUrl / pdfBlobLoading ถูกคำนวณไว้แล้วก่อน early return (Rules of Hooks)
 
-  const F = ({ label, value, hi, mono }) => (
-    <div className="info-field">
-      <div className="info-label">{label}</div>
-      <div className={`info-val${hi ? " hi" : ""}${mono ? " mono" : ""}`}>{value || "—"}</div>
-    </div>
-  )
+  const F = ({ label, value, hi, mono }) => {
+    const isEmpty = !value && value !== 0
+    return (
+      <div className={`info-field${isEmpty ? " info-field-empty" : ""}`}>
+        <div className="info-label">{label}</div>
+        <div className={`info-val${hi ? " hi" : ""}${mono ? " mono" : ""}`}>{value || "—"}</div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -360,20 +363,20 @@ export function DetailPage() {
             {editMode ? (
               <>
                 <button className="btn btn-w" onClick={cancelEdit} disabled={saving}>
-                  <Ico n="x" s={18} /> ยกเลิก
+                  <Ico n="x" s={18} /> <span className="btn-label">ยกเลิก</span>
                 </button>
                 <button className="btn btn-b" onClick={saveEdit} disabled={saving}>
-                  <Ico n="check" s={18} /> {saving ? "กำลังบันทึก…" : "บันทึก"}
+                  <Ico n="check" s={18} /> <span className="btn-label">{saving ? "กำลังบันทึก…" : "บันทึก"}</span>
                 </button>
               </>
             ) : (
               <>
                 <button className="btn btn-w" onClick={deletePolicy}
                   style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
-                  <Ico n="trash" s={18} /> ลบข้อมูล
+                  <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
                 </button>
                 <button className="btn btn-b" onClick={startEdit}>
-                  <Ico n="pen" s={18} /> แก้ไข
+                  <Ico n="pen" s={18} /> <span className="btn-label">แก้ไข</span>
                 </button>
               </>
             )}

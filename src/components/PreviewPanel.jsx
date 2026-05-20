@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Ico } from "../icons"
 import { getStatus, fmtDate, baht, policyTypeLabel } from "../helpers"
 import api from "../api"
-import { usePdfBlob } from "../pdfUtils"
+import { usePdfBlob, prefetchPdf } from "../pdfUtils"
 
 function PvpField({ label, value, multiline, mono, hi }) {
   if (!value || value === "") return null
@@ -53,6 +53,12 @@ export function PreviewPanel({ p, onClose, onOpen }) {
           (r.pdf_url || r.pdf_filename || r.pdf_size)
         )
         setRelatedPdfs(sameCustomer)
+        // ⚡ prefetch PDF ของทุก renewals ที่ user น่าจะคลิกดู
+        sameCustomer.forEach(r => {
+          if (r.pdf_filename || r.pdf_size) {
+            prefetchPdf(`${api.defaults.baseURL}/policies/${r.id}/pdf`)
+          }
+        })
       })
       .catch(() => { if (!cancelled) setRelatedPdfs([]) })
     return () => { cancelled = true }

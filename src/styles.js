@@ -521,10 +521,22 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .sb-status-txt{display:none}
 }
 @media(max-width:639px){
-  .stats{grid-template-columns:1fr 1fr;gap:12px}
-  .sc{padding:16px 18px 14px}
-  .sc-ico{width:46px;height:46px;border-radius:13px}
-  .sc-val{font-size:28px}
+  .stats{grid-template-columns:1fr 1fr;gap:10px}
+  .sc{padding:14px 14px 12px;gap:10px;align-items:center}
+  .sc-ico{width:38px;height:38px;border-radius:10px;flex-shrink:0}
+  .sc-ico svg{width:20px;height:20px}
+  .sc-bd{min-width:0;flex:1}
+  .sc-lbl{
+    font-size:13px;
+    line-height:1.3;
+    margin-bottom:4px;
+    /* 2 บรรทัดสูงสุดแล้ว ellipsis — กัน label ยาวไม่พัง layout */
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .sc-val{font-size:23px;letter-spacing:-.4px}
   .sc-sub{display:none}
   .srch{display:none}
   .body{padding:16px}
@@ -540,6 +552,13 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .fi{padding:14px 16px}
   .fi.fw{grid-column:unset}
   .drop{padding:30px 18px}
+}
+@media(max-width:380px){
+  .sc{padding:12px 12px 10px;gap:8px}
+  .sc-ico{width:34px;height:34px;border-radius:9px}
+  .sc-ico svg{width:18px;height:18px}
+  .sc-lbl{font-size:12.5px}
+  .sc-val{font-size:21px}
 }
 
 .page-wrap{display:block;min-height:calc(100vh - 64px)}
@@ -760,29 +779,44 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .pdf-preview-wrap .pdf-iframe{height:60vh !important;min-height:320px !important}
 }
 @media(max-width:639px){
-  .page-hd{padding:10px 14px;gap:8px;flex-wrap:wrap}
+  .page-hd{padding:8px 12px;gap:8px;flex-wrap:wrap;align-items:center}
   .page-hd-div{display:none}
-  .page-body{padding:14px 12px}
-  .page-title{font-size:15px}
-  .page-sub{font-size:12px}
-  .page-hd-right{gap:6px}
-  .page-hd-right .btn{padding:10px 14px;font-size:14px}
-  .info-row{grid-template-columns:1fr}
+  .page-body{padding:12px 12px}
+  .page-title{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .page-sub{font-size:12px;margin-top:2px}
+  .page-hd-info{flex:1;min-width:0}
+  .page-hd-info > div:first-child{min-width:0;flex-wrap:wrap}
+  .page-hd-right{gap:6px;margin-left:auto;flex-shrink:0;flex-wrap:nowrap}
+  .page-hd-right .btn{padding:9px 12px;font-size:13.5px;gap:6px;border-radius:9px}
+  .page-back{padding:9px 12px;font-size:14px;flex-shrink:0}
+  .info-row{grid-template-columns:1fr;gap:14px}
   .info-row.fw{grid-template-columns:1fr}
-  .info-card-bd{padding:14px 14px}
-  .info-card{margin-bottom:14px;border-radius:12px}
-  .info-card-hd{padding:12px 14px}
-  .info-card-title{font-size:15px}
-  .info-val.hi{font-size:20px}
+  .info-row[style*="margin-bottom"]{margin-bottom:14px !important}
+  .info-card{margin-bottom:14px;border-radius:13px}
+  .info-card-hd{padding:11px 14px}
+  .info-card-title{font-size:15.5px}
+  .info-card-bd{padding:13px 14px !important}
+  .info-label{font-size:13px;margin-bottom:4px}
+  .info-val{font-size:15.5px}
+  .info-val.hi{font-size:20px !important}
+  /* hero "เลขกรมธรรม์" card — ลด padding และ font-size */
+  .info-card-bd > .info-field[style*="blue-bg"]{padding:12px 14px !important;margin-bottom:12px !important;border-radius:10px !important}
+  .info-card-bd > .info-field[style*="blue-bg"] .info-val{font-size:19px !important}
   .pdf-preview-wrap .pdf-iframe{height:55vh !important;min-height:280px !important}
   .pdf-preview-bar{padding:10px 12px;gap:7px}
   .pdf-zoom-btn{width:34px;height:34px}
-  .page-back{padding:10px 14px;font-size:15px}
 }
 @media(max-width:480px){
-  .page-hd{padding:8px 12px}
-  .page-back span{display:none}
-  .page-back{padding:10px}
+  .page-hd{padding:7px 10px}
+  .page-back{padding:8px 10px;font-size:0;gap:0;min-width:38px;justify-content:center}
+  .page-back svg{flex-shrink:0}
+  /* ซ่อนข้อความปุ่ม action — เหลือไอคอนอย่างเดียว */
+  .page-hd-right .btn .btn-label{display:none}
+  .page-hd-right .btn{padding:9px;min-width:40px;justify-content:center;gap:0}
+  /* ซ่อน field ที่ค่าว่าง บนจอเล็ก เพื่อลดความยาวหน้า */
+  .info-field-empty{display:none}
+  .info-card-bd{padding:12px !important}
+  .page-body{padding:10px 10px}
 }
 `
 
