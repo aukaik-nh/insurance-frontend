@@ -4,12 +4,20 @@ import { F_SECS, F_LBL } from "../helpers"
 const DATE_KEYS = ["coverage_start", "coverage_end", "date_notify", "date_cancel", "date_policy_receive"]
 const CALC_KEYS = ["stamp_duty", "vat", "total_premium"]
 
-// "2016-12-03" → "03/12/2559"
-function toThai(iso) {
-  if (!iso) return ""
-  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  if (!m) return iso
-  return `${m[3]}/${m[2]}/${parseInt(m[1]) + 543}`
+// normalize: รับได้ทั้ง ISO ("2016-12-03"), DD/MM/YYYY (พ.ศ.), DD/MM/YYYY (ค.ศ.)
+// คืน ISO เสมอ — ถ้า parse ไม่ได้ คืน input เดิม
+function normalizeDate(raw) {
+  if (!raw) return ""
+  const s = String(raw).trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/)
+  if (!m) return s
+  let [, d, mo, y] = m
+  y = parseInt(y, 10); mo = parseInt(mo, 10); d = parseInt(d, 10)
+  if (y > 2400) y -= 543               // พ.ศ. → ค.ศ.
+  else if (y < 100) y += 2000           // 2-digit
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return s
+  return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`
 }
 
 function calcPremium(net) {
@@ -47,6 +55,8 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
               const isWide  = k === "insured_address"
               const rawVal  = values[k] ?? ""
 
+              // value สำหรับ <input type=date> ต้องเป็น YYYY-MM-DD (ค.ศ.) เสมอ
+              const dateVal = isDate ? normalizeDate(rawVal) : ""
               return (
                 <div key={k} className={`fi${isWide ? " fw" : ""}`}>
                   <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -58,10 +68,10 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
                     )}
                   </label>
                   <input
-                    type="text"
+                    type={isDate ? "date" : "text"}
                     readOnly={isCalc}
                     placeholder={
-                      isDate                   ? "DD/MM/YYYY"
+                      isDate                   ? "YYYY-MM-DD"
                       : k === "policy_number"  ? "เช่น 10-72-69/006797"
                       : k === "license_plate"  ? "เช่น 1กก 1234"
                       : k === "phone"          ? "เช่น 081-234-5678"
@@ -69,8 +79,12 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
                       : ""
                     }
                     style={isCalc ? { background: "var(--blue-bg)", color: "var(--blue)", cursor: "default", fontWeight: 600 } : {}}
-                    value={isDate ? toThai(rawVal) : rawVal}
-                    onChange={e => !isCalc && handleChange(k, e.target.value)}
+                    value={isDate ? (/^\d{4}-\d{2}-\d{2}$/.test(dateVal) ? dateVal : "") : rawVal}
+                    onChange={e => {
+                      if (isCalc) return
+                      // date input คืน YYYY-MM-DD เสมอ — เก็บ ISO ตรงๆ ไม่ต้องแปลง
+                      handleChange(k, e.target.value)
+                    }}
                   />
                 </div>
               )

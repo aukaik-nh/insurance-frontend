@@ -116,6 +116,13 @@ export function InvoicePage() {
     if (!form.invoice_no.trim()) { setErr("กรุณาใส่เลขที่ใบแจ้งหนี้"); return }
     if (!(calc.net > 0))        { setErr("กรุณาใส่เบี้ยประกันสุทธิ"); return }
 
+    // ⚠️ เปิด tab ก่อน await — popup blocker อนุญาตเฉพาะ window.open ที่เกิดจาก user gesture
+    const win = window.open("", "_blank")
+    if (!win) {
+      setErr("กรุณาอนุญาตให้เปิดแท็บใหม่ในเบราว์เซอร์ (popup ถูกบล็อก)")
+      return
+    }
+
     const items = [{
       description: form.description || "เบี้ยประกันภัย",
       quantity: 1,
@@ -142,9 +149,12 @@ export function InvoicePage() {
       }, { responseType: "blob" })
 
       const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }))
-      window.open(url, "_blank")
+      win.location.href = url
+      // browser GC blob URL เมื่อแท็บปิด — แต่เผื่อ revoke หลังโหลดเสร็จ (delay ให้ tab โหลด PDF ก่อน)
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
       notify("สร้างใบแจ้งหนี้สำเร็จ")
     } catch (e) {
+      win.close()
       const detail = e.response?.data
       let msg = e.message
       if (detail instanceof Blob) {
