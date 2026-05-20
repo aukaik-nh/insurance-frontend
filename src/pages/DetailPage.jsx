@@ -76,6 +76,28 @@ export function DetailPage() {
       .catch(() => setRelatedPdfs([]))
   }, [p?.id, p?.license_plate, p?.pdf_url, refreshKey])
 
+  // ⚠️ usePdfBlob ต้องถูกเรียก *ก่อน* early return — Rules of Hooks
+  // คำนวณ input แบบ null-safe (รองรับช่วง p ยังไม่โหลด)
+  const _activePolicy   = relatedPdfs.find(r => r.id === activePdfId) || p
+  const _hasPdfInDb     = !!_activePolicy?.pdf_filename || !!_activePolicy?.pdf_size
+  const _isLegacyPdf    = !!(_activePolicy?.pdf_url && _activePolicy.pdf_url.includes("drive.google.com"))
+  const _viewingRelated = !!p && activePdfId !== p.id
+  const _blobApiUrl     = !p ? null
+    : _viewingRelated && _activePolicy?.id
+        ? `${api.defaults.baseURL}/policies/${_activePolicy.id}/pdf`
+    : activeDocId === "main"
+        ? `${api.defaults.baseURL}/policies/${p.id}/pdf`
+    : activeDocId
+        ? `${api.defaults.baseURL}/policies/${p.id}/attachments/${activeDocId}/pdf`
+    : null
+  const _hasActiveDoc = !p ? false
+    : _viewingRelated ? _hasPdfInDb
+    : (activeDocId !== "main" || _hasPdfInDb)
+
+  const { blobUrl: pdfBlobUrl, loading: pdfBlobLoading } = usePdfBlob(
+    _hasActiveDoc && !_isLegacyPdf ? _blobApiUrl : null
+  )
+
   if (loading) return (
     <div className="page-wrap">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, gap: 12, padding: 40 }}>
@@ -213,16 +235,10 @@ export function DetailPage() {
   const currentDocDlUrl    = `${currentDocUrl}?download=1`
   const showDocTabs        = !viewingRelated && docTabs.length > 1
 
-  // hasActiveDoc = มีเอกสารที่ต้องโหลด
-  //   • ดู tab กรมธรรม์หลัก → ต้องมี PDF หลักอยู่
-  //   • ดู tab เอกสารแนบ (prb/endorsement) → โหลดเสมอ
-  //   • ดู related policy → ใช้ hasPdfInDb ของ activePolicy
-  const hasActiveDoc = viewingRelated ? hasPdfInDb : (activeDocId !== "main" || hasPdfInDb)
+  // hasActiveDoc = มีเอกสารที่ต้องโหลด (อ้างอิงตัวที่คำนวณไว้ก่อน early return)
+  const hasActiveDoc = _hasActiveDoc
 
-  // Blob URL สำหรับ iframe (iframe ส่ง auth header ไม่ได้)
-  const { blobUrl: pdfBlobUrl, loading: pdfBlobLoading } = usePdfBlob(
-    hasActiveDoc && !isLegacyPdf ? currentDocUrl : null
-  )
+  // pdfBlobUrl / pdfBlobLoading ถูกคำนวณไว้แล้วก่อน early return (Rules of Hooks)
 
   const F = ({ label, value, hi, mono }) => (
     <div className="info-field">
