@@ -14,20 +14,24 @@ export function DetailPage() {
   const { state }     = useLocation()
   const { id }        = useParams()
 
-  const [p, setP]           = useState(null)
-  const [loading, setLoading] = useState(true)
+  // ⚡ instant render: ถ้ามีข้อมูลจาก list (navigate state) ใช้ทันที — ไม่ต้องรอ API
+  //    ยังคง fetch ข้อมูลล่าสุดในเบื้องหลังเพื่อ refresh
+  const initialP = state?.policy && state.policy.id === id ? state.policy : null
+
+  const [p, setP]           = useState(initialP)
+  const [loading, setLoading] = useState(!initialP)
   const [fetchErr, setFetchErr] = useState(false)
 
   const [pdfFull, setPdfFull]       = useState(false)
   const [editName, setEditName]     = useState(false)
-  const [name, setName]             = useState(state?.policy?.pdf_filename || "")
+  const [name, setName]             = useState(initialP?.pdf_filename || "")
   const [savingName, setSavingName] = useState(false)
   const [editMode, setEditMode]     = useState(false)
   const [editVals, setEditVals]     = useState({})
   const [saving, setSaving]         = useState(false)
 
   const [relatedPdfs, setRelatedPdfs] = useState([])  // PDFs ของลูกค้าเดียวกัน (renewals)
-  const [activePdfId, setActivePdfId] = useState(null) // id ของ record ที่กำลังดู PDF
+  const [activePdfId, setActivePdfId] = useState(initialP?.id || null) // id ของ record ที่กำลังดู PDF
   const [pdfListOpen, setPdfListOpen] = useState(true) // collapse/expand list
   const [uploadingPdf, setUploadingPdf] = useState(false)
   const [refreshKey, setRefreshKey]     = useState(0)
@@ -40,47 +44,59 @@ export function DetailPage() {
   const [attachItems, setAttachItems] = useState([])
   const [activeDocId, setActiveDocId] = useState("main")
 
-  // fetch ข้อมูลล่าสุดจาก API เสมอ — re-trigger ได้ด้วย refreshKey
+  // fetch ข้อมูลล่าสุดจาก API — refresh data ในเบื้องหลัง
   useEffect(() => {
     if (!id) return
     let cancelled = false
-    setLoading(true)
+    // ถ้าไม่มี cache → แสดง spinner; ถ้ามี cache → fetch เงียบๆ ไม่บัง UI
+    if (!initialP) setLoading(true)
     setFetchErr(false)
     api.get(`/policies/${id}`)
       .then(res => {
         if (cancelled) return
         setP(res.data)
         setName(res.data.pdf_filename || "")
-        setActivePdfId(res.data.id)
+        // ตั้ง activePdfId เป็น id ของ policy ที่เพิ่ง fetch — เว้นแต่ผู้ใช้กำลังดู PDF related ของ policy นี้อยู่
+        setActivePdfId(prev => (prev && prev !== res.data.id ? prev : res.data.id))
       })
-      .catch(() => { if (!cancelled) setFetchErr(true) })
+      .catch(() => { if (!cancelled && !initialP) setFetchErr(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [id, refreshKey])
+
+  // เมื่อเปลี่ยน policy id (เช่น navigate จาก /policies/A → /policies/B) → reset activePdfId
+  useEffect(() => {
+    if (initialP?.id === id) setActivePdfId(id)
+    else setActivePdfId(null)  // จะถูกตั้งใหม่หลัง fetch เสร็จ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   // reset doc tab เมื่อสลับ related policy
   useEffect(() => { setActiveDocId("main") }, [activePdfId])
 
   // fetch ลูกค้าเดียวกัน (search ทะเบียน) — กรองเฉพาะที่มี PDF
-  // re-fetch เมื่อ refreshKey เปลี่ยน (หลัง upload/delete)
+  // ⚡ defer 250ms — ให้หน้าหลัก render เสร็จก่อน ค่อยโหลดข้อมูล related (ไม่ critical)
   useEffect(() => {
     if (!p?.license_plate) { setRelatedPdfs([]); return }
     const plate = p.license_plate.trim()
     if (!plate || plate === "OTHER" || plate === "—") { setRelatedPdfs([]); return }
 
     let cancelled = false
-    api.get("/policies", { params: { search: plate, limit: 50 } })
-      .then(res => {
-        if (cancelled) return
-        const all = res.data.data || []
-        const sameCustomer = all.filter(r =>
-          r.license_plate?.trim() === plate &&
-          (r.pdf_url || r.pdf_filename || r.pdf_size)  // มี PDF เท่านั้น
-        )
-        setRelatedPdfs(sameCustomer)
-      })
-      .catch(() => { if (!cancelled) setRelatedPdfs([]) })
-    return () => { cancelled = true }
+    const timer = setTimeout(() => {
+      if (cancelled) return
+      api.get("/policies", { params: { search: plate, limit: 50 } })
+        .then(res => {
+          if (cancelled) return
+          const all = res.data.data || []
+          const sameCustomer = all.filter(r =>
+            r.license_plate?.trim() === plate &&
+            (r.pdf_url || r.pdf_filename || r.pdf_size)  // มี PDF เท่านั้น
+          )
+          setRelatedPdfs(sameCustomer)
+        })
+        .catch(() => { if (!cancelled) setRelatedPdfs([]) })
+    }, 250)
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [p?.id, p?.license_plate, p?.pdf_url, refreshKey])
 
   // ⚠️ usePdfBlob ต้องถูกเรียก *ก่อน* early return — Rules of Hooks

@@ -463,6 +463,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .ldg{text-align:center;padding:64px 20px}
 .spin{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--brd);border-top-color:var(--blue);animation:spin .65s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .ldg-t{font-size:14px;font-weight:500;color:var(--t2)}
 .ldg-s{font-size:13px;color:var(--t3);margin-top:4px}
 .empty{text-align:center;padding:64px 20px}

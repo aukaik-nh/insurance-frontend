@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
@@ -46,12 +46,32 @@ export function ListPage({ tab }) {
     setPage(1)
   }
 
-  // race-safe fetch — ใช้ ref กัน race condition จาก search/filter ที่กดเร็วๆ
+  // ⚡ prefetch: hover แถวในตาราง → ดึง detail + attachments ล่วงหน้า
+  // browser cache + axios จัดการให้ — request ซ้ำกัน 1 วินาทีไม่ยิงใหม่
+  const prefetchedIds = useRef(new Set())
+  const prefetchPolicy = (r) => {
+    if (!r?.id || prefetchedIds.current.has(r.id)) return
+    prefetchedIds.current.add(r.id)
+    // expire หลัง 30 วินาที — กัน cache เก่าค้าง
+    setTimeout(() => prefetchedIds.current.delete(r.id), 30_000)
+    api.get(`/policies/${r.id}`).catch(() => {})
+    api.get(`/policies/${r.id}/attachments`).catch(() => {})
+  }
+
+  // ⚡ debounce search — รอ 300ms หลังพิมพ์เสร็จ จึงค่อยยิง API (กัน request ฟุ่มเฟือยตอนพิมพ์เร็วๆ)
+  const [debouncedSearch, setDebouncedSearch] = useState(search)
+  useEffect(() => {
+    if (search === debouncedSearch) return
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  // race-safe fetch — ป้องกัน race condition จาก filter ที่กดเร็วๆ
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     const params = { page, limit: LIMIT, sort: sortKey, order: sortDir }
-    if (search)   params.search    = search
+    if (debouncedSearch) params.search = debouncedSearch
     if (status)   params.status    = status
     if (dateFrom) params.date_from = dateFrom
     if (dateTo)   params.date_to   = dateTo
@@ -77,7 +97,7 @@ export function ListPage({ tab }) {
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [page, search, sortKey, sortDir, status, dateFrom, dateTo, hasPdf])
+  }, [page, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf])
   useEffect(() => { setPreviewPolicy(null) }, [tab])
 
   const expiring = rows.filter(r => {
@@ -315,6 +335,7 @@ export function ListPage({ tab }) {
             pages={tab === "expiring" ? 1 : pages}
             setPage={tab === "expiring" ? () => {} : setPage}
             onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
+            onRowHover={prefetchPolicy}
             activeId={previewPolicy?.id}
             pageOffset={tab === "expiring" ? 0 : (page - 1) * LIMIT}
             sortKey={sortKey}

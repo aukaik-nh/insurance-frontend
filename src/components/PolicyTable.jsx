@@ -29,8 +29,9 @@ function SortHeader({ label, col, sortKey, sortDir, onSort, style }) {
   )
 }
 
-export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset, sortKey, sortDir, onSort }) {
-  if (loading) return (
+export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset, sortKey, sortDir, onSort, onRowHover }) {
+  // ⚡ แสดง spinner เฉพาะตอนยังไม่มีข้อมูลเลย — refetch ครั้งถัดไปให้แสดงข้อมูลเดิมไปก่อน
+  if (loading && !rows.length) return (
     <div className="card">
       <div className="ldg">
         <div className="spin" />
@@ -50,7 +51,17 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
   )
 
   return (
-    <div className="card">
+    <div className="card" style={{ position: "relative" }}>
+      {/* refreshing indicator — โผล่บนตารางตอนกำลังโหลด (ไม่ปิด UI) */}
+      {loading && (
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 2,
+          background: "linear-gradient(90deg, transparent, var(--blue), transparent)",
+          backgroundSize: "200% 100%",
+          animation: "shimmer 1.2s linear infinite",
+          zIndex: 5,
+        }} />
+      )}
       <div className="card-hd">
         <div>
           <div className="card-title">รายการกรมธรรม์</div>
@@ -75,7 +86,10 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
               const st     = getStatus(r.coverage_end)
               const hasPdf = !!(r.pdf_url || r.pdf_filename || r.pdf_size)
               return (
-                <tr key={r.id} onClick={() => onRow(r)} className={activeId === r.id ? "tr-active" : ""}>
+                <tr key={r.id}
+                  onClick={() => onRow(r)}
+                  onMouseEnter={() => onRowHover?.(r)}
+                  className={activeId === r.id ? "tr-active" : ""}>
                   <td style={{ textAlign: "center", color: "var(--t2)", fontSize: 15, fontVariantNumeric: "tabular-nums" }}>
                     {pageOffset + idx + 1}
                   </td>
