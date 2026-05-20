@@ -154,13 +154,19 @@ export function PreviewPanel({ p, onClose, onOpen }) {
               <div className="spin" style={{ width: 28, height: 28, borderWidth: 2.5 }} />
               <div style={{ fontSize: 14 }}>กำลังโหลด PDF…</div>
             </div>
-          ) : (
+          ) : pdfBlobUrl ? (
             <iframe
               key={activePolicy.id}
-              src={pdfBlobUrl || ""}
+              src={pdfBlobUrl}
               title="PDF"
               style={{ width: "100%", flex: 1, minHeight: 0, border: "none", display: "block", background: "#f5f5f5" }}
             />
+          ) : (
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 10, background: "var(--sur2)", color: "var(--t3)", padding: 24, textAlign: "center" }}>
+              <Ico n="warn" s={36} sw={1} />
+              <div style={{ fontSize: 15, fontWeight: 600, color: "var(--t2)" }}>โหลด PDF ไม่สำเร็จ</div>
+              <div style={{ fontSize: 13, lineHeight: 1.5 }}>กดปุ่ม "ดูข้อมูลทั้งหมด" เพื่อเปิดหน้าเต็ม</div>
+            </div>
           )
         ) : (
           /* ไม่มี PDF → แสดงข้อมูลกรมธรรม์แทน */

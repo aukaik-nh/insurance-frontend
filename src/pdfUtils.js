@@ -63,8 +63,15 @@ export async function downloadPdf(apiUrl, filename = "document.pdf") {
   }
 }
 
-/** เปิด PDF ในแท็บใหม่ via auth (fetch → blob → window.open) */
+/** เปิด PDF ในแท็บใหม่ via auth (fetch → blob → window.open)
+ *  ⚠️  ต้องเปิด window ก่อน await เพื่อหลีกเลี่ยง popup blocker */
 export async function openPdfTab(apiUrl) {
+  // เปิด window synchronously (ก่อน await) — popup blocker อนุญาตเฉพาะที่เกิดจาก user gesture โดยตรง
+  const win = window.open("", "_blank")
+  if (!win) {
+    alert("กรุณาอนุญาตให้เปิดแท็บใหม่ในเบราว์เซอร์ (popup ถูกบล็อก)")
+    return
+  }
   try {
     const res = await fetch(apiUrl, {
       headers: { Authorization: `Bearer ${getToken()}` },
@@ -72,9 +79,9 @@ export async function openPdfTab(apiUrl) {
     if (!res.ok) throw new Error("โหลดไม่สำเร็จ")
     const blob = await res.blob()
     const url  = URL.createObjectURL(blob)
-    window.open(url, "_blank")
-    // blob URL จะถูก revoke เมื่อแท็บปิด (browser จัดการเอง)
+    win.location.href = url
   } catch (e) {
+    win.close()
     alert("เปิดไม่สำเร็จ: " + e.message)
   }
 }

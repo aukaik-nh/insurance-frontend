@@ -737,10 +737,17 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .sb-logout{color:var(--t2)}
 .sb-logout:hover{background:var(--red-bg) !important;border-color:var(--red-brd) !important;color:var(--red) !important}
 @media(max-width:639px){
-  .login-card{padding:28px 22px 24px;border-radius:18px}
+  .login-wrap{padding:16px;align-items:flex-start;padding-top:40px}
+  .login-card{padding:26px 20px 22px;border-radius:16px}
   .login-app-name{font-size:19px}
+  .login-app-sub{font-size:13px}
   .login-logo-wrap{width:52px;height:52px;border-radius:14px}
   .login-submit{padding:14px 20px;font-size:16px}
+  .login-bg-blob-1,.login-bg-blob-2{display:none}
+}
+@media(max-width:380px){
+  .login-card{padding:22px 16px 18px}
+  .login-brand{gap:12px}
 }
 /* ═══════════════════════════════════════════════════════════ */
 
@@ -749,14 +756,32 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .detail-split,.upload-split{grid-template-columns:1fr}
   .detail-aside,.upload-aside{position:static}
   .upload-aside .pdf-iframe{height:400px !important}
+  .pdf-preview-wrap .pdf-iframe{height:60vh !important;min-height:320px !important}
 }
 @media(max-width:639px){
-  .page-hd{padding:10px 14px;gap:10px}
-  .page-body{padding:18px 16px}
-  .page-title{font-size:15.5px}
+  .page-hd{padding:10px 14px;gap:8px;flex-wrap:wrap}
+  .page-hd-div{display:none}
+  .page-body{padding:14px 12px}
+  .page-title{font-size:15px}
+  .page-sub{font-size:12px}
+  .page-hd-right{gap:6px}
+  .page-hd-right .btn{padding:10px 14px;font-size:14px}
   .info-row{grid-template-columns:1fr}
-  .info-card-bd{padding:18px 16px}
-  .info-card{margin-bottom:16px}
+  .info-row.fw{grid-template-columns:1fr}
+  .info-card-bd{padding:14px 14px}
+  .info-card{margin-bottom:14px;border-radius:12px}
+  .info-card-hd{padding:12px 14px}
+  .info-card-title{font-size:15px}
+  .info-val.hi{font-size:20px}
+  .pdf-preview-wrap .pdf-iframe{height:55vh !important;min-height:280px !important}
+  .pdf-preview-bar{padding:10px 12px;gap:7px}
+  .pdf-zoom-btn{width:34px;height:34px}
+  .page-back{padding:10px 14px;font-size:15px}
+}
+@media(max-width:480px){
+  .page-hd{padding:8px 12px}
+  .page-back span{display:none}
+  .page-back{padding:10px}
 }
 `
 

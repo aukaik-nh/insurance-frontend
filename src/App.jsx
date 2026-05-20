@@ -204,7 +204,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                 })}
 
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t3)", letterSpacing: 1, padding: "16px 12px 6px" }}>
-                  สร้าง / เพิ่ม
+                  จัดการ
                 </div>
                 {NAV_ACTION.map(it => {
                   const active = isActive(it.path)
@@ -240,6 +240,31 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                     </div>
                   )
                 })}
+
+                {/* Logout row */}
+                <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid var(--brd)" }}>
+                  <div
+                    onClick={() => { setMobileMenu(false); onLogout() }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 14,
+                      padding: "14px 14px", borderRadius: 11, cursor: "pointer",
+                      border: "1px solid var(--red-brd)",
+                      background: "var(--red-bg)",
+                    }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 11,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--red-bg)", color: "var(--red)", flexShrink: 0,
+                      border: "1.5px solid var(--red-brd)",
+                    }}>
+                      <Ico n="logout" s={21} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: "var(--red)" }}>ออกจากระบบ</div>
+                      <div style={{ fontSize: 14, color: "var(--t3)", marginTop: 3 }}>ล้างข้อมูลและกลับหน้าล็อกอิน</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
           )}

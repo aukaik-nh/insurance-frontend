@@ -213,9 +213,15 @@ export function DetailPage() {
   const currentDocDlUrl    = `${currentDocUrl}?download=1`
   const showDocTabs        = !viewingRelated && docTabs.length > 1
 
+  // hasActiveDoc = มีเอกสารที่ต้องโหลด
+  //   • ดู tab กรมธรรม์หลัก → ต้องมี PDF หลักอยู่
+  //   • ดู tab เอกสารแนบ (prb/endorsement) → โหลดเสมอ
+  //   • ดู related policy → ใช้ hasPdfInDb ของ activePolicy
+  const hasActiveDoc = viewingRelated ? hasPdfInDb : (activeDocId !== "main" || hasPdfInDb)
+
   // Blob URL สำหรับ iframe (iframe ส่ง auth header ไม่ได้)
   const { blobUrl: pdfBlobUrl, loading: pdfBlobLoading } = usePdfBlob(
-    hasPdfInDb && !isLegacyPdf ? currentDocUrl : null
+    hasActiveDoc && !isLegacyPdf ? currentDocUrl : null
   )
 
   const F = ({ label, value, hi, mono }) => (
@@ -595,7 +601,8 @@ export function DetailPage() {
                 </div>
               )}
 
-              {isLegacyPdf ? (
+              {/* isLegacyPdf ใช้กับ tab หลัก / related เท่านั้น — ถ้าเป็น attachment ให้ข้ามไป */}
+              {(isLegacyPdf && activeDocId === "main") ? (
                 <div className="info-card" style={{ marginBottom: 0 }}>
                   <div className="info-card-bd">
                     <div className="pdf-placeholder" style={{ height: 360, padding: 24 }}>
@@ -613,7 +620,7 @@ export function DetailPage() {
                     </div>
                   </div>
                 </div>
-              ) : hasPdfInDb ? (
+              ) : hasActiveDoc ? (
                 <div
                   className="pdf-preview-wrap"
                   onDragOver={e => { e.preventDefault() }}
@@ -647,6 +654,10 @@ export function DetailPage() {
                         <button className="pdf-zoom-btn" onClick={() => setEditName(true)} title="แก้ไขชื่อ">
                           <Ico n="pen" s={17} />
                         </button>
+                        <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ"
+                          disabled={!pdfBlobUrl}>
+                          <Ico n="expand" s={17} />
+                        </button>
                         <button className="pdf-zoom-btn" onClick={() => openPdfTab(currentDocUrl)} title="เปิดแท็บใหม่">
                           <Ico n="open" s={17} />
                         </button>
@@ -671,13 +682,22 @@ export function DetailPage() {
                       <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
                       <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>
                     </div>
-                  ) : (
+                  ) : pdfBlobUrl ? (
                     <iframe
                       key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
                       className="pdf-iframe"
-                      src={pdfBlobUrl || ""}
+                      src={pdfBlobUrl}
                       title="PDF Preview"
                       style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)", color: "var(--t3)" }}>
+                      <Ico n="warn" s={40} sw={1} />
+                      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--t2)" }}>โหลด PDF ไม่สำเร็จ</div>
+                      <button className="btn btn-w" style={{ fontSize: 14, padding: "9px 18px" }}
+                        onClick={() => openPdfTab(currentDocUrl)}>
+                        <Ico n="open" s={16} /> เปิดในแท็บใหม่แทน
+                      </button>
+                    </div>
                   )}
                 </div>
               ) : (
