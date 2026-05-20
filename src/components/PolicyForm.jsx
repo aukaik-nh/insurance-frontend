@@ -20,7 +20,7 @@ function calcPremium(net) {
   return { stamp_duty: stamp, vat, total_premium: total }
 }
 
-export function PolicyForm({ values, onChange }) {
+export function PolicyForm({ values, onChange, hideSections = [] }) {
   function handleChange(k, val) {
     if (k === "net_premium") {
       const calc = calcPremium(val)
@@ -30,12 +30,14 @@ export function PolicyForm({ values, onChange }) {
     }
   }
 
+  const sections = F_SECS.filter(s => !hideSections.includes(s.label))
+
   return (
     <>
-      {F_SECS.map(sec => (
-        <div key={sec.label} style={{ marginBottom: 18 }}>
+      {sections.map(sec => (
+        <div key={sec.label} style={{ marginBottom: 30 }}>
           <div className="shd">
-            <Ico n={sec.ico} s={13} />
+            <Ico n={sec.ico} s={17} />
             <span className="shd-lbl">{sec.label}</span>
           </div>
           <div className="fg">
@@ -47,10 +49,10 @@ export function PolicyForm({ values, onChange }) {
 
               return (
                 <div key={k} className={`fi${isWide ? " fw" : ""}`}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {F_LBL[k]}
                     {isCalc && (
-                      <span style={{ fontSize: 10, color: "var(--blue)", background: "var(--blue-bg)", borderRadius: 4, padding: "1px 5px" }}>
+                      <span style={{ fontSize: 12, color: "var(--blue)", background: "var(--blue-bg)", borderRadius: 6, padding: "3px 8px" }}>
                         คำนวณอัตโนมัติ
                       </span>
                     )}
@@ -79,12 +81,12 @@ export function PolicyForm({ values, onChange }) {
 
       <div className="notes-card">
         <div className="notes-card-hd">
-          <Ico n="doc" s={13} />
+          <Ico n="doc" s={17} />
           <span>หมายเหตุ</span>
         </div>
         <textarea
           className="notes-ta"
-          rows={4}
+          rows={5}
           placeholder="บันทึกข้อความเพิ่มเติม เช่น รายละเอียดพิเศษ, ข้อตกลง, หรือข้อมูลอื่น…"
           value={values.notes ?? ""}
           onChange={e => onChange({ ...values, notes: e.target.value })}

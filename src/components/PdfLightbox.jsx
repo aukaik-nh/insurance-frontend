@@ -25,24 +25,24 @@ export function PdfLightbox({ src, filename, sizeKB, onClose }) {
   return (
     <div className="pdf-lb-ov" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="pdf-lb-bar">
-        <Ico n="doc" s={16} />
+        <Ico n="doc" s={20} />
         <div className="pdf-lb-name">
           {filename || "PDF Preview"}
           {sizeKB && <span className="pdf-lb-size">  ·  {sizeKB} KB</span>}
         </div>
         <button className="pdf-lb-btn" onClick={() => stepZoom(-1)} title="ย่อ (−)">
-          <Ico n="zoomOut" s={15} />
+          <Ico n="zoomOut" s={18} />
         </button>
         <span className="pdf-lb-zoom">{zoom}%</span>
         <button className="pdf-lb-btn" onClick={() => stepZoom(+1)} title="ขยาย (+)">
-          <Ico n="zoomIn" s={15} />
+          <Ico n="zoomIn" s={18} />
         </button>
         <button className="pdf-lb-btn" onClick={() => setZoom(100)} title="รีเซ็ต (0)">100%</button>
         <a className="pdf-lb-btn" href={src} target="_blank" rel="noreferrer" title="เปิดในแท็บใหม่">
-          <Ico n="open" s={15} /> แท็บใหม่
+          <Ico n="open" s={18} /> แท็บใหม่
         </a>
         <button className="pdf-lb-btn close" onClick={onClose} title="ปิด (Esc)">
-          <Ico n="x" s={15} /> ปิด
+          <Ico n="x" s={18} /> ปิด
         </button>
       </div>
       <div className="pdf-lb-body">
@@ -52,7 +52,7 @@ export function PdfLightbox({ src, filename, sizeKB, onClose }) {
             <iframe className="pdf-lb-frame" src={src} title="PDF Fullscreen" />
           ) : (
             <div className="pdf-placeholder" style={{ height: "100%" }}>
-              <Ico n="doc" s={40} sw={1} />
+              <Ico n="doc" s={48} sw={1} />
               <div className="ph-title">ยังไม่มีไฟล์</div>
             </div>
           )}

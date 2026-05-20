@@ -9,7 +9,7 @@ export function Toast({ msg, type, onClose }) {
 
   return (
     <div className={`toast ${type === "success" ? "ok" : "er"}`}>
-      <Ico n={type === "success" ? "checkc" : "xc"} s={17} />
+      <Ico n={type === "success" ? "checkc" : "xc"} s={22} />
       <span>{msg}</span>
     </div>
   )

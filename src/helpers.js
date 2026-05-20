@@ -66,6 +66,12 @@ export const F_SECS = [
     keys: ["net_premium", "stamp_duty", "vat", "total_premium",
            "third_party_per_person", "third_party_per_accident", "own_damage"],
   },
+  {
+    label: "ค่าคอมมิชชั่น / หัก ณ ที่จ่าย / ปัดเศษ",
+    ico: "banknote",
+    keys: ["prepaid_tax_1pct", "commission_pct", "commission_baht",
+           "wht_10pct", "rounding", "collected_amount"],
+  },
 ]
 
 export const F_LBL = {
@@ -99,5 +105,11 @@ export const F_LBL = {
   third_party_per_person:     "บุคคลภายนอก/คน",
   third_party_per_accident:   "บุคคลภายนอก/ครั้ง",
   own_damage:                 "ความเสียหายต่อรถ",
+  prepaid_tax_1pct:           "1% (ภาษีล่วงหน้า)",
+  commission_pct:             "CM %",
+  commission_baht:            "CM (บาท)",
+  wht_10pct:                  "ภาษี 10% (หัก ณ ที่จ่าย)",
+  rounding:                   "ปัดเศษ",
+  collected_amount:           "เรียกเก็บ",
   notes:                      "หมายเหตุ",
 }

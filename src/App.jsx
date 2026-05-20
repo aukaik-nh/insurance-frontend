@@ -35,17 +35,13 @@ function Layout() {
 
   // เมนูแบ่งเป็น 2 กลุ่ม
   const NAV_VIEW = [
-    { path: "/",          ico: "grid",   label: "ภาพรวม",          desc: "Dashboard + สถิติ", badge: 0 },
-    { path: "/policies",  ico: "doc",    label: "กรมธรรม์ทั้งหมด", desc: "ดู / ค้นหา / แก้ไข", badge: 0 },
-    { path: "/expiring",  ico: "bell",   label: "ใกล้หมดอายุ",     desc: "ภายใน 30 วัน", badge: expiringCount },
+    { path: "/", ico: "grid", label: "ภาพรวม", desc: "Dashboard + สถิติ", badge: 0 },
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "อัปโหลด PDF",   desc: "เพิ่มกรมธรรม์ใหม่" },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
   ]
-  const NAV = [...NAV_VIEW, ...NAV_ACTION]
-
-  const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
+const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
   const isActive = navPath => navPath === "/" ? path === "/" : path.startsWith(navPath)
 
   return (
@@ -57,7 +53,7 @@ function Layout() {
         <header className="sb" style={{ position: "relative" }}>
           {/* โลโก้ */}
           <div className="sb-logo" style={{ cursor: "pointer" }} onClick={() => navTo("/")}>
-            <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย" style={{ height: 52, width: 52, objectFit: "contain" }} />
+            <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย" style={{ height: 46, width: 46, objectFit: "contain" }} />
             <img src="/image.png" alt="" style={{ height: 36, width: 36, objectFit: "cover", borderRadius: "50%" }} />
             <div className="sb-brand">ประกันคุ้มภัย</div>
           </div>
@@ -71,28 +67,29 @@ function Layout() {
                   onClick={() => navTo(it.path)}
                   title={it.desc}
                   style={{
-                    display: "flex", alignItems: "center", gap: 7,
-                    padding: "8px 12px",
-                    borderRadius: 9,
+                    display: "flex", alignItems: "center", gap: 9,
+                    padding: "9px 16px",
+                    borderRadius: 10,
                     cursor: "pointer",
-                    fontSize: 13.5,
+                    fontSize: 15.5,
                     fontWeight: active ? 700 : 500,
-                    color: active ? "#fff" : "var(--t2)",
-                    background: active ? "var(--blue)" : "transparent",
-                    transition: "all 0.15s",
+                    color: active ? "var(--blue)" : "var(--t2)",
+                    background: active ? "var(--blue-bg)" : "transparent",
+                    transition: "all 0.13s",
+                    height: 42,
                   }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--blue-bg)" }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--sur2)" }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
                 >
-                  <Ico n={it.ico} s={15} />
+                  <Ico n={it.ico} s={17} />
                   <span>{it.label}</span>
                   {it.badge > 0 && (
                     <span style={{
-                      background: active ? "rgba(255,255,255,0.25)" : "var(--amber, #f59e0b)",
+                      background: "#F59E0B",
                       color: "#fff",
-                      padding: "1px 7px",
-                      borderRadius: 9,
-                      fontSize: 11,
+                      padding: "2px 10px",
+                      borderRadius: 11,
+                      fontSize: 13.5,
                       fontWeight: 700,
                       marginLeft: 2,
                     }}>{it.badge}</span>
@@ -100,7 +97,7 @@ function Layout() {
                 </div>
               )
             })}
-            <div style={{ width: 1, height: 22, background: "var(--brd)", margin: "0 8px" }} />
+            <div style={{ width: 1, height: 26, background: "var(--brd)", margin: "0 10px" }} />
             {NAV_ACTION.map(it => {
               const active = isActive(it.path)
               return (
@@ -108,20 +105,21 @@ function Layout() {
                   onClick={() => navTo(it.path)}
                   title={it.desc}
                   style={{
-                    display: "flex", alignItems: "center", gap: 7,
-                    padding: "8px 12px",
-                    borderRadius: 9,
+                    display: "flex", alignItems: "center", gap: 9,
+                    padding: "9px 16px",
+                    borderRadius: 10,
                     cursor: "pointer",
-                    fontSize: 13.5,
+                    fontSize: 15.5,
                     fontWeight: active ? 700 : 500,
-                    color: active ? "#fff" : "var(--t2)",
-                    background: active ? "var(--blue)" : "transparent",
-                    transition: "all 0.15s",
+                    color: active ? "var(--blue)" : "var(--t2)",
+                    background: active ? "var(--blue-bg)" : "transparent",
+                    transition: "all 0.13s",
+                    height: 42,
                   }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--blue-bg)" }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--sur2)" }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
                 >
-                  <Ico n={it.ico} s={15} />
+                  <Ico n={it.ico} s={17} />
                   <span>{it.label}</span>
                 </div>
               )
@@ -136,10 +134,10 @@ function Layout() {
             </div>
             <button className="theme-btn" onClick={() => setDarkMode(d => !d)}
               title={darkMode ? "โหมดสว่าง" : "โหมดมืด"}>
-              <Ico n={darkMode ? "sun" : "moon"} s={16} />
+              <Ico n={darkMode ? "sun" : "moon"} s={20} />
             </button>
             <button className="ham" onClick={() => setMobileMenu(m => !m)}>
-              <Ico n="menu" s={18} />
+              <Ico n="menu" s={22} />
             </button>
           </div>
 
@@ -151,7 +149,7 @@ function Layout() {
                 style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 998 }}
               />
               <div className="mob-menu open" style={{ zIndex: 999, padding: 12, maxHeight: "80vh", overflowY: "auto" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", letterSpacing: 1, padding: "8px 10px 4px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t3)", letterSpacing: 1, padding: "10px 12px 6px" }}>
                   ดูข้อมูล
                 </div>
                 {NAV_VIEW.map(it => {
@@ -161,42 +159,42 @@ function Layout() {
                       className={`mob-item${active ? " on" : ""}`}
                       onClick={() => navTo(it.path)}
                       style={{
-                        display: "flex", alignItems: "center", gap: 12,
-                        padding: "10px 12px",
-                        borderRadius: 9,
-                        marginBottom: 4,
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "14px 14px",
+                        borderRadius: 11,
+                        marginBottom: 6,
                         background: active ? "var(--blue-bg)" : "transparent",
                         border: active ? "1px solid var(--blue-mid)" : "1px solid transparent",
                         cursor: "pointer"
                       }}>
                       <div style={{
-                        width: 36, height: 36, borderRadius: 9,
+                        width: 44, height: 44, borderRadius: 11,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         background: active ? "var(--blue)" : "var(--sur2)",
                         color: active ? "white" : "var(--t2)",
                         flexShrink: 0
                       }}>
-                        <Ico n={it.ico} s={17} />
+                        <Ico n={it.ico} s={21} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: active ? 700 : 600, color: active ? "var(--blue)" : "var(--t1)" }}>
+                        <div style={{ fontSize: 17, fontWeight: active ? 700 : 600, color: active ? "var(--blue)" : "var(--t1)" }}>
                           {it.label}
                         </div>
-                        <div style={{ fontSize: 11.5, color: "var(--t3)", marginTop: 1 }}>
+                        <div style={{ fontSize: 14, color: "var(--t3)", marginTop: 3 }}>
                           {it.desc}
                         </div>
                       </div>
                       {it.badge > 0 && (
                         <span style={{
                           background: "var(--amber, #f59e0b)", color: "white",
-                          padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700
+                          padding: "4px 12px", borderRadius: 12, fontSize: 14, fontWeight: 700
                         }}>{it.badge}</span>
                       )}
                     </div>
                   )
                 })}
 
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--t3)", letterSpacing: 1, padding: "12px 10px 4px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t3)", letterSpacing: 1, padding: "16px 12px 6px" }}>
                   สร้าง / เพิ่ม
                 </div>
                 {NAV_ACTION.map(it => {
@@ -205,28 +203,28 @@ function Layout() {
                     <div key={it.path}
                       onClick={() => navTo(it.path)}
                       style={{
-                        display: "flex", alignItems: "center", gap: 12,
-                        padding: "10px 12px",
-                        borderRadius: 9,
-                        marginBottom: 4,
+                        display: "flex", alignItems: "center", gap: 14,
+                        padding: "14px 14px",
+                        borderRadius: 11,
+                        marginBottom: 6,
                         background: active ? "var(--blue-bg)" : "transparent",
                         border: active ? "1px solid var(--blue-mid)" : "1px solid transparent",
                         cursor: "pointer"
                       }}>
                       <div style={{
-                        width: 36, height: 36, borderRadius: 9,
+                        width: 44, height: 44, borderRadius: 11,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         background: active ? "var(--blue)" : "var(--sur2)",
                         color: active ? "white" : "var(--t2)",
                         flexShrink: 0
                       }}>
-                        <Ico n={it.ico} s={17} />
+                        <Ico n={it.ico} s={21} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: active ? 700 : 600, color: active ? "var(--blue)" : "var(--t1)" }}>
+                        <div style={{ fontSize: 17, fontWeight: active ? 700 : 600, color: active ? "var(--blue)" : "var(--t1)" }}>
                           {it.label}
                         </div>
-                        <div style={{ fontSize: 11.5, color: "var(--t3)", marginTop: 1 }}>
+                        <div style={{ fontSize: 14, color: "var(--t3)", marginTop: 3 }}>
                           {it.desc}
                         </div>
                       </div>

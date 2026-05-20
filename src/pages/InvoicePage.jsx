@@ -27,7 +27,7 @@ const calcStampDuty = net => Math.ceil((Number(net) || 0) * STAMP_DUTY_RATE)  //
 function Sec({ ico, title, children }) {
   return (
     <div className="info-card">
-      <div className="info-card-hd"><Ico n={ico} s={16} /><span className="info-card-title">{title}</span></div>
+      <div className="info-card-hd"><Ico n={ico} s={20} /><span className="info-card-title">{title}</span></div>
       <div className="info-card-bd">{children}</div>
     </div>
   )
@@ -36,23 +36,23 @@ function Sec({ ico, title, children }) {
 function Inp({ label, value, onChange, type = "text", placeholder, full, suffix, highlight }) {
   return (
     <div className="info-field" style={full ? { gridColumn: "1 / -1" } : undefined}>
-      <label className="info-label" style={{ marginBottom: 4 }}>{label}</label>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <label className="info-label" style={{ marginBottom: 6 }}>{label}</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input
           type={type}
           value={value ?? ""}
           placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
           style={{
-            width: "100%", padding: "8px 10px",
-            border: `1px solid ${highlight ? "var(--blue)" : "var(--brd)"}`,
-            borderRadius: 7, fontSize: 13.5, fontFamily: "inherit",
+            width: "100%", padding: "13px 17px",
+            border: `1.5px solid ${highlight ? "var(--blue)" : "var(--brd)"}`,
+            borderRadius: 10, fontSize: 17, fontFamily: "inherit",
             background: highlight ? "var(--blue-bg)" : "var(--sur)",
             color: "var(--t1)",
             textAlign: type === "number" ? "right" : "left"
           }}
         />
-        {suffix && <span style={{ fontSize: 12, color: "var(--t3)", whiteSpace: "nowrap" }}>{suffix}</span>}
+        {suffix && <span style={{ fontSize: 16, color: "var(--t2)", whiteSpace: "nowrap", fontWeight: 500 }}>{suffix}</span>}
       </div>
     </div>
   )
@@ -60,9 +60,9 @@ function Inp({ label, value, onChange, type = "text", placeholder, full, suffix,
 
 function Line({ label, value, muted }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 13 }}>
-      <span style={{ color: muted ? "var(--t3)" : "var(--t1)" }}>{label}</span>
-      <span style={{ fontVariantNumeric: "tabular-nums", color: muted ? "var(--t2)" : "var(--t1)" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", fontSize: 17 }}>
+      <span style={{ color: muted ? "var(--t2)" : "var(--t1)" }}>{label}</span>
+      <span style={{ fontVariantNumeric: "tabular-nums", color: muted ? "var(--t1)" : "var(--t1)" }}>
         {(Number(value) || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
       </span>
     </div>
@@ -160,7 +160,7 @@ export function InvoicePage() {
     <div className="page-wrap">
       <div className="page-hd">
         <button className="page-back" onClick={() => navigate(-1)}>
-          <Ico n="chevL" s={15} /> กลับ
+          <Ico n="chevL" s={19} /> กลับ
         </button>
         <div className="page-hd-div" />
         <div className="page-hd-info">
@@ -169,7 +169,7 @@ export function InvoicePage() {
         </div>
         <div className="page-hd-right">
           <button className="btn btn-b" onClick={submit} disabled={generating}>
-            <Ico n="doc" s={14} />
+            <Ico n="doc" s={18} />
             {generating ? "กำลังสร้าง..." : "สร้าง PDF"}
           </button>
         </div>
@@ -178,10 +178,10 @@ export function InvoicePage() {
       <div className="page-body">
         {err && (
           <div className="bnr er" style={{ marginBottom: 16 }}>
-            <Ico n="warn" s={18} />
+            <Ico n="warn" s={22} />
             <div className="bnr-body"><div className="bnr-t">{err}</div></div>
             <button onClick={() => setErr("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--red)" }}>
-              <Ico n="x" s={14} />
+              <Ico n="x" s={18} />
             </button>
           </div>
         )}
@@ -196,11 +196,11 @@ export function InvoicePage() {
         </Sec>
 
         <Sec ico="person" title="ผู้ขาย (ของคุณ)">
-          <div className="info-row" style={{ marginBottom: 12 }}>
+          <div className="info-row" style={{ marginBottom: 20 }}>
             <Inp label="ชื่อบริษัท/ชื่อผู้ขาย" value={form.seller.name} onChange={v => updateParty("seller", "name", v)} />
             <Inp label="โทรศัพท์" value={form.seller.phone} onChange={v => updateParty("seller", "phone", v)} />
           </div>
-          <div className="info-row fw" style={{ marginBottom: 12 }}>
+          <div className="info-row fw" style={{ marginBottom: 20 }}>
             <Inp label="ที่อยู่" value={form.seller.address} onChange={v => updateParty("seller", "address", v)} full />
           </div>
           <div className="info-row">
@@ -209,11 +209,11 @@ export function InvoicePage() {
         </Sec>
 
         <Sec ico="person" title="ผู้ซื้อ (ลูกค้า)">
-          <div className="info-row" style={{ marginBottom: 12 }}>
+          <div className="info-row" style={{ marginBottom: 20 }}>
             <Inp label="ชื่อ-นามสกุล / ชื่อบริษัท" value={form.buyer.name} onChange={v => updateParty("buyer", "name", v)} />
             <Inp label="โทรศัพท์" value={form.buyer.phone} onChange={v => updateParty("buyer", "phone", v)} />
           </div>
-          <div className="info-row fw" style={{ marginBottom: 12 }}>
+          <div className="info-row fw" style={{ marginBottom: 20 }}>
             <Inp label="ที่อยู่" value={form.buyer.address} onChange={v => updateParty("buyer", "address", v)} full />
           </div>
           <div className="info-row">
@@ -224,56 +224,56 @@ export function InvoicePage() {
 
         {/* ── คำนวณเบี้ยประกัน (Auto) ── */}
         <Sec ico="banknote" title="คำนวณเบี้ยประกัน (อัตโนมัติ)">
-          <div className="info-row fw" style={{ marginBottom: 12 }}>
+          <div className="info-row fw" style={{ marginBottom: 20 }}>
             <Inp label="รายละเอียด" value={form.description}
               onChange={v => setForm(f => ({ ...f, description: v }))}
               placeholder="เช่น เบี้ยประกันภัยรถยนต์ ทะเบียน กก-1234" full />
           </div>
 
-          <div className="info-row" style={{ marginBottom: 12 }}>
+          <div className="info-row" style={{ marginBottom: 20 }}>
             <Inp label="เบี้ยประกันสุทธิ" type="number" value={form.net_premium}
               onChange={v => setForm(f => ({ ...f, net_premium: v }))}
               suffix="บาท" highlight />
 
             <div className="info-field">
-              <label className="info-label" style={{ marginBottom: 4, display: "flex", alignItems: "center", gap: 8 }}>
+              <label className="info-label" style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 10 }}>
                 <span>อากร <span style={{ color: "var(--t3)", fontWeight: 400 }}>(0.4% ปัดขึ้น)</span></span>
                 {form.stamp_duty_override !== null && form.stamp_duty_override !== "" && (
                   <button onClick={resetStamp}
-                    style={{ background: "none", border: "1px solid var(--blue)", borderRadius: 4, padding: "1px 6px", cursor: "pointer", color: "var(--blue)", fontSize: 10 }}>
+                    style={{ background: "none", border: "1px solid var(--blue)", borderRadius: 6, padding: "3px 10px", cursor: "pointer", color: "var(--blue)", fontSize: 12 }}>
                     คืนค่าอัตโนมัติ
                   </button>
                 )}
               </label>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input type="number" value={calc.stamp}
                   onChange={e => setForm(f => ({ ...f, stamp_duty_override: e.target.value }))}
                   style={{
-                    width: "100%", padding: "8px 10px",
-                    border: `1px solid ${form.stamp_duty_override !== null && form.stamp_duty_override !== "" ? "var(--amber, #f59e0b)" : "var(--brd)"}`,
-                    borderRadius: 7, fontSize: 13.5, fontFamily: "inherit",
+                    width: "100%", padding: "13px 17px",
+                    border: `1.5px solid ${form.stamp_duty_override !== null && form.stamp_duty_override !== "" ? "var(--amber, #f59e0b)" : "var(--brd)"}`,
+                    borderRadius: 10, fontSize: 17, fontFamily: "inherit",
                     background: "var(--sur)", color: "var(--t1)", textAlign: "right"
                   }} />
-                <span style={{ fontSize: 12, color: "var(--t3)" }}>บาท</span>
+                <span style={{ fontSize: 16, color: "var(--t2)", fontWeight: 500 }}>บาท</span>
               </div>
               {calc.net > 0 && (
-                <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 3 }}>
+                <div style={{ fontSize: 14, color: "var(--t2)", marginTop: 6 }}>
                   สูตร: ⌈{baht(calc.net * STAMP_DUTY_RATE)}⌉ = <b>{calc.stamp_auto}</b> บาท
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ marginTop: 14, marginBottom: 8, fontSize: 12, color: "var(--t3)", fontWeight: 600 }}>
+          <div style={{ marginTop: 18, marginBottom: 12, fontSize: 16.5, color: "var(--t2)", fontWeight: 600 }}>
             ความคุ้มครองเพิ่มเติม (เลือกใส่ถ้ามี — จะบวกเข้ายอดและคิด VAT ด้วย):
           </div>
-          <div className="info-row" style={{ marginBottom: 6 }}>
+          <div className="info-row" style={{ marginBottom: 20 }}>
             <Inp label="บุคคลภายนอก/คน" type="number" value={form.third_party_person}
               onChange={v => setForm(f => ({ ...f, third_party_person: v }))} suffix="บาท" />
             <Inp label="บุคคลภายนอก/ครั้ง" type="number" value={form.third_party_accident}
               onChange={v => setForm(f => ({ ...f, third_party_accident: v }))} suffix="บาท" />
           </div>
-          <div className="info-row" style={{ marginBottom: 12 }}>
+          <div className="info-row" style={{ marginBottom: 20 }}>
             <Inp label="ความเสียหายต่อรถ" type="number" value={form.own_damage}
               onChange={v => setForm(f => ({ ...f, own_damage: v }))} suffix="บาท" />
             <Inp label="VAT (%)" type="number" value={(form.vat_rate * 100).toFixed(0)}
@@ -281,12 +281,12 @@ export function InvoicePage() {
           </div>
 
           {/* ── สรุปยอด ── */}
-          <div style={{ borderTop: "1px solid var(--brd)", paddingTop: 12, marginTop: 8 }}>
+          <div style={{ borderTop: "1px solid var(--brd)", paddingTop: 20, marginTop: 16 }}>
             <Line label="เบี้ยสุทธิ" value={calc.net} />
             {calc.extra > 0 && <Line label="ความคุ้มครองเพิ่ม" value={calc.extra} muted />}
             <Line label="อากรแสตมป์" value={calc.stamp} muted />
             <Line label={`ภาษีมูลค่าเพิ่ม VAT ${(form.vat_rate * 100).toFixed(0)}%`} value={calc.vat} muted />
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 4px", fontSize: 16, fontWeight: 700, borderTop: "1px solid var(--brd)", marginTop: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "16px 0 6px", fontSize: 24, fontWeight: 700, borderTop: "1px solid var(--brd)", marginTop: 10 }}>
               <span>รวมทั้งสิ้น</span>
               <span style={{ color: "var(--blue)", fontVariantNumeric: "tabular-nums" }}>{baht(calc.total)} บาท</span>
             </div>
@@ -302,7 +302,7 @@ export function InvoicePage() {
               placeholder="0812345678 หรือ 1234567890123"
             />
           </div>
-          <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 8 }}>
+          <div style={{ fontSize: 16.5, color: "var(--t2)", marginTop: 12 }}>
             ระบบจะ generate QR code อัตโนมัติตามยอด <b>{baht(calc.total)} บาท</b>
           </div>
         </Sec>
@@ -313,13 +313,13 @@ export function InvoicePage() {
             onChange={e => setForm(f => ({ ...f, note: e.target.value }))}
             placeholder="หมายเหตุที่จะแสดงในใบแจ้งหนี้..."
             rows={3}
-            style={{ width: "100%", padding: 10, border: "1px solid var(--brd)", borderRadius: 7, fontSize: 13, fontFamily: "inherit", background: "var(--sur)", color: "var(--t1)", resize: "vertical" }}
+            style={{ width: "100%", padding: "14px 17px", border: "1.5px solid var(--brd)", borderRadius: 10, fontSize: 17, fontFamily: "inherit", background: "var(--sur)", color: "var(--t1)", resize: "vertical", lineHeight: 1.55 }}
           />
         </Sec>
 
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
-          <button className="btn btn-b" onClick={submit} disabled={generating} style={{ minWidth: 240, justifyContent: "center" }}>
-            <Ico n="doc" s={15} />
+          <button className="btn btn-b" onClick={submit} disabled={generating} style={{ minWidth: 280, justifyContent: "center" }}>
+            <Ico n="doc" s={19} />
             {generating ? "กำลังสร้าง..." : "สร้างใบแจ้งหนี้ PDF"}
           </button>
         </div>
