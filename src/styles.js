@@ -779,16 +779,28 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .pdf-preview-wrap .pdf-iframe{height:60vh !important;min-height:320px !important}
 }
 @media(max-width:639px){
-  .page-hd{padding:8px 12px;gap:8px;flex-wrap:wrap;align-items:center}
+  .page-hd{padding:8px 12px;gap:8px;flex-wrap:nowrap;align-items:center}
   .page-hd-div{display:none}
   .page-body{padding:12px 12px}
   .page-title{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-  .page-sub{font-size:12px;margin-top:2px}
-  .page-hd-info{flex:1;min-width:0}
-  .page-hd-info > div:first-child{min-width:0;flex-wrap:wrap}
+  .page-sub{font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .page-hd-info{flex:1 1 auto;min-width:0;overflow:hidden}
+  /* title + badge บรรทัดเดียวกัน, badge ไม่ wrap */
+  .page-hd-info > div:first-child{display:flex !important;align-items:center;gap:8px !important;min-width:0;flex-wrap:nowrap;overflow:hidden}
+  .page-hd-info > div:first-child .badge{flex-shrink:0}
   .page-hd-right{gap:6px;margin-left:auto;flex-shrink:0;flex-wrap:nowrap}
   .page-hd-right .btn{padding:9px 12px;font-size:13.5px;gap:6px;border-radius:9px}
   .page-back{padding:9px 12px;font-size:14px;flex-shrink:0}
+  /* ── PremiumGrid table — แน่นบนมือถือ ── */
+  .info-card-bd table{min-width:380px !important}
+  .info-card-bd table th{padding:8px 7px !important;font-size:12px !important}
+  .info-card-bd table td{padding:5px 5px !important;font-size:12.5px !important}
+  .info-card-bd table input{padding:6px 7px !important;font-size:12.5px !important}
+  /* ── PolicyTable — compact cells ── */
+  .card table th,.card table td{padding:11px 9px;font-size:13.5px}
+  .card table td.tm{font-size:13px;letter-spacing:0}
+  .plate{padding:4px 8px;font-size:13px}
+  .card .badge{padding:4px 9px;font-size:12.5px}
   .info-row{grid-template-columns:1fr;gap:14px}
   .info-row.fw{grid-template-columns:1fr}
   .info-row[style*="margin-bottom"]{margin-bottom:14px !important}
