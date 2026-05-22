@@ -373,21 +373,33 @@ export function ListPage({ tab }) {
             )}
           </div>
 
-          {/* ── Quick action pills (เฉพาะหน้า dashboard) ── */}
+          {/* ── Quick nav cards (horizontal scroll) — เฉพาะหน้า dashboard ── */}
           {tab === "dashboard" && (
-            <div className="navpills">
-              <span className="navpills-lbl">ทางลัด</span>
-              {[
-                { path: "/upload",   ico: "upload",   cls: "np-blue",   lbl: "อัปโหลด PDF" },
-                { path: "/invoice",  ico: "banknote", cls: "np-purple", lbl: "ใบแจ้งหนี้"   },
-                { path: "/expiring", ico: "bell",     cls: "np-amber",  lbl: "ใกล้หมดอายุ", badge: expiring.length },
-              ].map(it => (
-                <button key={it.path} className={`navpill ${it.cls}`} onClick={() => navigate(it.path)}>
-                  <Ico n={it.ico} s={17} />
-                  <span>{it.lbl}</span>
-                  {it.badge > 0 && <span className="navpill-badge">{it.badge}</span>}
-                </button>
-              ))}
+            <div className="navcards-wrap">
+              <div className="navcards-hd">
+                <Ico n="grid" s={16} />
+                <span className="navcards-ttl">ทางลัด</span>
+                <span className="navcards-sub">กดเพื่อเข้าเมนู</span>
+              </div>
+              <div className="navcards">
+                {[
+                  { path: "/upload",   ico: "upload",   cls: "fcard-blue",   lbl: "อัปโหลด PDF",      desc: "เพิ่มกรมธรรม์ใหม่" },
+                  { path: "/invoice",  ico: "banknote", cls: "fcard-purple", lbl: "ใบแจ้งหนี้",        desc: "สร้าง invoice + QR" },
+                  { path: "/expiring", ico: "bell",     cls: "fcard-amber",  lbl: "ใกล้หมดอายุ",      desc: "ภายใน 30 วัน",     badge: expiring.length },
+                ].map(it => (
+                  <button key={it.path} className={`navcard ${it.cls}`} onClick={() => navigate(it.path)}>
+                    <span className="fcard-ico"><Ico n={it.ico} s={20} /></span>
+                    <div className="navcard-body">
+                      <div className="navcard-ttl">
+                        {it.lbl}
+                        {it.badge > 0 && <span className="navcard-badge">{it.badge}</span>}
+                      </div>
+                      <div className="navcard-desc">{it.desc}</div>
+                    </div>
+                    <Ico n="arrowR" s={18} />
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
