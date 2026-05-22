@@ -208,27 +208,6 @@ export function ListPage({ tab }) {
                   </button>
                 </div>
               )}
-
-              {/* ── Quick nav cards (horizontal scroll) ── */}
-              <div className="navcards">
-                {[
-                  { path: "/upload",   ico: "upload",   cls: "fcard-blue",   lbl: "อัปโหลด PDF",      desc: "เพิ่มกรมธรรม์ใหม่" },
-                  { path: "/invoice",  ico: "banknote", cls: "fcard-purple", lbl: "ใบแจ้งหนี้",        desc: "สร้าง invoice + QR" },
-                  { path: "/expiring", ico: "bell",     cls: "fcard-amber",  lbl: "ใกล้หมดอายุ",      desc: "ภายใน 30 วัน",     badge: expiring.length },
-                ].map(it => (
-                  <button key={it.path} className={`navcard ${it.cls}`} onClick={() => navigate(it.path)}>
-                    <span className="fcard-ico"><Ico n={it.ico} s={20} /></span>
-                    <div className="navcard-body">
-                      <div className="navcard-ttl">
-                        {it.lbl}
-                        {it.badge > 0 && <span className="navcard-badge">{it.badge}</span>}
-                      </div>
-                      <div className="navcard-desc">{it.desc}</div>
-                    </div>
-                    <Ico n="arrowR" s={16} />
-                  </button>
-                ))}
-              </div>
             </>
           )}
 
@@ -393,6 +372,29 @@ export function ListPage({ tab }) {
               </div>
             )}
           </div>
+
+          {/* ── Quick nav cards (horizontal scroll) — เฉพาะหน้า dashboard ── */}
+          {tab === "dashboard" && (
+            <div className="navcards">
+              {[
+                { path: "/upload",   ico: "upload",   cls: "fcard-blue",   lbl: "อัปโหลด PDF",      desc: "เพิ่มกรมธรรม์ใหม่" },
+                { path: "/invoice",  ico: "banknote", cls: "fcard-purple", lbl: "ใบแจ้งหนี้",        desc: "สร้าง invoice + QR" },
+                { path: "/expiring", ico: "bell",     cls: "fcard-amber",  lbl: "ใกล้หมดอายุ",      desc: "ภายใน 30 วัน",     badge: expiring.length },
+              ].map(it => (
+                <button key={it.path} className={`navcard ${it.cls}`} onClick={() => navigate(it.path)}>
+                  <span className="fcard-ico"><Ico n={it.ico} s={20} /></span>
+                  <div className="navcard-body">
+                    <div className="navcard-ttl">
+                      {it.lbl}
+                      {it.badge > 0 && <span className="navcard-badge">{it.badge}</span>}
+                    </div>
+                    <div className="navcard-desc">{it.desc}</div>
+                  </div>
+                  <Ico n="arrowR" s={16} />
+                </button>
+              ))}
+            </div>
+          )}
 
           <PolicyTable
             rows={displayRows}
