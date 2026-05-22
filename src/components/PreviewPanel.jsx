@@ -210,24 +210,24 @@ export function PreviewPanel({ p, onClose, onOpen }) {
           </div>
         )}
 
-        {/* ข้อมูลย่อ 2 บรรทัด */}
-        <div style={{ padding: "10px 18px", borderTop: "1px solid var(--brd)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 5 }}>
-          <div style={{ display: "flex", gap: 14, fontSize: 15, color: "var(--t1)" }}>
+        {/* ข้อมูลย่อ — compact (เน้นให้ PDF มี space เยอะ) */}
+        <div style={{ padding: "6px 14px", borderTop: "1px solid var(--brd)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+          <div style={{ display: "flex", gap: 10, fontSize: 12.5, color: "var(--t1)", flexWrap: "wrap" }}>
             <span style={{ color: "var(--t3)", flexShrink: 0 }}>เลขที่</span>
             <span style={{ fontWeight: 600 }}>{activePolicy.policy_number || "-"}</span>
             <span style={{ color: "var(--t3)", flexShrink: 0, marginLeft: "auto" }}>ทะเบียน</span>
             <span style={{ fontWeight: 600 }}>{activePolicy.license_plate || "-"}</span>
           </div>
-          <div style={{ display: "flex", gap: 14, fontSize: 15, color: "var(--t1)" }}>
+          <div style={{ display: "flex", gap: 10, fontSize: 12.5, color: "var(--t1)" }}>
             <span style={{ color: "var(--t3)", flexShrink: 0 }}>คุ้มครอง</span>
             <span>{fmtDate(activePolicy.coverage_start) || "-"} – {fmtDate(activePolicy.coverage_end) || "-"}</span>
           </div>
         </div>
 
-        {/* footer */}
-        <div className="pvp-foot">
-          <button className="btn btn-b" style={{ width: "100%", justifyContent: "center" }} onClick={onOpen}>
-            <Ico n="expand" s={17} /> ดูข้อมูลทั้งหมด
+        {/* footer — ปุ่มเตี้ยลง */}
+        <div className="pvp-foot" style={{ padding: "8px 14px" }}>
+          <button className="btn btn-b" style={{ width: "100%", justifyContent: "center", padding: "10px 16px", fontSize: 14 }} onClick={onOpen}>
+            <Ico n="expand" s={16} /> ดูข้อมูลทั้งหมด
           </button>
         </div>
       </div>
