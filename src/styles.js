@@ -325,7 +325,17 @@ tr.tr-active td{background:var(--blue-bg) !important}
 
 @media(max-width:900px){
   .navcards-wrap{padding:14px 12px 6px;margin:14px 0 18px}
-  .navcard{flex:0 0 86%;min-width:0}      /* ~1.15 cards visible */
+  .navcard{
+    flex:0 0 88%;min-width:0;
+    padding:22px 22px;min-height:120px;gap:18px;
+    border-radius:16px;
+  }
+  .navcard .fcard-ico{width:58px;height:58px;border-radius:14px}
+  .navcard .fcard-ico svg{width:30px;height:30px}
+  .navcard-ttl{font-size:19px;gap:10px}
+  .navcard-desc{font-size:14.5px;margin-top:5px}
+  .navcard-badge{font-size:13px;padding:2px 12px}
+  .navcard > svg:last-child{width:22px;height:22px}
 }
 
 /* Filter bar — horizontal scroll cards (snap, swipe) */
