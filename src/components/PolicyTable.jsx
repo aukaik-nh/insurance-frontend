@@ -85,6 +85,15 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
             {rows.map((r, idx) => {
               const st     = getStatus(r.coverage_end)
               const hasPdf = !!(r.pdf_url || r.pdf_filename || r.pdf_size)
+              // เหลือกี่วัน (เปรียบเทียบกับวันนี้)
+              const daysLeft = r.coverage_end
+                ? Math.ceil((new Date(r.coverage_end) - new Date()) / 86400000)
+                : null
+              const daysLabel = daysLeft == null ? null
+                : daysLeft < 0   ? { txt: `หมดแล้ว ${-daysLeft} วัน`, color: "var(--red)" }
+                : daysLeft === 0 ? { txt: "หมดวันนี้",                color: "var(--red)" }
+                : daysLeft <= 30 ? { txt: `เหลือ ${daysLeft} วัน`,    color: "var(--amber)" }
+                :                   { txt: `เหลือ ${daysLeft} วัน`,    color: "var(--green)" }
               return (
                 <tr key={r.id}
                   onClick={() => onRow(r)}
@@ -107,7 +116,16 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>
                   <td><span className="plate">{r.license_plate || "—"}</span></td>
-                  <td style={{ color: "var(--t1)", fontSize: 16, whiteSpace: "nowrap", fontWeight: 500 }}>{fmtDate(r.coverage_end) || "—"}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <div style={{ color: "var(--t1)", fontSize: 16, fontWeight: 500, lineHeight: 1.2 }}>
+                      {fmtDate(r.coverage_end) || "—"}
+                    </div>
+                    {daysLabel && (
+                      <div style={{ fontSize: 12, fontWeight: 600, color: daysLabel.color, marginTop: 3 }}>
+                        {daysLabel.txt}
+                      </div>
+                    )}
+                  </td>
                   <td><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
                 </tr>
               )
