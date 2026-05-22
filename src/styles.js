@@ -256,9 +256,16 @@ tr.tr-active td{background:var(--blue-bg) !important}
   animation:fbar-in .15s ease;
 }
 @media(max-width:900px){
-  .filter-bar{flex-direction:column;align-items:stretch;gap:14px}
+  .filter-bar{flex-direction:column;align-items:stretch;gap:14px;padding:14px 16px}
   .fbar-div{display:none}
-  .fbar-group{flex-wrap:wrap}
+  .fbar-group{flex-direction:column;align-items:stretch;gap:8px}
+  .fbar-lbl{font-size:13px}
+  .fbar-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .fbar-opts .fopt{padding:10px 12px;font-size:14px;justify-content:center}
+  .fbar-dates{flex-wrap:wrap}
+  .fbar-date{flex:1;min-width:0}
+  .fbar-date input{width:100%}
+  .fbar-clear{justify-content:center}
 }
 @keyframes fbar-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .fbar-group{display:flex;align-items:center;gap:10px;flex-shrink:0}

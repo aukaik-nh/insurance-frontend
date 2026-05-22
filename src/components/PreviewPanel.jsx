@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Ico } from "../icons"
 import { getStatus, fmtDate, baht, policyTypeLabel } from "../helpers"
 import api from "../api"
-import { usePdfBlob, prefetchPdf } from "../pdfUtils"
+import { usePdfBlob, prefetchPdf, getPdfUrl } from "../pdfUtils"
 
 function PvpField({ label, value, multiline, mono, hi }) {
   if (!value || value === "") return null
@@ -55,9 +55,8 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         setRelatedPdfs(sameCustomer)
         // ⚡ prefetch PDF ของทุก renewals ที่ user น่าจะคลิกดู
         sameCustomer.forEach(r => {
-          if (r.pdf_filename || r.pdf_size) {
-            prefetchPdf(`${api.defaults.baseURL}/policies/${r.id}/pdf`)
-          }
+          const u = getPdfUrl(r, api.defaults.baseURL)
+          if (u) prefetchPdf(u)
         })
       })
       .catch(() => { if (!cancelled) setRelatedPdfs([]) })
@@ -65,14 +64,16 @@ export function PreviewPanel({ p, onClose, onOpen }) {
   }, [p?.id, p?.license_plate])
 
   const activePolicy = relatedPdfs.find(r => r.id === activePdfId) || p
-  const activePdfApiUrl = `${api.defaults.baseURL}/policies/${activePolicy.id}/pdf`
   const activeHasPdf = !!activePolicy.pdf_filename || !!activePolicy.pdf_size
   const activeLegacy = activePolicy.pdf_url && activePolicy.pdf_url.includes("drive.google.com")
 
+  // ⚡ ถ้ามี Supabase public URL → fetch ตรงไม่ผ่าน backend (CDN เร็วกว่า Render free tier)
+  const activePdfUrl = activeHasPdf && !activeLegacy
+    ? getPdfUrl(activePolicy, api.defaults.baseURL)
+    : null
+
   // Blob URL — iframe ส่ง auth header ไม่ได้ ต้อง fetch เองแล้วใช้ blob
-  const { blobUrl: pdfBlobUrl, loading: pdfLoading } = usePdfBlob(
-    activeHasPdf && !activeLegacy ? activePdfApiUrl : null
-  )
+  const { blobUrl: pdfBlobUrl, loading: pdfLoading } = usePdfBlob(activePdfUrl)
 
   return (
     <>

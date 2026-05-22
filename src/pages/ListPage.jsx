@@ -5,7 +5,7 @@ import { Ico } from "../icons"
 import { getStatus } from "../helpers"
 import { PolicyTable } from "../components/PolicyTable"
 import { PreviewPanel } from "../components/PreviewPanel"
-import { prefetchPdf } from "../pdfUtils"
+import { prefetchPdf, getPdfUrl } from "../pdfUtils"
 
 const LIMIT = 10
 
@@ -41,6 +41,30 @@ export function ListPage({ tab }) {
     setPage(1)
   }
 
+  // ── Date quick-presets: filter coverage_end ภายใน N วันจากวันนี้ ──
+  const ymd = (d) => {
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0")
+    return `${y}-${m}-${dd}`
+  }
+  const today = ymd(new Date())
+  const datePresets = [
+    { val: 1,  label: "1 วัน"  },
+    { val: 7,  label: "7 วัน"  },
+    { val: 30, label: "1 เดือน" },
+  ]
+  const activePreset = datePresets.find(p => {
+    const d = new Date(); d.setDate(d.getDate() + p.val)
+    return dateFrom === today && dateTo === ymd(d)
+  })?.val
+  const applyPreset = (n) => {
+    if (activePreset === n) { setDateFrom(""); setDateTo("") }
+    else {
+      const d = new Date(); d.setDate(d.getDate() + n)
+      setDateFrom(today); setDateTo(ymd(d))
+    }
+    setPage(1)
+  }
+
   const onSort = (col) => {
     if (sortKey === col) setSortDir(d => d === "asc" ? "desc" : "asc")
     else { setSortKey(col); setSortDir("asc") }
@@ -57,9 +81,8 @@ export function ListPage({ tab }) {
     api.get(`/policies/${r.id}`).catch(() => {})
     api.get(`/policies/${r.id}/attachments`).catch(() => {})
     // ถ้ามี PDF → prefetch blob ด้วย (เก็บใน module-level cache ของ pdfUtils)
-    if (r.pdf_filename || r.pdf_size) {
-      prefetchPdf(`${api.defaults.baseURL}/policies/${r.id}/pdf`)
-    }
+    const u = getPdfUrl(r, api.defaults.baseURL)
+    if (u) prefetchPdf(u)
   }
 
   // ⚡ debounce search — รอ 300ms หลังพิมพ์เสร็จ จึงค่อยยิง API (กัน request ฟุ่มเฟือยตอนพิมพ์เร็วๆ)
@@ -247,6 +270,17 @@ export function ListPage({ tab }) {
                 {/* วันหมดอายุ */}
                 <div className="fbar-group">
                   <span className="fbar-lbl">วันหมดอายุ</span>
+                  <div className="fbar-opts">
+                    {datePresets.map(p => (
+                      <button
+                        key={p.val}
+                        className={`fopt${activePreset === p.val ? " active" : ""}`}
+                        onClick={() => applyPreset(p.val)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                   <div className="fbar-dates">
                     <div className="fbar-date">
                       <Ico n="cal" s={17} />

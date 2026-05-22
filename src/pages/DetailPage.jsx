@@ -7,7 +7,7 @@ import { PdfLightbox } from "../components/PdfLightbox"
 import { PolicyForm } from "../components/PolicyForm"
 import { AttachmentsCard } from "../components/AttachmentsCard"
 import { PremiumGrid } from "../components/PremiumGrid"
-import { usePdfBlob, downloadPdf, openPdfTab } from "../pdfUtils"
+import { usePdfBlob, downloadPdf, openPdfTab, getPdfUrl } from "../pdfUtils"
 
 export function DetailPage() {
   const navigate      = useNavigate()
@@ -105,11 +105,12 @@ export function DetailPage() {
   const _hasPdfInDb     = !!_activePolicy?.pdf_filename || !!_activePolicy?.pdf_size
   const _isLegacyPdf    = !!(_activePolicy?.pdf_url && _activePolicy.pdf_url.includes("drive.google.com"))
   const _viewingRelated = !!p && activePdfId !== p.id
+  // ⚡ getPdfUrl → ใช้ Supabase public URL ตรงถ้ามี (เร็วกว่าผ่าน Render free tier)
   const _blobApiUrl     = !p ? null
     : _viewingRelated && _activePolicy?.id
-        ? `${api.defaults.baseURL}/policies/${_activePolicy.id}/pdf`
+        ? getPdfUrl(_activePolicy, api.defaults.baseURL)
     : activeDocId === "main"
-        ? `${api.defaults.baseURL}/policies/${p.id}/pdf`
+        ? getPdfUrl(p, api.defaults.baseURL)
     : activeDocId
         ? `${api.defaults.baseURL}/policies/${p.id}/attachments/${activeDocId}/pdf`
     : null

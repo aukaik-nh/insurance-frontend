@@ -3,6 +3,21 @@ import { useState, useEffect } from "react"
 /** ดึง token จาก localStorage */
 const getToken = () => localStorage.getItem("auth_token") || ""
 
+/** Supabase Storage public URL → fetch ตรง ไม่ผ่าน backend (เร็วกว่าเพราะใช้ CDN + ไม่ผ่าน Render free tier) */
+const isSupabasePublic = (url) => !!url && url.includes("/storage/v1/object/public/")
+
+/**
+ * เลือก URL ที่เหมาะสมที่สุดสำหรับโหลด PDF ของ policy:
+ * - มี pdf_url แบบ Supabase public → ใช้ URL นั้นตรง (เร็วสุด)
+ * - ไม่มี → fall back ไป backend endpoint (รองรับ pdf_data base64, Google Drive legacy)
+ */
+export function getPdfUrl(policy, apiBaseUrl) {
+  if (!policy) return null
+  if (isSupabasePublic(policy.pdf_url)) return policy.pdf_url
+  if (policy.pdf_filename || policy.pdf_size) return `${apiBaseUrl}/policies/${policy.id}/pdf`
+  return null
+}
+
 /* ─────────────────────────────────────────────────────────────────
    PDF Blob Cache (module-level)
    ────────────────────────────────────────────────────────────────
@@ -37,7 +52,9 @@ function fetchPdfBlob(apiUrl) {
   if (blobCache.has(apiUrl)) { touch(apiUrl); return Promise.resolve(blobCache.get(apiUrl).url) }
   if (inflight.has(apiUrl)) return inflight.get(apiUrl)
 
-  const p = fetch(apiUrl, { headers: { Authorization: `Bearer ${getToken()}` } })
+  // Supabase public URL → ไม่ต้องส่ง Authorization (จะถูก Supabase reject และ browser ไม่ใช้ disk cache)
+  const headers = isSupabasePublic(apiUrl) ? {} : { Authorization: `Bearer ${getToken()}` }
+  const p = fetch(apiUrl, { headers })
     .then(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       return res.blob()
@@ -106,9 +123,8 @@ export function usePdfBlob(apiUrl) {
 /** Download PDF via auth → trigger browser download */
 export async function downloadPdf(apiUrl, filename = "document.pdf") {
   try {
-    const res = await fetch(apiUrl, {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    })
+    const headers = isSupabasePublic(apiUrl) ? {} : { Authorization: `Bearer ${getToken()}` }
+    const res = await fetch(apiUrl, { headers })
     if (!res.ok) throw new Error("ดาวน์โหลดไม่สำเร็จ")
     const blob = await res.blob()
     const url  = URL.createObjectURL(blob)
@@ -132,9 +148,8 @@ export async function openPdfTab(apiUrl) {
     return
   }
   try {
-    const res = await fetch(apiUrl, {
-      headers: { Authorization: `Bearer ${getToken()}` },
-    })
+    const headers = isSupabasePublic(apiUrl) ? {} : { Authorization: `Bearer ${getToken()}` }
+    const res = await fetch(apiUrl, { headers })
     if (!res.ok) throw new Error("โหลดไม่สำเร็จ")
     const blob = await res.blob()
     const url  = URL.createObjectURL(blob)
