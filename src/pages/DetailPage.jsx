@@ -389,9 +389,31 @@ export function DetailPage() {
 
             <div>
               {editMode ? (
-                <div className="info-card" style={{ padding: "18px 18px 8px" }}>
-                  <PolicyForm values={editVals} onChange={setEditVals} />
-                </div>
+                <>
+                  <div className="info-card" style={{ padding: "18px 18px 8px" }}>
+                    <PolicyForm
+                      values={editVals}
+                      onChange={setEditVals}
+                      hideSections={["เบี้ยประกัน", "ค่าคอมมิชชั่น / หัก ณ ที่จ่าย / ปัดเศษ"]}
+                    />
+                  </div>
+                  {/* ตารางเบี้ยประกัน — แก้ไขได้คอลัมน์กรมธรรม์ (พ.ร.บ. มาจาก attachment แก้แยก) */}
+                  <PremiumGrid
+                    title="เบี้ยประกัน"
+                    main={editVals}
+                    onMainChange={(k, v) => setEditVals(prev => ({ ...prev, [k]: v }))}
+                    prb={(() => {
+                      const prbAtt = attachItems.find(a => a.doc_type === "prb")
+                      if (!prbAtt) return null
+                      return {
+                        net_premium:   prbAtt.net_premium,
+                        stamp_duty:    prbAtt.stamp_duty,
+                        vat:           prbAtt.vat,
+                        total_premium: prbAtt.total_premium,
+                      }
+                    })()}
+                  />
+                </>
               ) : (
                 <>
                   {/* ข้อมูลกรมธรรม์ */}
