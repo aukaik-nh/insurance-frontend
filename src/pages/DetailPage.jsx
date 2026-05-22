@@ -9,6 +9,16 @@ import { AttachmentsCard } from "../components/AttachmentsCard"
 import { PremiumGrid } from "../components/PremiumGrid"
 import { usePdfBlob, downloadPdf, openPdfTab, getPdfUrl } from "../pdfUtils"
 
+// คำนวณอากร/VAT/รวม จากเบี้ยสุทธิ — สูตรเดียวกับ PolicyForm
+// stamp = ceil(net*0.004),  vat = (net+stamp)*0.07,  total = net+stamp+vat
+function calcPremium(net) {
+  const n = parseFloat(String(net).replace(",", "")) || 0
+  const stamp = Math.ceil(n * 0.004)
+  const vat   = Math.round((n + stamp) * 0.07 * 100) / 100
+  const total = Math.round((n + stamp + vat) * 100) / 100
+  return { stamp_duty: stamp, vat, total_premium: total }
+}
+
 export function DetailPage() {
   const navigate      = useNavigate()
   const { state }     = useLocation()
@@ -28,6 +38,7 @@ export function DetailPage() {
   const [savingName, setSavingName] = useState(false)
   const [editMode, setEditMode]     = useState(false)
   const [editVals, setEditVals]     = useState({})
+  const [editPrb,  setEditPrb]      = useState(null)   // PRB attachment edits (null = no PRB to edit)
   const [saving, setSaving]         = useState(false)
 
   const [relatedPdfs, setRelatedPdfs] = useState([])  // PDFs ของลูกค้าเดียวกัน (renewals)
@@ -158,15 +169,38 @@ export function DetailPage() {
     } finally { setSavingName(false) }
   }
 
-  const startEdit = () => { setEditVals({ ...p }); setEditMode(true) }
-  const cancelEdit = () => setEditMode(false)
+  const startEdit = () => {
+    setEditVals({ ...p })
+    const prbAtt = attachItems.find(a => a.doc_type === "prb")
+    setEditPrb(prbAtt ? {
+      id: prbAtt.id,
+      net_premium:   prbAtt.net_premium,
+      stamp_duty:    prbAtt.stamp_duty,
+      vat:           prbAtt.vat,
+      total_premium: prbAtt.total_premium,
+    } : null)
+    setEditMode(true)
+  }
+  const cancelEdit = () => { setEditPrb(null); setEditMode(false) }
 
   const saveEdit = async () => {
     setSaving(true)
     try {
+      // 1) save policy main fields
       await api.put(`/policies/${p.id}`, editVals)
+      // 2) save PRB attachment (if exists + changed)
+      if (editPrb?.id) {
+        await api.put(`/policies/${p.id}/attachments/${editPrb.id}`, {
+          net_premium:   editPrb.net_premium,
+          stamp_duty:    editPrb.stamp_duty,
+          vat:           editPrb.vat,
+          total_premium: editPrb.total_premium,
+        })
+      }
       setP({ ...p, ...editVals })
+      setRefreshKey(k => k + 1)   // refetch attachments so PRB updates show
       setEditMode(false)
+      setEditPrb(null)
     } catch (e) {
       alert("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setSaving(false) }
@@ -397,21 +431,22 @@ export function DetailPage() {
                       hideSections={["เบี้ยประกัน", "ค่าคอมมิชชั่น / หัก ณ ที่จ่าย / ปัดเศษ"]}
                     />
                   </div>
-                  {/* ตารางเบี้ยประกัน — แก้ไขได้คอลัมน์กรมธรรม์ (พ.ร.บ. มาจาก attachment แก้แยก) */}
+                  {/* ตารางเบี้ยประกัน — แก้ทั้งกรมธรรม์ + พ.ร.บ. (PRB จะ save ผ่าน attachments API)
+                      เมื่อแก้ "เบี้ยสุทธิ" → คำนวณ stamp/VAT/รวม ให้อัตโนมัติ */}
                   <PremiumGrid
                     title="เบี้ยประกัน"
                     main={editVals}
-                    onMainChange={(k, v) => setEditVals(prev => ({ ...prev, [k]: v }))}
-                    prb={(() => {
-                      const prbAtt = attachItems.find(a => a.doc_type === "prb")
-                      if (!prbAtt) return null
-                      return {
-                        net_premium:   prbAtt.net_premium,
-                        stamp_duty:    prbAtt.stamp_duty,
-                        vat:           prbAtt.vat,
-                        total_premium: prbAtt.total_premium,
-                      }
-                    })()}
+                    onMainChange={(k, v) => setEditVals(prev =>
+                      k === "net_premium"
+                        ? { ...prev, net_premium: v, ...calcPremium(v) }
+                        : { ...prev, [k]: v }
+                    )}
+                    prb={editPrb}
+                    onPrbChange={editPrb ? ((k, v) => setEditPrb(prev =>
+                      k === "net_premium"
+                        ? { ...prev, net_premium: v, ...calcPremium(v) }
+                        : { ...prev, [k]: v }
+                    )) : undefined}
                   />
                 </>
               ) : (
