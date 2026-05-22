@@ -248,6 +248,42 @@ tr.tr-active td{background:var(--blue-bg) !important}
   border-radius:99px;padding:1px 7px;font-size:11.5px;font-weight:700;line-height:1.5;
 }
 
+/* Quick nav cards (horizontal scroll cards on dashboard) */
+.navcards{
+  display:flex;flex-direction:row;gap:12px;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scroll-padding:4px;
+  padding:4px 4px 12px;margin:8px -4px 16px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:var(--brd2) transparent;
+}
+.navcards::-webkit-scrollbar{height:6px}
+.navcards::-webkit-scrollbar-track{background:transparent}
+.navcards::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+.navcard{
+  flex:0 0 260px;scroll-snap-align:start;
+  display:flex;align-items:center;gap:12px;
+  background:var(--sur);border:1.5px solid var(--brd);border-radius:14px;
+  padding:14px 16px;cursor:pointer;text-align:left;
+  font-family:'Sarabun','Noto Sans Thai',sans-serif;
+  box-shadow:var(--sh0);transition:all .15s;color:var(--t1);
+}
+.navcard:hover{border-color:var(--blue-mid);background:var(--blue-bg);transform:translateY(-1px)}
+.navcard-body{flex:1;min-width:0}
+.navcard-ttl{
+  display:flex;align-items:center;gap:8px;
+  font-size:15.5px;font-weight:700;color:var(--t1);
+}
+.navcard-desc{font-size:12.5px;color:var(--t3);margin-top:2px}
+.navcard-badge{
+  background:#F59E0B;color:#fff;
+  padding:1px 8px;border-radius:99px;font-size:12px;font-weight:700;line-height:1.5;
+}
+@media(max-width:700px){
+  .navcard{flex:0 0 78%}      /* ~1.3 cards visible */
+}
+
 /* Filter bar — horizontal scroll cards (snap, swipe) */
 .filter-bar{
   display:flex;flex-direction:row;gap:12px;
