@@ -48,9 +48,9 @@ export function ListPage({ tab }) {
   }
   const today = ymd(new Date())
   const datePresets = [
-    { val: 1,  label: "1 วัน"  },
-    { val: 7,  label: "7 วัน"  },
-    { val: 30, label: "1 เดือน" },
+    { val: 1,  label: "วัน"     },
+    { val: 7,  label: "อาทิตย์" },
+    { val: 30, label: "เดือน"   },
   ]
   const activePreset = datePresets.find(p => {
     const d = new Date(); d.setDate(d.getDate() + p.val)

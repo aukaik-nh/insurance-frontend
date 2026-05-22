@@ -36,7 +36,8 @@ function Layout({ onLogout }) {
 
   // เมนูแบ่งเป็น 2 กลุ่ม
   const NAV_VIEW = [
-    { path: "/", ico: "grid", label: "ภาพรวม", desc: "Dashboard + สถิติ", badge: 0 },
+    { path: "/",         ico: "grid", label: "ภาพรวม",        desc: "Dashboard + สถิติ",       badge: 0 },
+    { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ภายใน 30 วัน",            badge: expiringCount },
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "อัปโหลด PDF",   desc: "เพิ่มกรมธรรม์ใหม่" },
