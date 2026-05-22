@@ -718,7 +718,8 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   padding:14px 24px;background:var(--sur);
   border-bottom:1px solid var(--brd);
   display:flex;align-items:center;gap:18px;
-  position:fixed;top:64px;left:0;right:0;z-index:90;box-shadow:var(--sh1);
+  position:fixed !important;top:64px !important;left:0 !important;right:0 !important;
+  z-index:90;box-shadow:var(--sh1);
   flex-wrap:nowrap;min-width:0;
 }
 .page-back{
