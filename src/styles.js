@@ -249,46 +249,83 @@ tr.tr-active td{background:var(--blue-bg) !important}
 }
 
 /* Quick nav cards (horizontal scroll cards on dashboard) */
+.navcards-wrap{
+  margin:18px 0 22px;
+  padding:16px 16px 8px;
+  background:linear-gradient(180deg,var(--sur2) 0%,transparent 100%);
+  border:1px dashed var(--brd2);border-radius:16px;
+}
+.navcards-hd{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:12px;padding:0 2px;
+}
+.navcards-hd svg{color:var(--t2)}
+.navcards-ttl{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:.3px}
+.navcards-sub{font-size:12.5px;color:var(--t3);margin-left:4px}
+
 .navcards{
   display:flex;flex-direction:row;gap:14px;
   overflow-x:auto;overflow-y:hidden;
   scroll-snap-type:x mandatory;
   scroll-padding:4px;
-  padding:4px 4px 14px;margin:10px -4px 18px;
+  padding:4px 4px 10px;margin:0 -4px;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:thin;scrollbar-color:var(--brd2) transparent;
 }
 .navcards::-webkit-scrollbar{height:6px}
 .navcards::-webkit-scrollbar-track{background:transparent}
 .navcards::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+
 .navcard{
   flex:1 1 0;min-width:260px;scroll-snap-align:start;
-  display:flex;align-items:center;gap:16px;
-  background:var(--sur);border:1.5px solid var(--brd);border-radius:16px;
-  padding:20px 22px;cursor:pointer;text-align:left;
+  display:flex;align-items:center;gap:14px;
+  border:1.5px solid;border-radius:14px;
+  padding:16px 18px;cursor:pointer;text-align:left;
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
-  box-shadow:var(--sh1);transition:all .15s;color:var(--t1);
-  min-height:92px;
+  box-shadow:var(--sh0);transition:all .15s;color:var(--t1);
+  min-height:84px;position:relative;
 }
-.navcard:hover{border-color:var(--blue-mid);background:var(--blue-bg);transform:translateY(-2px);box-shadow:var(--sh2)}
-.navcard .fcard-ico{width:50px;height:50px;border-radius:13px}
-.navcard .fcard-ico svg{width:26px;height:26px}
+.navcard:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+
+/* พื้น tinted ตามสีไอคอน + เส้นขอบเข้ม → ดูเป็นปุ่ม action ชัดเจน */
+.navcard.fcard-blue{background:var(--blue-bg);border-color:var(--blue-mid)}
+.navcard.fcard-blue:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.navcard.fcard-blue:hover .navcard-ttl,
+.navcard.fcard-blue:hover .navcard-desc,
+.navcard.fcard-blue:hover > svg:last-child{color:#fff}
+
+.navcard.fcard-purple{background:#F5F3FF;border-color:#C4B5FD}
+.navcard.fcard-purple:hover{background:#7C3AED;color:#fff;border-color:#7C3AED}
+.navcard.fcard-purple:hover .navcard-ttl,
+.navcard.fcard-purple:hover .navcard-desc,
+.navcard.fcard-purple:hover > svg:last-child{color:#fff}
+
+.navcard.fcard-amber{background:#FFFBEB;border-color:#FCD34D}
+.navcard.fcard-amber:hover{background:#D97706;color:#fff;border-color:#D97706}
+.navcard.fcard-amber:hover .navcard-ttl,
+.navcard.fcard-amber:hover .navcard-desc,
+.navcard.fcard-amber:hover > svg:last-child{color:#fff}
+
+.navcard .fcard-ico{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.7)}
+.navcard .fcard-ico svg{width:24px;height:24px}
+.navcard:hover .fcard-ico{background:rgba(255,255,255,.25);color:#fff}
+
 .navcard-body{flex:1;min-width:0}
 .navcard-ttl{
   display:flex;align-items:center;gap:10px;
-  font-size:18px;font-weight:700;color:var(--t1);
+  font-size:17px;font-weight:700;color:var(--t1);
 }
-.navcard-desc{font-size:14px;color:var(--t3);margin-top:4px}
+.navcard-desc{font-size:13.5px;color:var(--t3);margin-top:3px}
 .navcard-badge{
   background:#F59E0B;color:#fff;
-  padding:2px 10px;border-radius:99px;font-size:13px;font-weight:700;line-height:1.5;
+  padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:700;line-height:1.5;
 }
-.navcard > svg:last-child{color:var(--t3);flex-shrink:0}
-.navcard:hover > svg:last-child{color:var(--blue);transform:translateX(3px);transition:transform .15s}
+.navcard > svg:last-child{color:var(--t3);flex-shrink:0;transition:transform .15s}
+.navcard:hover > svg:last-child{transform:translateX(4px)}
 
 @media(max-width:900px){
-  .navcards{scroll-snap-type:x mandatory}
-  .navcard{flex:0 0 86%;min-width:0}      /* ~1.15 cards visible — โชว์เด่นทีละ card เห็นขอบถัดไปนิดนึง */
+  .navcards-wrap{padding:14px 12px 6px;margin:14px 0 18px}
+  .navcard{flex:0 0 86%;min-width:0}      /* ~1.15 cards visible */
 }
 
 /* Filter bar — horizontal scroll cards (snap, swipe) */
