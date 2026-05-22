@@ -248,18 +248,30 @@ tr.tr-active td{background:var(--blue-bg) !important}
   border-radius:99px;padding:1px 7px;font-size:11.5px;font-weight:700;line-height:1.5;
 }
 
-/* Filter bar — card-based layout */
+/* Filter bar — horizontal scroll cards (snap, swipe) */
 .filter-bar{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:12px;animation:fbar-in .15s ease;
+  display:flex;flex-direction:row;gap:12px;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scroll-padding:4px;
+  padding:4px 4px 10px;
+  margin:0 -4px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:var(--brd2) transparent;
+  animation:fbar-in .15s ease;
 }
+.filter-bar::-webkit-scrollbar{height:6px}
+.filter-bar::-webkit-scrollbar-track{background:transparent}
+.filter-bar::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+.filter-bar::-webkit-scrollbar-thumb:hover{background:var(--t3)}
 @keyframes fbar-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
-/* แต่ละกลุ่มเป็น card */
+/* แต่ละกลุ่มเป็น card — flex-basis คงที่เพื่อ snap */
 .fcard{
   background:var(--sur);border:1.5px solid var(--brd);border-radius:14px;
   padding:14px 16px;display:flex;flex-direction:column;gap:10px;
   box-shadow:var(--sh0);transition:border-color .15s;
+  flex:0 0 280px;scroll-snap-align:start;min-width:0;
 }
 .fcard:hover{border-color:var(--brd2)}
 .fcard-hd{display:flex;align-items:center;gap:10px}
@@ -281,14 +293,13 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .fcard-purple .fcard-ico{background:#EDE9FE;color:#7C3AED}
 
 .fbar-clear-block{
-  grid-column:1/-1;justify-content:center;
+  width:100%;justify-content:center;margin-top:10px;
   background:transparent;border-style:dashed;
 }
 .fbar-clear-block:hover{background:var(--red);color:#fff;border-style:solid}
 
 @media(max-width:700px){
-  .filter-bar{grid-template-columns:1fr;gap:10px}
-  .fcard{padding:13px 14px}
+  .fcard{flex:0 0 78%;padding:13px 14px}      /* ~1.3 cards visible */
   .fcard-bd{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
   .fcard-bd .fopt{padding:10px 12px;font-size:14px;justify-content:center}
   .fcard-sub{flex-direction:column;align-items:stretch;gap:6px}

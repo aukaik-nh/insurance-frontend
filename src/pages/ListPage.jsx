@@ -242,8 +242,9 @@ export function ListPage({ tab }) {
               </button>
             </div>
 
-            {/* Collapsible filter panel — card-based */}
+            {/* Collapsible filter panel — horizontal scrolling cards */}
             {showFilter && (
+              <>
               <div className="filter-bar">
 
                 {/* สถานะ */}
@@ -335,13 +336,15 @@ export function ListPage({ tab }) {
                   </div>
                 </div>
 
-                {/* Clear (footer) */}
-                {activeFilters > 0 && (
-                  <button className="fbar-clear fbar-clear-block" onClick={clearFilters}>
-                    <Ico n="x" s={16} /> ล้างทั้งหมด ({activeFilters})
-                  </button>
-                )}
               </div>
+
+              {/* Clear (footer outside scroll) */}
+              {activeFilters > 0 && (
+                <button className="fbar-clear fbar-clear-block" onClick={clearFilters}>
+                  <Ico n="x" s={16} /> ล้างทั้งหมด ({activeFilters})
+                </button>
+              )}
+              </>
             )}
 
             {/* Active chips — แสดงเมื่อมี filter ที่ active */}
