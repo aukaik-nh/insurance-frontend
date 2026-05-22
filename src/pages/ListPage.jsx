@@ -242,14 +242,17 @@ export function ListPage({ tab }) {
               </button>
             </div>
 
-            {/* Collapsible filter panel */}
+            {/* Collapsible filter panel — card-based */}
             {showFilter && (
               <div className="filter-bar">
 
                 {/* สถานะ */}
-                <div className="frow">
-                  <label className="frow-lbl">สถานะ</label>
-                  <div className="frow-opts">
+                <div className="fcard fcard-blue">
+                  <div className="fcard-hd">
+                    <span className="fcard-ico"><Ico n="shield" s={16} /></span>
+                    <span className="fcard-ttl">สถานะ</span>
+                  </div>
+                  <div className="fcard-bd">
                     {STATUS_OPTS.map(o => (
                       <button
                         key={o.val}
@@ -265,52 +268,56 @@ export function ListPage({ tab }) {
                   </div>
                 </div>
 
-                {/* วันหมดอายุ — presets + custom range (2 sub-rows) */}
-                <div className="frow">
-                  <label className="frow-lbl">วันหมดอายุ</label>
-                  <div className="frow-stack">
-                    <div className="frow-opts">
-                      {datePresets.map(p => (
-                        <button
-                          key={p.val}
-                          className={`fopt${activePreset === p.val ? " active" : ""}`}
-                          onClick={() => applyPreset(p.val)}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="frow-sub">
-                      <span className="frow-sub-lbl">หรือกำหนดเอง</span>
-                      <div className="fbar-dates">
-                        <div className="fbar-date">
-                          <Ico n="cal" s={17} />
-                          <input
-                            type="date"
-                            value={dateFrom}
-                            title="ตั้งแต่"
-                            onChange={e => { setDateFrom(e.target.value); setPage(1) }}
-                          />
-                        </div>
-                        <span className="fbar-dash">—</span>
-                        <div className="fbar-date">
-                          <Ico n="cal" s={17} />
-                          <input
-                            type="date"
-                            value={dateTo}
-                            title="ถึง"
-                            onChange={e => { setDateTo(e.target.value); setPage(1) }}
-                          />
-                        </div>
+                {/* วันหมดอายุ */}
+                <div className="fcard fcard-amber">
+                  <div className="fcard-hd">
+                    <span className="fcard-ico"><Ico n="cal" s={16} /></span>
+                    <span className="fcard-ttl">วันหมดอายุ</span>
+                  </div>
+                  <div className="fcard-bd">
+                    {datePresets.map(p => (
+                      <button
+                        key={p.val}
+                        className={`fopt${activePreset === p.val ? " active" : ""}`}
+                        onClick={() => applyPreset(p.val)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="fcard-sub">
+                    <span className="fcard-sub-lbl">หรือกำหนดเอง</span>
+                    <div className="fbar-dates">
+                      <div className="fbar-date">
+                        <Ico n="cal" s={17} />
+                        <input
+                          type="date"
+                          value={dateFrom}
+                          title="ตั้งแต่"
+                          onChange={e => { setDateFrom(e.target.value); setPage(1) }}
+                        />
+                      </div>
+                      <span className="fbar-dash">—</span>
+                      <div className="fbar-date">
+                        <Ico n="cal" s={17} />
+                        <input
+                          type="date"
+                          value={dateTo}
+                          title="ถึง"
+                          onChange={e => { setDateTo(e.target.value); setPage(1) }}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* PDF */}
-                <div className="frow">
-                  <label className="frow-lbl">ไฟล์ PDF</label>
-                  <div className="frow-opts">
+                <div className="fcard fcard-purple">
+                  <div className="fcard-hd">
+                    <span className="fcard-ico"><Ico n="doc" s={16} /></span>
+                    <span className="fcard-ttl">ไฟล์ PDF</span>
+                  </div>
+                  <div className="fcard-bd">
                     {[
                       { val: "",      label: "ทั้งหมด" },
                       { val: "true",  label: "มี PDF",    ico: "doc" },
@@ -330,11 +337,9 @@ export function ListPage({ tab }) {
 
                 {/* Clear (footer) */}
                 {activeFilters > 0 && (
-                  <div className="frow-foot">
-                    <button className="fbar-clear" onClick={clearFilters}>
-                      <Ico n="x" s={16} /> ล้างทั้งหมด ({activeFilters})
-                    </button>
-                  </div>
+                  <button className="fbar-clear fbar-clear-block" onClick={clearFilters}>
+                    <Ico n="x" s={16} /> ล้างทั้งหมด ({activeFilters})
+                  </button>
                 )}
               </div>
             )}

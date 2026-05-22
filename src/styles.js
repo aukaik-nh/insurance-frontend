@@ -248,37 +248,53 @@ tr.tr-active td{background:var(--blue-bg) !important}
   border-radius:99px;padding:1px 7px;font-size:11.5px;font-weight:700;line-height:1.5;
 }
 
-/* Filter bar — collapsible panel (row-per-group layout) */
+/* Filter bar — card-based layout */
 .filter-bar{
-  background:var(--sur);border:1.5px solid var(--brd);border-radius:14px;
-  padding:18px 22px;display:flex;flex-direction:column;
-  gap:14px;box-shadow:var(--sh0);
-  animation:fbar-in .15s ease;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:12px;animation:fbar-in .15s ease;
 }
 @keyframes fbar-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
-/* แต่ละแถว: label ซ้าย | options ขวา */
-.frow{display:grid;grid-template-columns:120px 1fr;align-items:flex-start;gap:18px;min-height:38px}
-.frow-lbl{font-size:14px;font-weight:700;color:var(--t2);letter-spacing:.2px;padding-top:10px;white-space:nowrap}
-.frow-opts{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding-top:2px}
-.frow-stack{display:flex;flex-direction:column;gap:10px}
-.frow-sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:2px}
-.frow-sub-lbl{font-size:12.5px;color:var(--t3);white-space:nowrap;font-weight:500}
-.frow-foot{display:flex;justify-content:flex-end;border-top:1px solid var(--brd);padding-top:12px;margin-top:2px}
+/* แต่ละกลุ่มเป็น card */
+.fcard{
+  background:var(--sur);border:1.5px solid var(--brd);border-radius:14px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+  box-shadow:var(--sh0);transition:border-color .15s;
+}
+.fcard:hover{border-color:var(--brd2)}
+.fcard-hd{display:flex;align-items:center;gap:10px}
+.fcard-ico{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:9px;flex-shrink:0;
+}
+.fcard-ttl{font-size:13px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+.fcard-bd{display:flex;flex-wrap:wrap;gap:7px}
+.fcard-sub{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-top:10px;margin-top:2px;border-top:1px dashed var(--brd);
+}
+.fcard-sub-lbl{font-size:12.5px;color:var(--t3);white-space:nowrap;font-weight:500}
+
+/* สีประจำการ์ด — แค่ไอคอน, ไม่ทำให้ทั้งการ์ดสีฉูดฉาด */
+.fcard-blue .fcard-ico{background:var(--blue-bg);color:var(--blue)}
+.fcard-amber .fcard-ico{background:#FEF3C7;color:#D97706}
+.fcard-purple .fcard-ico{background:#EDE9FE;color:#7C3AED}
+
+.fbar-clear-block{
+  grid-column:1/-1;justify-content:center;
+  background:transparent;border-style:dashed;
+}
+.fbar-clear-block:hover{background:var(--red);color:#fff;border-style:solid}
 
 @media(max-width:700px){
-  .filter-bar{padding:14px 16px;gap:16px}
-  .frow{grid-template-columns:1fr;gap:8px;min-height:0}
-  .frow-lbl{padding-top:0;font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.6px}
-  .frow-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;padding-top:0}
-  .frow-opts .fopt{padding:10px 12px;font-size:14px;justify-content:center}
-  .frow-sub{flex-direction:column;align-items:stretch;gap:6px}
-  .frow-sub-lbl{font-size:12px;color:var(--t3)}
+  .filter-bar{grid-template-columns:1fr;gap:10px}
+  .fcard{padding:13px 14px}
+  .fcard-bd{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  .fcard-bd .fopt{padding:10px 12px;font-size:14px;justify-content:center}
+  .fcard-sub{flex-direction:column;align-items:stretch;gap:6px}
   .fbar-dates{display:flex;gap:8px;flex-wrap:nowrap}
   .fbar-date{flex:1;min-width:0}
   .fbar-date input{width:100%}
-  .frow-foot{justify-content:stretch}
-  .fbar-clear{justify-content:center;width:100%}
 }
 .fbar-dates{display:flex;align-items:center;gap:8px}
 .fbar-date{
