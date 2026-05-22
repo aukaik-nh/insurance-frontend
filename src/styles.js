@@ -718,7 +718,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   padding:14px 24px;background:var(--sur);
   border-bottom:1px solid var(--brd);
   display:flex;align-items:center;gap:18px;
-  position:sticky;top:64px;z-index:90;box-shadow:var(--sh1);
+  position:fixed;top:64px;left:0;right:0;z-index:90;box-shadow:var(--sh1);
   flex-wrap:nowrap;min-width:0;
 }
 .page-back{
@@ -735,7 +735,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .page-title{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-sub{font-size:14px;color:var(--t3);margin-top:3px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-hd-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
-.page-body{padding:22px 28px;flex:1}
+.page-body{padding:88px 28px 22px;flex:1}      /* padding-top = page-hd height (~76px) + breathing room */
 
 .detail-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
 .detail-aside{position:sticky;top:calc(64px + 62px + 14px)}
@@ -933,7 +933,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 @media(max-width:639px){
   .page-hd{padding:8px 12px;gap:8px;flex-wrap:nowrap;align-items:center}
   .page-hd-div{display:none}
-  .page-body{padding:12px 12px}
+  .page-body{padding:70px 12px 12px}      /* mobile: page-hd ~58px + breathing */
   .page-title{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .page-sub{font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .page-hd-info{flex:1 1 auto;min-width:0;overflow:hidden}
@@ -980,7 +980,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   /* ซ่อน field ที่ค่าว่าง บนจอเล็ก เพื่อลดความยาวหน้า */
   .info-field-empty{display:none}
   .info-card-bd{padding:12px !important}
-  .page-body{padding:10px 10px}
+  .page-body{padding:64px 10px 10px}      /* small mobile: page-hd ~54px + breathing */
 }
 `
 
