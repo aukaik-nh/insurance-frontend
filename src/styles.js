@@ -491,6 +491,14 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .btn-w:hover{background:var(--sur2);border-color:var(--brd2);color:var(--t1)}
 .btn-w:disabled{opacity:.5;cursor:not-allowed}
 
+/* ปุ่ม "เพิ่ม พ.ร.บ." — pulse subtle เรียก attention */
+.btn-prb.btn-b{position:relative;animation:prb-pulse 2.4s ease-in-out infinite}
+.btn-prb.btn-b:hover{animation:none;transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,111,229,.42)}
+@keyframes prb-pulse{
+  0%,100%{box-shadow:0 4px 12px rgba(30,111,229,.32)}
+  50%    {box-shadow:0 4px 12px rgba(30,111,229,.32),0 0 0 6px rgba(30,111,229,.10)}
+}
+
 .body{padding:20px 28px}
 
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px}

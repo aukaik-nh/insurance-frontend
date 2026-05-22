@@ -161,13 +161,22 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           {/* ปุ่ม toggle PRB — ซ่อนในโหมด readOnly */}
           {!readOnly && onTogglePrb && (
             <button
-              className={`btn ${hasPrb ? "btn-w" : "btn-b"}`}
+              className={`btn ${hasPrb ? "btn-w" : "btn-b"} btn-prb`}
               onClick={e => { e.stopPropagation(); onTogglePrb() }}
-              style={{ padding: "8px 16px", fontSize: 14 }}
+              style={hasPrb
+                ? { padding: "10px 18px", fontSize: 14.5, fontWeight: 600 }
+                : {
+                    padding: "12px 22px",
+                    fontSize: 15.5,
+                    fontWeight: 700,
+                    boxShadow: "0 4px 12px rgba(30,111,229,.32)",
+                    letterSpacing: ".2px",
+                  }
+              }
             >
               {hasPrb
                 ? <><Ico n="x" s={16} /> เอา พ.ร.บ. ออก</>
-                : <><Ico n="plus" s={16} /> เพิ่ม พ.ร.บ.</>}
+                : <><Ico n="plus" s={18} /> เพิ่ม พ.ร.บ.</>}
             </button>
           )}
         </div>
