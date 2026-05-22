@@ -248,84 +248,50 @@ tr.tr-active td{background:var(--blue-bg) !important}
   border-radius:99px;padding:1px 7px;font-size:11.5px;font-weight:700;line-height:1.5;
 }
 
-/* Quick nav cards (horizontal scroll cards on dashboard) */
-.navcards-wrap{
-  margin:18px 0 22px;
-  padding:16px 16px 8px;
-  background:linear-gradient(180deg,var(--sur2) 0%,transparent 100%);
-  border:1px dashed var(--brd2);border-radius:16px;
+/* Quick action pills — pill-shaped buttons (ดูต่างจาก stats cards ชัดเจน) */
+.navpills{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  margin:14px 0 18px;
 }
-.navcards-hd{
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:12px;padding:0 2px;
+.navpills-lbl{
+  font-size:12.5px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.6px;
+  margin-right:4px;
 }
-.navcards-hd svg{color:var(--t2)}
-.navcards-ttl{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:.3px}
-.navcards-sub{font-size:12.5px;color:var(--t3);margin-left:4px}
-
-.navcards{
-  display:flex;flex-direction:row;gap:14px;
-  overflow-x:auto;overflow-y:hidden;
-  scroll-snap-type:x mandatory;
-  scroll-padding:4px;
-  padding:4px 4px 10px;margin:0 -4px;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;scrollbar-color:var(--brd2) transparent;
-}
-.navcards::-webkit-scrollbar{height:6px}
-.navcards::-webkit-scrollbar-track{background:transparent}
-.navcards::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
-
-.navcard{
-  flex:1 1 0;min-width:260px;scroll-snap-align:start;
-  display:flex;align-items:center;gap:14px;
-  border:1.5px solid;border-radius:14px;
-  padding:16px 18px;cursor:pointer;text-align:left;
+.navpill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;border-radius:99px;
+  border:1.5px solid;cursor:pointer;
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
-  box-shadow:var(--sh0);transition:all .15s;color:var(--t1);
-  min-height:84px;position:relative;
+  font-size:14.5px;font-weight:600;
+  transition:all .15s;white-space:nowrap;
+  box-shadow:var(--sh0);
 }
-.navcard:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.navpill:hover{transform:translateY(-1px);box-shadow:var(--sh2)}
+.navpill svg{flex-shrink:0}
 
-/* พื้น tinted ตามสีไอคอน + เส้นขอบเข้ม → ดูเป็นปุ่ม action ชัดเจน */
-.navcard.fcard-blue{background:var(--blue-bg);border-color:var(--blue-mid)}
-.navcard.fcard-blue:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
-.navcard.fcard-blue:hover .navcard-ttl,
-.navcard.fcard-blue:hover .navcard-desc,
-.navcard.fcard-blue:hover > svg:last-child{color:#fff}
+.navpill.np-blue{background:var(--sur);border-color:var(--blue-mid);color:var(--blue)}
+.navpill.np-blue:hover{background:var(--blue);color:#fff}
 
-.navcard.fcard-purple{background:#F5F3FF;border-color:#C4B5FD}
-.navcard.fcard-purple:hover{background:#7C3AED;color:#fff;border-color:#7C3AED}
-.navcard.fcard-purple:hover .navcard-ttl,
-.navcard.fcard-purple:hover .navcard-desc,
-.navcard.fcard-purple:hover > svg:last-child{color:#fff}
+.navpill.np-purple{background:var(--sur);border-color:#C4B5FD;color:#7C3AED}
+.navpill.np-purple:hover{background:#7C3AED;color:#fff}
 
-.navcard.fcard-amber{background:#FFFBEB;border-color:#FCD34D}
-.navcard.fcard-amber:hover{background:#D97706;color:#fff;border-color:#D97706}
-.navcard.fcard-amber:hover .navcard-ttl,
-.navcard.fcard-amber:hover .navcard-desc,
-.navcard.fcard-amber:hover > svg:last-child{color:#fff}
+.navpill.np-amber{background:var(--sur);border-color:#FCD34D;color:#D97706}
+.navpill.np-amber:hover{background:#D97706;color:#fff}
 
-.navcard .fcard-ico{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.7)}
-.navcard .fcard-ico svg{width:24px;height:24px}
-.navcard:hover .fcard-ico{background:rgba(255,255,255,.25);color:#fff}
-
-.navcard-body{flex:1;min-width:0}
-.navcard-ttl{
-  display:flex;align-items:center;gap:10px;
-  font-size:17px;font-weight:700;color:var(--t1);
+.navpill-badge{
+  background:rgba(0,0,0,.08);color:inherit;
+  padding:1px 8px;border-radius:99px;
+  font-size:12.5px;font-weight:700;line-height:1.5;
+  margin-left:2px;
 }
-.navcard-desc{font-size:13.5px;color:var(--t3);margin-top:3px}
-.navcard-badge{
-  background:#F59E0B;color:#fff;
-  padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:700;line-height:1.5;
-}
-.navcard > svg:last-child{color:var(--t3);flex-shrink:0;transition:transform .15s}
-.navcard:hover > svg:last-child{transform:translateX(4px)}
+.navpill:hover .navpill-badge{background:rgba(255,255,255,.25);color:#fff}
 
-@media(max-width:900px){
-  .navcards-wrap{padding:14px 12px 6px;margin:14px 0 18px}
-  .navcard{flex:0 0 86%;min-width:0}      /* ~1.15 cards visible */
+@media(max-width:700px){
+  .navpills{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .navpills::-webkit-scrollbar{display:none}
+  .navpill{flex-shrink:0}
 }
 
 /* Filter bar — horizontal scroll cards (snap, swipe) */
