@@ -211,166 +211,21 @@ export function ListPage({ tab }) {
             </>
           )}
 
-          {/* ── Search + Filter ── */}
+          {/* ── Search (filter UI removed) ── */}
           <div className="filter-wrap">
-
-            {/* Search row + filter toggle */}
-            <div className="srch-row">
-              <div className="big-srch">
-                <Ico n="search" s={20} />
-                <input
-                  placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
-                  value={search}
-                  onChange={e => { setSearch(e.target.value); setPage(1) }}
-                />
-                {search && (
-                  <button className="big-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
-                    <Ico n="x" s={18} />
-                  </button>
-                )}
-              </div>
-              <button
-                className={`ftoggle${showFilter ? " open" : ""}${activeFilters > 0 && !showFilter ? " has-active" : ""}`}
-                onClick={() => setShowFilter(f => !f)}
-              >
-                <Ico n="filter" s={18} />
-                <span>ฟิลเตอร์</span>
-                {activeFilters > 0 && !showFilter && (
-                  <span className="ftoggle-badge">{activeFilters}</span>
-                )}
-                <Ico n={showFilter ? "chevU" : "chevD"} s={16} />
-              </button>
-            </div>
-
-            {/* Collapsible filter panel — horizontal scrolling cards */}
-            {showFilter && (
-              <>
-              <div className="filter-bar">
-
-                {/* สถานะ */}
-                <div className="fcard fcard-blue">
-                  <div className="fcard-hd">
-                    <span className="fcard-ico"><Ico n="shield" s={16} /></span>
-                    <span className="fcard-ttl">สถานะ</span>
-                  </div>
-                  <div className="fcard-bd">
-                    {STATUS_OPTS.map(o => (
-                      <button
-                        key={o.val}
-                        className={`fopt${status === o.val ? " active" : ""}${o.val === "active" ? " fopt-green" : o.val === "expiring" ? " fopt-amber" : o.val === "expired" ? " fopt-red" : ""}`}
-                        onClick={() => { setStatus(o.val); setPage(1) }}
-                      >
-                        {o.val && <span className="fopt-dot" style={{
-                          background: o.val === "active" ? "var(--green)" : o.val === "expiring" ? "#F59E0B" : "var(--red)"
-                        }} />}
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* วันหมดอายุ */}
-                <div className="fcard fcard-amber">
-                  <div className="fcard-hd">
-                    <span className="fcard-ico"><Ico n="cal" s={16} /></span>
-                    <span className="fcard-ttl">วันหมดอายุ</span>
-                  </div>
-                  <div className="fcard-bd">
-                    {datePresets.map(p => (
-                      <button
-                        key={p.val}
-                        className={`fopt${activePreset === p.val ? " active" : ""}`}
-                        onClick={() => applyPreset(p.val)}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="fcard-sub">
-                    <span className="fcard-sub-lbl">หรือกำหนดเอง</span>
-                    <div className="fbar-dates">
-                      <div className="fbar-date">
-                        <Ico n="cal" s={17} />
-                        <input
-                          type="date"
-                          value={dateFrom}
-                          title="ตั้งแต่"
-                          onChange={e => { setDateFrom(e.target.value); setPage(1) }}
-                        />
-                      </div>
-                      <span className="fbar-dash">—</span>
-                      <div className="fbar-date">
-                        <Ico n="cal" s={17} />
-                        <input
-                          type="date"
-                          value={dateTo}
-                          title="ถึง"
-                          onChange={e => { setDateTo(e.target.value); setPage(1) }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* PDF */}
-                <div className="fcard fcard-purple">
-                  <div className="fcard-hd">
-                    <span className="fcard-ico"><Ico n="doc" s={16} /></span>
-                    <span className="fcard-ttl">ไฟล์ PDF</span>
-                  </div>
-                  <div className="fcard-bd">
-                    {[
-                      { val: "",      label: "ทั้งหมด" },
-                      { val: "true",  label: "มี PDF",    ico: "doc" },
-                      { val: "false", label: "ไม่มี PDF" },
-                    ].map(o => (
-                      <button
-                        key={o.val}
-                        className={`fopt${hasPdf === o.val ? " active" : ""}`}
-                        onClick={() => { setHasPdf(o.val); setPage(1) }}
-                      >
-                        {o.ico && <Ico n={o.ico} s={17} />}
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Clear (footer outside scroll) */}
-              {activeFilters > 0 && (
-                <button className="fbar-clear fbar-clear-block" onClick={clearFilters}>
-                  <Ico n="x" s={16} /> ล้างทั้งหมด ({activeFilters})
+            <div className="big-srch">
+              <Ico n="search" s={20} />
+              <input
+                placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1) }}
+              />
+              {search && (
+                <button className="big-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
+                  <Ico n="x" s={18} />
                 </button>
               )}
-              </>
-            )}
-
-            {/* Active chips — แสดงเมื่อมี filter ที่ active */}
-            {activeFilters > 0 && (
-              <div className="filter-chips">
-                {status && (
-                  <span className={`fchip ${STATUS_OPTS.find(o => o.val === status)?.cls || ""}`}>
-                    {STATUS_OPTS.find(o => o.val === status)?.label}
-                    <button onClick={() => { setStatus(""); setPage(1) }}><Ico n="x" s={14} /></button>
-                  </span>
-                )}
-                {(dateFrom || dateTo) && (
-                  <span className="fchip">
-                    <Ico n="cal" s={15} />
-                    {dateFrom ? dateFrom.split("-").reverse().join("/") : "ทุกวัน"} – {dateTo ? dateTo.split("-").reverse().join("/") : "ทุกวัน"}
-                    <button onClick={() => { setDateFrom(""); setDateTo(""); setPage(1) }}><Ico n="x" s={14} /></button>
-                  </span>
-                )}
-                {hasPdf && (
-                  <span className="fchip">
-                    {hasPdf === "true" ? <><Ico n="doc" s={15} /> มี PDF</> : "ไม่มี PDF"}
-                    <button onClick={() => { setHasPdf(""); setPage(1) }}><Ico n="x" s={14} /></button>
-                  </span>
-                )}
-              </div>
-            )}
+            </div>
           </div>
 
           {/* ── Quick nav cards (horizontal scroll) — เฉพาะหน้า dashboard ── */}
