@@ -731,10 +731,10 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 }
 .page-back:hover{background:var(--sur2);color:var(--t1);border-color:var(--brd2)}
 .page-hd-div{width:1px;height:26px;background:var(--brd);flex-shrink:0}
-.page-hd-info{min-width:0}
-.page-title{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.2px;line-height:1.3}
-.page-sub{font-size:14px;color:var(--t3);margin-top:3px;font-weight:400}
-.page-hd-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.page-hd-info{flex:1 1 0;min-width:0;overflow:hidden}
+.page-title{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-sub{font-size:14px;color:var(--t3);margin-top:3px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.page-hd-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .page-body{padding:22px 28px;flex:1}
 
 .detail-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
