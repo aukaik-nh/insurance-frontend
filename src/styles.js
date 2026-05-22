@@ -718,8 +718,8 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   padding:14px 24px;background:var(--sur);
   border-bottom:1px solid var(--brd);
   display:flex;align-items:center;gap:18px;
-  position:sticky;top:64px;z-index:40;box-shadow:var(--sh0);
-  flex-wrap:wrap;
+  position:sticky;top:64px;z-index:90;box-shadow:var(--sh1);
+  flex-wrap:nowrap;min-width:0;
 }
 .page-back{
   display:inline-flex;align-items:center;gap:8px;
