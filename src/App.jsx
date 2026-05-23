@@ -296,6 +296,46 @@ export default function App() {
     setToken(null)
   }
 
+  // ── Keep-alive backend + auto re-check token ตอน tab กลับมา ──
+  //   1. ping /health ทุก 10 นาที (กันกรณี GitHub Actions cron delay/หาย)
+  //   2. ping + ตรวจ token ตอน tab visible อีกครั้ง (กรณีเปิดทิ้งไว้นานๆ)
+  //   3. ถ้า JWT หมดอายุ → logout ทันที (เด้งไป login โดยไม่ต้องรอ API call)
+  useEffect(() => {
+    if (!token) return
+
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
+    const healthUrl = apiBase.replace(/\/api\/?$/, "") + "/health"
+    const ping = () => fetch(healthUrl, { method: "GET", cache: "no-store" }).catch(() => {})
+
+    const checkToken = () => {
+      const t = localStorage.getItem("auth_token")
+      if (!t) { handleLogout(); return }
+      try {
+        const payload = JSON.parse(atob(t.split(".")[1]))
+        if (payload.exp && payload.exp * 1000 < Date.now()) handleLogout()
+      } catch {
+        handleLogout()
+      }
+    }
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") ping()
+    }, 10 * 60 * 1000)
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        ping()
+        checkToken()
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [token])
+
   // หน้า login — แสดงนอก BrowserRouter (ไม่มี nav)
   if (!token) {
     return (
