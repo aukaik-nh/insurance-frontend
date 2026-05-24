@@ -93,10 +93,10 @@ export function ListPage({ tab }) {
     return () => clearTimeout(t)
   }, [search])
 
-  // race-safe fetch — ป้องกัน race condition จาก filter ที่กดเร็วๆ
+  // race-safe fetch + stale-while-revalidate cache
+  // โชว์ผลลัพธ์ล่าสุดจาก localStorage ทันที (กัน user รอ cold start backend) แล้วค่อย swap ของใหม่เมื่อ API ตอบ
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     const params = { page, limit: LIMIT, sort: sortKey, order: sortDir }
     if (debouncedSearch) params.search = debouncedSearch
     if (status)   params.status    = status
@@ -104,12 +104,38 @@ export function ListPage({ tab }) {
     if (dateTo)   params.date_to   = dateTo
     if (hasPdf)   params.has_pdf   = hasPdf
 
+    const cacheKey = `policies-cache:${JSON.stringify(params)}`
+    let hadCache = false
+    try {
+      const raw = localStorage.getItem(cacheKey)
+      if (raw) {
+        const { rows: cRows, total: cTotal, ts } = JSON.parse(raw)
+        // ใช้ cache ถ้าอายุไม่เกิน 7 วัน
+        if (cRows && Date.now() - (ts || 0) < 7 * 24 * 60 * 60 * 1000) {
+          setRows(cRows)
+          setTotal(cTotal || 0)
+          const expCnt = cRows.filter(r => {
+            if (!r.coverage_end) return false
+            const d = (new Date(r.coverage_end) - new Date()) / 86400000
+            return d >= 0 && d < 30
+          }).length
+          setExpiringCount(expCnt)
+          hadCache = true
+        }
+      }
+    } catch {}
+    setLoading(!hadCache)
+
     api.get("/policies", { params })
       .then(res => {
         if (cancelled) return
         const data = res.data.data || []
+        const totalCount = res.data.total || 0
         setRows(data)
-        setTotal(res.data.total || 0)
+        setTotal(totalCount)
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ rows: data, total: totalCount, ts: Date.now() }))
+        } catch {}
         const expCnt = data.filter(r => {
           if (!r.coverage_end) return false
           const d = (new Date(r.coverage_end) - new Date()) / 86400000
@@ -119,7 +145,8 @@ export function ListPage({ tab }) {
       })
       .catch(e => {
         if (cancelled) return
-        notify("โหลดข้อมูลไม่สำเร็จ: " + (e.response?.data?.detail || e.message), "error")
+        // ถ้ามี cache อยู่แล้ว ไม่ต้อง notify error รบกวน — user ยังเห็นข้อมูลได้
+        if (!hadCache) notify("โหลดข้อมูลไม่สำเร็จ: " + (e.response?.data?.detail || e.message), "error")
       })
       .finally(() => { if (!cancelled) setLoading(false) })
 

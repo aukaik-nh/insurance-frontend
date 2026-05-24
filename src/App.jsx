@@ -21,11 +21,65 @@ function Layout({ onLogout }) {
   const [page,          setPage]          = useState(1)
   const [toast,         setToast]         = useState(null)
   const [expiringCount, setExpiringCount] = useState(0)
+  const [serverStatus,  setServerStatus]  = useState("checking") // checking | ready | error
 
   useEffect(() => {
     document.body.classList.toggle("dark", darkMode)
     localStorage.setItem("theme", darkMode ? "dark" : "light")
   }, [darkMode])
+
+  // Probe backend /health — Render free tier cold start อาจรอ ~50s
+  // ระหว่าง probe → จุดเหลือง, ตอบแล้ว → เขียว, ครบ window แล้วยังไม่ตอบ → แดง
+  useEffect(() => {
+    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
+    const healthUrl = apiBase.replace(/\/api\/?$/, "") + "/health"
+    let cancelled = false
+    let timer
+
+    const pingOnce = async () => {
+      try {
+        const ctl = new AbortController()
+        const to = setTimeout(() => ctl.abort(), 8000)
+        const res = await fetch(healthUrl, { method: "GET", cache: "no-store", signal: ctl.signal })
+        clearTimeout(to)
+        return res.ok
+      } catch {
+        return false
+      }
+    }
+
+    const probe = async () => {
+      setServerStatus(s => (s === "ready" ? "checking" : s))
+      // ลอง 12 ครั้ง × 8s timeout + 2s delay ≈ window ~120s ครอบคลุม cold start
+      for (let i = 0; i < 12; i++) {
+        if (cancelled) return
+        if (await pingOnce()) {
+          if (!cancelled) setServerStatus("ready")
+          return
+        }
+        await new Promise(r => { timer = setTimeout(r, 2000) })
+      }
+      if (!cancelled) setServerStatus("error")
+    }
+
+    probe()
+    const onVisible = () => {
+      if (document.visibilityState === "visible") probe()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [])
+
+  const statusMeta = {
+    checking: { color: "#F59E0B", shadow: "rgba(245,158,11,.35)", label: "กำลังปลุกเซิร์ฟเวอร์..." },
+    ready:    { color: "#34D399", shadow: "rgba(52,211,153,.3)",  label: "ระบบพร้อมใช้งาน" },
+    error:    { color: "#EF4444", shadow: "rgba(239,68,68,.3)",   label: "เซิร์ฟเวอร์ไม่ตอบสนอง" },
+  }[serverStatus]
 
   // reset page when search changes
   const handleSearch = v => { setSearch(v); setPage(1) }
@@ -130,9 +184,16 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
 
           {/* Right area */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div className="sb-dot" />
-              <span className="sb-status-txt">ระบบพร้อมใช้งาน</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }} title={statusMeta.label}>
+              <div
+                className="sb-dot"
+                style={{
+                  background: statusMeta.color,
+                  boxShadow: `0 0 0 2px ${statusMeta.shadow}`,
+                  animation: serverStatus === "checking" ? "sb-dot-pulse 1.1s ease-in-out infinite" : "none",
+                }}
+              />
+              <span className="sb-status-txt">{statusMeta.label}</span>
             </div>
             <button className="theme-btn" onClick={() => setDarkMode(d => !d)}
               title={darkMode ? "โหมดสว่าง" : "โหมดมืด"}>
@@ -293,6 +354,11 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token")
+    // ล้าง policies cache กันข้อมูลค้างข้าม account
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith("policies-cache:")) localStorage.removeItem(k)
+    }
     setToken(null)
   }
 

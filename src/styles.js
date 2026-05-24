@@ -134,7 +134,8 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
 .sb-item.on .sb-chip{background:#FEF3C7;color:#D97706}
 .sb-divider{width:1px;height:20px;background:var(--brd);margin:0 6px;flex-shrink:0}
 .sb-dot{width:6px;height:6px;border-radius:50%;background:#34D399;flex-shrink:0;box-shadow:0 0 0 2px rgba(52,211,153,.3)}
-.sb-status-txt{font-size:14px;color:var(--t3)}
+.sb-status-txt{font-size:14px;color:var(--t3);white-space:nowrap}
+@keyframes sb-dot-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.85)}}
 
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
 
