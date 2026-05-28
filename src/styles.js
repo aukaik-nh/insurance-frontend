@@ -203,16 +203,28 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
 }
 .pvp-title{font-size:18px;font-weight:700;color:var(--t1);line-height:1.3}
 .pvp-close{
-  background:var(--sur2);border:1.5px solid var(--brd);border-radius:8px;
-  width:34px;height:34px;cursor:pointer;display:flex;
+  background:var(--red-bg);border:1.5px solid var(--red-brd);border-radius:10px;
+  width:38px;height:38px;cursor:pointer;display:flex;
   align-items:center;justify-content:center;
-  color:var(--t1);flex-shrink:0;transition:all .15s;margin-left:auto;
+  color:var(--red);flex-shrink:0;transition:all .15s;margin-left:auto;
 }
-.pvp-close:hover{background:var(--red-bg);border-color:var(--red-brd);color:var(--red)}
+.pvp-close:hover{background:var(--red);border-color:var(--red);color:#fff}
 .pvp-backdrop{display:none}
 @media(max-width:767px){
   .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
-  .pvp-close{width:44px;height:44px}
+  /* drag handle bar — บอกผู้ใช้ว่าลากปิดได้ */
+  .pvp::before{
+    content:"";display:block;width:48px;height:5px;border-radius:99px;
+    background:var(--brd2,#cbd5e1);margin:8px auto -2px;flex-shrink:0;
+  }
+  .pvp-close{
+    width:44px;height:44px;
+    /* เด่น — กลม + แดงเข้ม + แสง */
+    background:var(--red);border-color:var(--red);color:#fff;
+    box-shadow:0 2px 6px rgba(239,68,68,.35);
+  }
+  .pvp-close:hover{background:#dc2626}
+  .pvp-hd{padding:10px 14px 12px;position:sticky;top:0;background:var(--sur);z-index:5}
 }
 .pvp-body{overflow-y:auto;padding:14px 18px;flex-shrink:0}
 .pvp-sec{margin-bottom:10px}
