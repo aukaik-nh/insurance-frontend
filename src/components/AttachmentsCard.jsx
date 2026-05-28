@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
 import { Ico } from "../icons"
 import api from "../api"
 import { openPdfTab, downloadPdf } from "../pdfUtils"
@@ -64,13 +64,20 @@ const calcTotal = (net, stamp, vat) => {
   return t > 0 ? Math.round(t * 100) / 100 : ""
 }
 
-export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpdated, onItemsChange }) {
+export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpdated, onItemsChange, hideHeaderButton = false }, ref) {
   const [items, setItems]       = useState([])
   const [loading, setLoading]   = useState(true)
   const [uploading, setUpload]  = useState(false)
   const [typePicker, setTypePicker] = useState(false)        // modal เลือกประเภท
   const fileRef = useRef(null)
   const pendingType = useRef(null)
+
+  // expose open/close ให้ parent (ใช้เมื่อย้ายปุ่ม "เพิ่มเอกสาร" ไปอยู่ที่ header ของ DetailPage)
+  useImperativeHandle(ref, () => ({
+    openAddDialog: () => setTypePicker(true),
+    closeAddDialog: () => setTypePicker(false),
+    isUploading: () => uploading,
+  }), [uploading])
 
   const load = async () => {
     setLoading(true)
@@ -186,16 +193,23 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
       <div className="info-card-hd">
         <Ico n="doc" s={20} />
         <span className="info-card-title">เอกสารแนบ</span>
-        <button
-          className="btn btn-b"
-          onClick={() => setTypePicker(true)}
-          disabled={uploading}
-          style={{ marginLeft: "auto", padding: "8px 16px", fontSize: 14 }}
-        >
-          {uploading
-            ? <><div className="spin" style={{ width: 14, height: 14, borderWidth: 2 }} /> กำลังอัปโหลด…</>
-            : <><Ico n="upload" s={16} /> เพิ่มเอกสาร</>}
-        </button>
+        {!hideHeaderButton && (
+          <button
+            className="btn btn-b"
+            onClick={() => setTypePicker(true)}
+            disabled={uploading}
+            style={{ marginLeft: "auto", padding: "8px 16px", fontSize: 14 }}
+          >
+            {uploading
+              ? <><div className="spin" style={{ width: 14, height: 14, borderWidth: 2 }} /> กำลังอัปโหลด…</>
+              : <><Ico n="upload" s={16} /> เพิ่มเอกสาร</>}
+          </button>
+        )}
+        {hideHeaderButton && uploading && (
+          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--t3)" }}>
+            <div className="spin" style={{ width: 14, height: 14, borderWidth: 2 }} /> กำลังอัปโหลด…
+          </span>
+        )}
       </div>
 
       <div className="info-card-bd" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -396,4 +410,4 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
 
     </div>
   )
-}
+})

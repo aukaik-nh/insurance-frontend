@@ -47,6 +47,14 @@ export function DetailPage() {
   const [uploadingPdf, setUploadingPdf] = useState(false)
   const [refreshKey, setRefreshKey]     = useState(0)
   const fileInputRef = useRef(null)
+  const attachRef = useRef(null)   // ref ไป AttachmentsCard เพื่อ trigger เปิด modal จากปุ่มบน header
+
+  // collapse state สำหรับแต่ละ info-card (default = expanded)
+  const [openSections, setOpenSections] = useState({
+    policy: true, insured: true, car: true,
+    period: true, premium: true, coverage: true, attach: true,
+  })
+  const toggle = (key) => setOpenSections(s => ({ ...s, [key]: !s[key] }))
 
   const [deleteModal, setDeleteModal] = useState(false)  // confirm ลบ record
   const [deleting, setDeleting]       = useState(false)
@@ -308,6 +316,30 @@ export function DetailPage() {
     )
   }
 
+  // หัว info-card ที่กดย่อ/ขยายได้
+  const CardHd = ({ icon, title, sectionKey, extra }) => (
+    <div
+      className="info-card-hd"
+      onClick={() => toggle(sectionKey)}
+      style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <Ico n={icon} s={20} />
+        <span className="info-card-title">{title}</span>
+        {extra}
+      </div>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        width: 30, height: 30, borderRadius: 7,
+        background: "var(--sur2)",
+        transition: "transform 0.2s",
+        transform: openSections[sectionKey] ? "rotate(180deg)" : "rotate(0deg)"
+      }}>
+        <Ico n="chevD" s={18} />
+      </div>
+    </div>
+  )
+
   return (
     <>
       {pdfFull && (
@@ -406,6 +438,11 @@ export function DetailPage() {
               </>
             ) : (
               <>
+                <button className="btn btn-w"
+                  onClick={() => attachRef.current?.openAddDialog()}
+                  style={{ color: "var(--blue)", borderColor: "var(--blue-mid)", background: "var(--blue-bg)" }}>
+                  <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
+                </button>
                 <button className="btn btn-w" onClick={deletePolicy}
                   style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
                   <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
@@ -453,7 +490,8 @@ export function DetailPage() {
                 <>
                   {/* ข้อมูลกรมธรรม์ */}
                   <div className="info-card">
-                    <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
+                    <CardHd icon="doc" title="ข้อมูลกรมธรรม์" sectionKey="policy" />
+                    {openSections.policy && (
                     <div className="info-card-bd">
                       {/* เลขกรมธรรม์ — เน้นพิเศษ */}
                       <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 12, padding: "18px 22px", marginBottom: 20 }}>
@@ -475,11 +513,13 @@ export function DetailPage() {
                         <F label="ชื่อตัวแทน / นายหน้า" value={p.broker_name !== p.agent_code ? p.broker_name : null} />
                       </div>
                     </div>
+                    )}
                   </div>
 
                   {/* ผู้เอาประกัน */}
                   <div className="info-card">
-                    <div className="info-card-hd"><Ico n="person" s={20} /><span className="info-card-title">ผู้เอาประกัน</span></div>
+                    <CardHd icon="person" title="ผู้เอาประกัน" sectionKey="insured" />
+                    {openSections.insured && (
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 18 }}>
                         <F label="ชื่อ-นามสกุล"  value={p.insured_name} />
@@ -489,11 +529,13 @@ export function DetailPage() {
                         <F label="ที่อยู่" value={p.insured_address} />
                       </div>
                     </div>
+                    )}
                   </div>
 
                   {/* รถยนต์ */}
                   <div className="info-card">
-                    <div className="info-card-hd"><Ico n="car" s={20} /><span className="info-card-title">ข้อมูลรถยนต์</span></div>
+                    <CardHd icon="car" title="ข้อมูลรถยนต์" sectionKey="car" />
+                    {openSections.car && (
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 18 }}>
                         <F label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
@@ -513,11 +555,13 @@ export function DetailPage() {
                         <F label="ทุนเอาประกัน (฿)" value={p.sum_insured ? `${baht(p.sum_insured)} ฿` : null} />
                       </div>
                     </div>
+                    )}
                   </div>
 
                   {/* ระยะเวลาคุ้มครอง */}
                   <div className="info-card">
-                    <div className="info-card-hd"><Ico n="cal" s={20} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
+                    <CardHd icon="cal" title="ระยะเวลาคุ้มครอง" sectionKey="period" />
+                    {openSections.period && (
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 18 }}>
                         <F label="วันเริ่มต้น" value={fmtDate(p.coverage_start)} />
@@ -533,6 +577,7 @@ export function DetailPage() {
                         </div>
                       )}
                     </div>
+                    )}
                   </div>
 
                   {/* เบี้ยประกัน — ตารางคำนวณ (read-only) แสดง main + พ.ร.บ. คู่กัน */}
@@ -555,10 +600,8 @@ export function DetailPage() {
                   {/* ความคุ้มครองเพิ่มเติม (ทุนเอาประกัน — เฉพาะกรมธรรม์รถยนต์) */}
                   {(p.third_party_per_person || p.third_party_per_accident || p.own_damage) && (
                     <div className="info-card">
-                      <div className="info-card-hd">
-                        <Ico n="shield" s={20} />
-                        <span className="info-card-title">ความคุ้มครองเพิ่มเติม</span>
-                      </div>
+                      <CardHd icon="shield" title="ความคุ้มครองเพิ่มเติม" sectionKey="coverage" />
+                      {openSections.coverage && (
                       <div className="info-card-bd">
                         <div className="info-row">
                           <F label="บุคคลภายนอก/คน"   value={p.third_party_per_person  ? `${baht(p.third_party_per_person)} ฿`  : null} />
@@ -566,18 +609,21 @@ export function DetailPage() {
                           <F label="ความเสียหายต่อรถ"  value={p.own_damage               ? `${baht(p.own_damage)} ฿`               : null} />
                         </div>
                       </div>
+                      )}
                     </div>
                   )}
 
                   {/* หมายเหตุ */}
                   <div className="info-card">
-                    <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">หมายเหตุ</span></div>
+                    <CardHd icon="doc" title="หมายเหตุ" sectionKey="notes" />
+                    {openSections.notes !== false && (
                     <div className="info-card-bd">
                       {p.notes
                         ? <div className="info-val" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{p.notes}</div>
                         : <div className="info-val" style={{ color: "var(--t3)", fontStyle: "italic" }}>ไม่มีหมายเหตุ</div>
                       }
                     </div>
+                    )}
                   </div>
                 </>
               )}
@@ -585,14 +631,17 @@ export function DetailPage() {
 
             {/* right: PDF + Attachments */}
             <div className="detail-aside">
-              {/* เอกสารแนบ — บนสุดของฝั่งขวา (ฝั่งเดียวกับ PDF) */}
+              {/* เอกสารแนบ — บนสุดของฝั่งขวา (ฝั่งเดียวกับ PDF)
+                  ปุ่ม "เพิ่มเอกสาร" ย้ายไปอยู่ที่ page header แล้ว — hide ในการ์ดนี้ */}
               <div style={{ marginBottom: 18 }}>
                 <AttachmentsCard
+                  ref={attachRef}
                   policyId={p.id}
                   hasMainPdf={hasPdfInDb}
                   mainFilename={p.pdf_filename}
                   onMainUpdated={() => setRefreshKey(k => k + 1)}
                   onItemsChange={setAttachItems}
+                  hideHeaderButton
                 />
               </div>
 
