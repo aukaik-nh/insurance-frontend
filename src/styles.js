@@ -202,19 +202,19 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
   display:flex;align-items:center;gap:12px;flex-shrink:0;
 }
 .pvp-title{font-size:18px;font-weight:700;color:var(--t1);line-height:1.3}
-/* X close button — แดงเด่น เห็นชัดทุกหน้าจอ */
+/* X close button — เรียบๆ แต่เห็นชัดด้วย border ที่เข้มขึ้น */
 .pvp-close{
-  background:var(--red);border:none;border-radius:10px;
-  width:38px;height:38px;cursor:pointer;display:flex;
+  background:var(--sur);border:1.5px solid var(--t3);border-radius:8px;
+  width:36px;height:36px;cursor:pointer;display:flex;
   align-items:center;justify-content:center;
-  color:#fff;flex-shrink:0;transition:all .15s;margin-left:auto;
-  box-shadow:0 2px 6px rgba(239,68,68,.35);
+  color:var(--t1);flex-shrink:0;transition:all .15s;margin-left:auto;
 }
-.pvp-close:hover{background:#dc2626;transform:scale(1.05)}
+.pvp-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .pvp-backdrop{display:none}
 @media(max-width:767px){
   .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
-  .pvp-close{width:44px;height:44px}
+  /* mobile: ใหญ่ขึ้นเพื่อกดง่าย */
+  .pvp-close{width:42px;height:42px}
   /* drag handle indicator */
   .pvp-hd::before{
     content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);
