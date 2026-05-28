@@ -371,6 +371,27 @@ export function InvoicePage() {
     insurance_type: "PERSONAL PROPERTY INSURANCE",
     original_policy_no: "",
     series:         "UPPOR0",
+    // ── tm2 specific ──
+    registration_no: "",
+    sequence_no:     "0001",
+    discount:        0,
+    insured_occupation: "",
+    effective_date:  "",
+    expiry_date:     "",
+    effective_time:  "16.30 น.",
+    vehicle_code:    "",
+    car_make:        "",
+    car_model:       "",
+    chassis_no:      "",
+    seats:           "",
+    insurance_subtype: "comp",  // prb | comp | 3rd | 3rd_only | other
+    sum_insured:     0,
+    accessories:     0,
+    use_of_vehicle:  "ใช้ส่วนบุคคล ไม่ใช้รับจ้างหรือให้เช่า",
+    broker_name:     "",
+    broker_code:     "",
+    agreement_date:  "",
+    remark:          "",
   })
   const [generating, setGenerating] = useState(false)
   const [err, setErr] = useState("")
@@ -440,6 +461,27 @@ export function InvoicePage() {
         insurance_type:    form.insurance_type || null,
         original_policy_no: form.original_policy_no || null,
         series:            form.series || null,
+        // tm2 only
+        registration_no:   form.registration_no || null,
+        sequence_no:       form.sequence_no || null,
+        discount:          Number(form.discount) || 0,
+        insured_occupation: form.insured_occupation || null,
+        effective_date:    form.effective_date || null,
+        expiry_date:       form.expiry_date || null,
+        effective_time:    form.effective_time || null,
+        vehicle_code:      form.vehicle_code || null,
+        car_make:          form.car_make || null,
+        car_model:         form.car_model || null,
+        chassis_no:        form.chassis_no || null,
+        seats:             form.seats || null,
+        insurance_subtype: form.insurance_subtype || null,
+        sum_insured:       Number(form.sum_insured) || 0,
+        accessories:       Number(form.accessories) || 0,
+        use_of_vehicle:    form.use_of_vehicle || null,
+        broker_name:       form.broker_name || null,
+        broker_code:       form.broker_code || null,
+        agreement_date:    form.agreement_date || null,
+        remark:            form.remark || null,
       }, { responseType: "blob" })
 
       const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }))
@@ -497,7 +539,7 @@ export function InvoicePage() {
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
               { v: "tm1",     l: "Tokio Marine — DEBIT NOTE",      d: "แบบสั้น · ลูกค้าจ่ายเบี้ย" },
-              { v: "tm2",     l: "Tokio Marine — DEBIT NOTE COPY", d: "แบบละเอียด · เพิ่มข้อมูลรถ (ยังไม่พร้อม)" , dis: true },
+              { v: "tm2",     l: "Tokio Marine — DEBIT NOTE COPY", d: "แบบละเอียด · เพิ่มข้อมูลรถ" },
               { v: "default", l: "Minimalist (เดิม)",                d: "ฟอร์มเรียบของระบบ" },
             ].map(opt => (
               <button
@@ -572,6 +614,99 @@ export function InvoicePage() {
                 onChange={v => setForm(f => ({ ...f, original_policy_no: v }))} placeholder="(เลขเดิม ถ้ามี)" />
             </div>
           </Sec>
+        )}
+
+        {/* ── tm2 only: ข้อมูลรถ + ประเภทประกัน + นายหน้า ── */}
+        {form.template === "tm2" && (
+          <>
+            <Sec ico="car" title="ข้อมูลรถยนต์">
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <Inp label="ยี่ห้อ / Make" value={form.car_make}
+                  onChange={v => setForm(f => ({ ...f, car_make: v }))} placeholder="TOYOTA" />
+                <Inp label="รุ่น / Model" value={form.car_model}
+                  onChange={v => setForm(f => ({ ...f, car_model: v }))} placeholder="COROLLA" />
+              </div>
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <Inp label="เลขตัวถัง / Chassis No." value={form.chassis_no}
+                  onChange={v => setForm(f => ({ ...f, chassis_no: v }))} placeholder="MB2KLAAG900043133" />
+                <Inp label="ที่นั่ง/ขนาด/น้ำหนัก" value={form.seats}
+                  onChange={v => setForm(f => ({ ...f, seats: v }))} placeholder="7/1800/-" />
+              </div>
+              <div className="info-row">
+                <Inp label="รหัสรถ / Code" value={form.vehicle_code}
+                  onChange={v => setForm(f => ({ ...f, vehicle_code: v }))} placeholder="110" />
+                <Inp label="อาชีพผู้เอาประกัน" value={form.insured_occupation}
+                  onChange={v => setForm(f => ({ ...f, insured_occupation: v }))} placeholder="-" />
+              </div>
+            </Sec>
+
+            <Sec ico="shield" title="ประเภทประกัน + ทุนประกัน">
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <div className="info-field">
+                  <label className="info-label" style={{ marginBottom: 8 }}>ประเภทประกัน</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {[
+                      { v: "prb",       l: "พ.ร.บ.",     en: "Compulsory" },
+                      { v: "comp",      l: "ประเภท 1",   en: "Comprehensive" },
+                      { v: "3rd",       l: "ประเภท 2",   en: "TP, F&T" },
+                      { v: "3rd_only",  l: "ประเภท 3",   en: "TP Only" },
+                      { v: "other",     l: "อื่นๆ",       en: "Other" },
+                    ].map(opt => (
+                      <button key={opt.v}
+                        onClick={() => setForm(f => ({ ...f, insurance_subtype: opt.v }))}
+                        style={{
+                          padding: "8px 14px", borderRadius: 8,
+                          border: `1.5px solid ${form.insurance_subtype === opt.v ? "var(--blue)" : "var(--brd)"}`,
+                          background: form.insurance_subtype === opt.v ? "var(--blue-bg)" : "var(--sur)",
+                          color: form.insurance_subtype === opt.v ? "var(--blue)" : "var(--t2)",
+                          fontWeight: form.insurance_subtype === opt.v ? 700 : 500,
+                          cursor: "pointer", fontFamily: "inherit", fontSize: 13.5,
+                        }}>
+                        {opt.l} <span style={{ fontSize: 11, opacity: 0.7 }}>{opt.en}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="info-row">
+                <Inp label="ทุนประกัน Sum Insured" type="number" value={form.sum_insured}
+                  onChange={v => setForm(f => ({ ...f, sum_insured: v }))} suffix="บาท" />
+                <Inp label="อุปกรณ์ตกแต่งเพิ่ม Accessories" type="number" value={form.accessories}
+                  onChange={v => setForm(f => ({ ...f, accessories: v }))} suffix="บาท" />
+              </div>
+            </Sec>
+
+            <Sec ico="cal" title="ระยะคุ้มครอง + นายหน้า + ส่วนลด">
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <Inp label="วันเริ่มประกัน (dd/mm/yyyy)" value={form.effective_date}
+                  onChange={v => setForm(f => ({ ...f, effective_date: v }))} placeholder="30/04/2026" />
+                <Inp label="วันหมดอายุ (dd/mm/yyyy)" value={form.expiry_date}
+                  onChange={v => setForm(f => ({ ...f, expiry_date: v }))} placeholder="30/04/2027" />
+              </div>
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <Inp label="เวลาเริ่มคุ้มครอง" value={form.effective_time}
+                  onChange={v => setForm(f => ({ ...f, effective_time: v }))} placeholder="16.30 น." />
+                <Inp label="วันที่สัญญา Agreement made on" value={form.agreement_date}
+                  onChange={v => setForm(f => ({ ...f, agreement_date: v }))} placeholder="20/04/2026" />
+              </div>
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <Inp label="ชื่อนายหน้า/ตัวแทน" value={form.broker_name}
+                  onChange={v => setForm(f => ({ ...f, broker_name: v }))} placeholder="นาย พีรพงศ์ จันทร์ธนามา" />
+                <Inp label="รหัสนายหน้า Broker Code" value={form.broker_code}
+                  onChange={v => setForm(f => ({ ...f, broker_code: v }))} placeholder="B200291" />
+              </div>
+              <div className="info-row" style={{ marginBottom: 16 }}>
+                <Inp label="ส่วนลด Discount" type="number" value={form.discount}
+                  onChange={v => setForm(f => ({ ...f, discount: v }))} suffix="บาท" />
+                <Inp label="Seq. ลำดับ" value={form.sequence_no}
+                  onChange={v => setForm(f => ({ ...f, sequence_no: v }))} placeholder="0001" />
+              </div>
+              <div className="info-row fw">
+                <Inp label="การใช้รถยนต์ Use of vehicle" value={form.use_of_vehicle}
+                  onChange={v => setForm(f => ({ ...f, use_of_vehicle: v }))} full />
+              </div>
+            </Sec>
+          </>
         )}
 
         <Sec ico="person" title="ผู้ซื้อ (ลูกค้า)">
