@@ -714,7 +714,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .sc-val{font-size:21px}
 }
 
-.page-wrap{display:block;min-height:calc(100vh - 64px)}
+.page-wrap{display:block;min-height:calc(100vh - 64px);overflow-x:hidden}
 .page-hd{
   padding:14px 24px;background:var(--sur);
   border-bottom:1px solid var(--brd);
@@ -926,11 +926,13 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 @media(max-width:1100px){.upload-split{grid-template-columns:320px 1fr}}
 @media(max-width:860px){
   .detail-split,.upload-split{grid-template-columns:1fr}
-  .detail-aside,.upload-aside{position:static}
+  .detail-aside,.upload-aside{position:static;max-width:100%;overflow:hidden}
   .upload-aside .pdf-iframe{height:400px !important}
   .pdf-preview-wrap .pdf-iframe{height:60vh !important;min-height:320px !important}
 }
 @media(max-width:639px){
+  /* ซ่อน live preview ฝั่งขวาบนจอเล็ก (กว้าง < 640px) — กว้างเกินจะดูไม่รู้เรื่อง */
+  .detail-aside{display:none !important}
   .page-hd{padding:8px 12px;gap:8px;flex-wrap:nowrap;align-items:center}
   .page-hd-div{display:none}
   .page-body{padding:12px}                 /* mobile */
