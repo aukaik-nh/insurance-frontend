@@ -2,6 +2,8 @@ import { useState, useMemo } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
+import { QrCode } from "../components/QrCode"
+import { generatePromptPayPayload } from "../promptpay"
 
 const baht = n => (Number(n) || 0).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
@@ -240,26 +242,38 @@ function InvoicePreview({ form, calc }) {
           </div>
         </div>
 
-        {/* ── QR PromptPay ── */}
-        {form.promptpay_target && (
-          <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed #cbd5e0", display: "grid", gridTemplateColumns: "auto 1fr", gap: 14, alignItems: "center" }}>
-            <div style={{
-              width: 88, height: 88, border: "1.5px dashed #94a3b8", borderRadius: 8,
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              color: "#64748b", fontSize: 10, lineHeight: 1.3, padding: 4, textAlign: "center",
-              background: "#f8fafc",
-            }}>
-              <div style={{ fontWeight: 700, color: "#000", fontSize: 11 }}>QR PromptPay</div>
-              <div style={{ marginTop: 4, fontWeight: 700 }}>{baht(calc.total)} ฿</div>
+        {/* ── QR PromptPay (real, scannable) ── */}
+        {form.promptpay_target && (() => {
+          let payload = null, error = null
+          try { payload = generatePromptPayPayload(form.promptpay_target, calc.total) }
+          catch (e) { error = e.message }
+          return (
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px dashed #cbd5e0", display: "grid", gridTemplateColumns: "auto 1fr", gap: 14, alignItems: "center" }}>
+              {payload ? (
+                <div style={{
+                  padding: 4, background: "#fff", border: "1px solid #ddd", borderRadius: 6,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <QrCode value={payload} size={92} />
+                </div>
+              ) : (
+                <div style={{
+                  width: 100, height: 100, border: "1.5px dashed #ef4444", borderRadius: 8,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#ef4444", fontSize: 10, padding: 4, textAlign: "center",
+                }}>
+                  เบอร์ผิด<br/>{error?.slice(0, 30)}
+                </div>
+              )}
+              <div>
+                <div style={{ fontSize: 10, color: "#666" }}>ชำระเงินผ่าน PromptPay</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#000", marginTop: 2 }}>พร้อมเพย์ {form.promptpay_target}</div>
+                <div style={{ fontSize: 11, color: "#444", marginTop: 2 }}>ยอด <b>{baht(calc.total)}</b> บาท</div>
+                <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>สแกน QR ผ่านแอปธนาคารเพื่อชำระเงิน</div>
+              </div>
             </div>
-            <div>
-              <div style={{ fontSize: 10, color: "#666" }}>ชำระเงินผ่าน PromptPay</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#000", marginTop: 2 }}>พร้อมเพย์ {form.promptpay_target}</div>
-              <div style={{ fontSize: 11, color: "#444", marginTop: 2 }}>ยอด {baht(calc.total)} บาท</div>
-              <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>สแกน QR ผ่านแอปธนาคารเพื่อชำระเงิน</div>
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* ── refs ── */}
         <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8.5, color: "#888" }}>
