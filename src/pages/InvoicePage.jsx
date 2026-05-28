@@ -74,10 +74,186 @@ function InvoicePreview({ form, calc }) {
   const fmtDate = (s) => {
     if (!s) return "—"
     const [y, m, d] = s.split("-")
-    return `${parseInt(d, 10)}/${parseInt(m, 10)}/${parseInt(y, 10) + 543}`
+    return `${String(parseInt(d, 10)).padStart(2, "0")}/${String(parseInt(m, 10)).padStart(2, "0")}/${parseInt(y, 10) + 543}`
   }
   const dash = (v) => (v && String(v).trim()) || "—"
+  const wht1 = (calc.net * 0.01).toFixed(2)
 
+  // Tokio Marine DEBIT NOTE preview
+  if (form.template === "tm1" || form.template === "tm2") {
+    return (
+      <div style={{
+        background: "#fff", color: "#000",
+        border: "1px solid #d0d7e0", borderRadius: 8,
+        padding: "18px 22px", boxShadow: "0 2px 6px rgba(0,0,0,.08)",
+        fontFamily: "'Sarabun','Noto Sans Thai',sans-serif",
+        fontSize: 11, lineHeight: 1.4,
+        position: "relative",
+      }}>
+        {/* ── HEADER: Logo + TM info (EN/TH) + seal ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr auto", gap: 10, alignItems: "flex-start", paddingBottom: 8, marginBottom: 10 }}>
+          {/* "logo" — circle with TM */}
+          <div style={{
+            width: 42, height: 42, borderRadius: "50%",
+            background: "#fff", border: "2.5px solid #002d72",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#002d72", fontSize: 9, fontWeight: 800, lineHeight: 1, textAlign: "center",
+          }}>TOKIO<br/>MARINE</div>
+          {/* EN block */}
+          <div>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "#000" }}>Tokio Marine Safety Insurance (Thailand) PCL.</div>
+            <div style={{ fontSize: 8.5, color: "#333", marginTop: 1 }}>S&amp;A Building, 2<sup>nd</sup> - 6<sup>th</sup> floors, No. 302, Silom Road,</div>
+            <div style={{ fontSize: 8.5, color: "#333" }}>Khwaeng Suriyawong, Khet Bangrak, Bangkok 10500</div>
+            <div style={{ fontSize: 8.5, color: "#333" }}>Tel. 0-2257-8000 Fax 0-2253-3701, 0-2253-4222</div>
+            <div style={{ fontSize: 8.5, color: "#333" }}>Claims Service Tel. 0-2257-8080</div>
+          </div>
+          {/* TH block */}
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#000" }}>บมจ. คุ้มภัยโตเกียวมารีนประกันภัย (ประเทศไทย)</div>
+            <div style={{ fontSize: 8.5, color: "#333", marginTop: 1 }}>สำนักงานใหญ่ ชั้น 2-6 เลขที่ 302 ถนนสีลม</div>
+            <div style={{ fontSize: 8.5, color: "#333" }}>แขวงสุริยวงศ์ เขตบางรัก กรุงเทพมหานคร 10500</div>
+            <div style={{ fontSize: 8.5, color: "#333", marginTop: 4 }}>เลขประจำตัวผู้เสียภาษี / ทะเบียนเลขที่: 0107563000011</div>
+          </div>
+          {/* gold seal */}
+          <div style={{
+            width: 38, height: 38, borderRadius: "50%",
+            background: "radial-gradient(circle, #fce98a 0%, #d4a017 70%, #7c5807 100%)",
+            border: "1px solid #7c5807",
+            opacity: 0.85,
+          }} />
+        </div>
+
+        {/* ── Series row ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, fontSize: 10, marginBottom: 6 }}>
+          <div>
+            <span style={{ fontWeight: 700 }}>{form.series || "UPPOR0"}</span>
+            <span style={{ marginLeft: 14, color: "#333" }}>
+              เริ่มวันที่ : <b>{form.coverage_start || "—"}</b>
+              {"   "} สิ้นสุด : <b>{form.coverage_end || "—"}</b>
+            </span>
+          </div>
+          <div style={{ textAlign: "right", lineHeight: 1.3 }}>
+            <div style={{ fontSize: 9.5, color: "#444" }}>(เอกสารออกเป็นชุด)</div>
+            <div style={{ fontSize: 9.5, color: "#444" }}>เอกสารสำหรับ</div>
+            <div style={{ fontSize: 10, fontWeight: 700 }}>(ลูกค้า)</div>
+            <div style={{ fontSize: 9, color: "#444" }}>(CUSTOMER)</div>
+          </div>
+        </div>
+
+        {/* ── Title + invoice no/date ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>ใบแจ้งหนี้</div>
+            <div style={{ fontSize: 11, color: "#444", marginTop: -2 }}>DEBIT NOTE</div>
+          </div>
+          <table style={{ borderCollapse: "collapse", fontSize: 10 }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: "2px 8px 2px 0", color: "#444" }}>เลขที่<br/><span style={{ fontSize: 8.5 }}>Receipt No.</span></td>
+                <td style={{ padding: "2px 0", fontWeight: 700, fontSize: 11 }}>{dash(form.invoice_no)}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: "2px 8px 2px 0", color: "#444" }}>วันที่<br/><span style={{ fontSize: 8.5 }}>Date</span></td>
+                <td style={{ padding: "2px 0", fontWeight: 700, fontSize: 11 }}>{fmtDate(form.invoice_date)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Main 2-column box ── */}
+        <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #555", fontSize: 10.5 }}>
+          <tbody>
+            <tr>
+              <td rowSpan={5} style={{ border: "1px solid #555", verticalAlign: "top", padding: "8px 10px", width: "60%" }}>
+                <div style={{ color: "#555", fontSize: 9.5 }}>ได้รับเงินจาก / Received From</div>
+                <div style={{ fontWeight: 700, marginTop: 3, minHeight: 14 }}>{dash(form.buyer.name)}</div>
+
+                <div style={{ color: "#555", fontSize: 9.5, marginTop: 10 }}>ที่อยู่ / Address</div>
+                <div style={{ marginTop: 3, minHeight: 50, whiteSpace: "pre-wrap" }}>{dash(form.buyer.address)}</div>
+
+                <div style={{ borderTop: "1px solid #ccc", marginTop: 14, paddingTop: 6, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div>
+                    <div style={{ color: "#555", fontSize: 9.5 }}>กรมธรรม์เลขที่ Policy No.</div>
+                    <div style={{ fontWeight: 700, marginTop: 2 }}>{dash(form.policy_no)}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: "#555", fontSize: 9.5 }}>สลักหลังเลขที่ Endt. No.</div>
+                    <div style={{ fontWeight: 700, marginTop: 2 }}>{dash(form.endorsement_no)}</div>
+                  </div>
+                </div>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", color: "#555", fontSize: 9.5 }}>
+                เลขประจำตัวผู้เสียภาษี<br/><span style={{ fontSize: 8.5 }}>TAX ID.</span>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", textAlign: "right", fontWeight: 700 }}>{dash(form.buyer.tax_id)}</td>
+            </tr>
+            <tr>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", color: "#555", fontSize: 9.5 }}>
+                สาขา<br/><span style={{ fontSize: 8.5 }}>Branch</span>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", textAlign: "right" }}>{dash(form.branch)}</td>
+            </tr>
+            <tr>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", color: "#555", fontSize: 9.5 }}>
+                เบี้ยประกันภัย<br/><span style={{ fontSize: 8.5 }}>Premium</span>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{baht(calc.net)}</td>
+            </tr>
+            <tr>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", color: "#555", fontSize: 9.5 }}>
+                อากรแสตมป์<br/><span style={{ fontSize: 8.5 }}>Stamp Duty</span>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{baht(calc.stamp)}</td>
+            </tr>
+            <tr>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", color: "#555", fontSize: 9.5 }}>
+                ภาษี<br/><span style={{ fontSize: 8.5 }}>Tax</span>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{baht(calc.vat)}</td>
+            </tr>
+            <tr>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", color: "#555", fontSize: 9.5, fontWeight: 700 }}>
+                รวมเป็นเงิน<br/><span style={{ fontSize: 8.5, fontWeight: 400 }}>Total</span>
+              </td>
+              <td style={{ border: "1px solid #555", padding: "5px 8px", textAlign: "right", fontWeight: 700, fontSize: 12, fontVariantNumeric: "tabular-nums" }}>{baht(calc.total)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* ── Footer info ── */}
+        <div style={{ marginTop: 10, fontSize: 10, lineHeight: 1.6 }}>
+          <div>
+            กรณีผู้เอาประกันภัยเป็นนิติบุคคล หักภาษี ณ ที่จ่าย 1 %
+            <span style={{ marginLeft: 16, fontWeight: 700 }}>{wht1}</span>
+          </div>
+          {form.insurance_type && (
+            <div>
+              Type : {form.insurance_type}
+              {form.original_policy_no && <span> (กรมธรรม์เดิมเลขที่: {form.original_policy_no})</span>}
+            </div>
+          )}
+          <div style={{ marginTop: 6 }}>
+            โปรดจ่ายเป็นเช็คขีดคร่อมในนาม <b>"บริษัท คุ้มภัยโตเกียวมารีนประกันภัย (ประเทศไทย) จำกัด (มหาชน)"</b>
+          </div>
+          <div style={{ fontSize: 9.5, color: "#444" }}>
+            Please pay by crossed cheque to <b>"Tokio Marine Safety Insurance (Thailand) Public Company Limited"</b>
+          </div>
+        </div>
+
+        {/* ── refs ── */}
+        <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8.5, color: "#888" }}>
+          <span>210919_REC1<br/>106-015-1-69</span>
+          <span>{dash(form.invoice_no)}</span>
+        </div>
+
+        <div style={{ marginTop: 12, textAlign: "center", fontSize: 9.5, color: "#94a3b8", letterSpacing: 0.5 }}>
+          — preview · ค่าจริงจะอยู่ใน PDF —
+        </div>
+      </div>
+    )
+  }
+
+  // ── Default minimalist preview (เดิม) ──────────────────────────────
   const Row = ({ k, v, muted, bold }) => (
     <tr>
       <td style={{ padding: "4px 8px", color: muted ? "#666" : "#333", fontSize: 12.5, fontWeight: bold ? 700 : 500 }}>{k}</td>
@@ -93,7 +269,6 @@ function InvoicePreview({ form, calc }) {
       fontFamily: "'Sarabun','Noto Sans Thai',sans-serif",
       fontSize: 13, lineHeight: 1.55,
     }}>
-      {/* ── header ── */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, paddingBottom: 12, borderBottom: "2px solid #1e40af" }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: "#1e40af", letterSpacing: 0.5 }}>ใบแจ้งหนี้ / INVOICE</div>
@@ -104,46 +279,22 @@ function InvoicePreview({ form, calc }) {
         </div>
       </div>
 
-      {/* ── ผู้ขาย / ผู้ซื้อ ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
         <div>
           <div style={{ fontSize: 11, color: "#1e40af", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>ผู้ขาย</div>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>{dash(form.seller.name)}</div>
           {form.seller.address && <div style={{ fontSize: 12, color: "#444", marginTop: 3 }}>{form.seller.address}</div>}
-          {form.seller.phone && <div style={{ fontSize: 12, color: "#444", marginTop: 2 }}>โทร: {form.seller.phone}</div>}
-          {form.seller.tax_id && <div style={{ fontSize: 12, color: "#444", marginTop: 2 }}>เลขผู้เสียภาษี: {form.seller.tax_id}</div>}
         </div>
         <div>
           <div style={{ fontSize: 11, color: "#1e40af", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>ผู้ซื้อ</div>
           <div style={{ fontSize: 13, fontWeight: 700, color: "#000" }}>{dash(form.buyer.name)}</div>
           {form.buyer.address && <div style={{ fontSize: 12, color: "#444", marginTop: 3 }}>{form.buyer.address}</div>}
-          {form.buyer.phone && <div style={{ fontSize: 12, color: "#444", marginTop: 2 }}>โทร: {form.buyer.phone}</div>}
-          {form.buyer.license_plate && <div style={{ fontSize: 12, color: "#444", marginTop: 2 }}>ทะเบียน: {form.buyer.license_plate}</div>}
-          {form.buyer.tax_id && <div style={{ fontSize: 12, color: "#444", marginTop: 2 }}>เลขผู้เสียภาษี: {form.buyer.tax_id}</div>}
         </div>
       </div>
 
-      {/* ── ตารางรายการ ── */}
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14 }}>
-        <thead>
-          <tr style={{ background: "#f3f6fa" }}>
-            <th style={{ padding: "8px 10px", textAlign: "left", fontSize: 11.5, color: "#1e40af", fontWeight: 700, borderBottom: "1.5px solid #1e40af" }}>รายการ</th>
-            <th style={{ padding: "8px 10px", textAlign: "right", fontSize: 11.5, color: "#1e40af", fontWeight: 700, borderBottom: "1.5px solid #1e40af", width: 110 }}>จำนวนเงิน</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={{ padding: "9px 10px", fontSize: 12.5, borderBottom: "1px solid #e2e8f0" }}>{dash(form.description)}</td>
-            <td style={{ padding: "9px 10px", fontSize: 12.5, textAlign: "right", fontVariantNumeric: "tabular-nums", borderBottom: "1px solid #e2e8f0" }}>{baht(calc.net)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* ── สรุปยอด ── */}
       <table style={{ width: "100%", borderCollapse: "collapse", marginLeft: "auto", maxWidth: 320, marginTop: 8 }}>
         <tbody>
           <Row k="เบี้ยสุทธิ" v={`${baht(calc.net)} บาท`} muted />
-          {calc.extra > 0 && <Row k="ความคุ้มครองเพิ่ม" v={`${baht(calc.extra)} บาท`} muted />}
           {calc.stamp > 0 && <Row k="อากรแสตมป์" v={`${baht(calc.stamp)} บาท`} muted />}
           {calc.vat > 0 && <Row k={`VAT ${(form.vat_rate * 100).toFixed(0)}%`} v={`${baht(calc.vat)} บาท`} muted />}
           <tr><td colSpan={2} style={{ padding: 0 }}><div style={{ height: 1, background: "#1e40af", margin: "6px 0" }} /></td></tr>
@@ -153,32 +304,6 @@ function InvoicePreview({ form, calc }) {
           </tr>
         </tbody>
       </table>
-
-      {/* ── QR + Note ── */}
-      {(form.promptpay_target || form.note) && (
-        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px dashed #cbd5e0", display: "grid", gridTemplateColumns: form.promptpay_target ? "auto 1fr" : "1fr", gap: 16 }}>
-          {form.promptpay_target && (
-            <div style={{ textAlign: "center" }}>
-              <div style={{
-                width: 88, height: 88, border: "1.5px dashed #94a3b8", borderRadius: 8,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#64748b", fontSize: 11, lineHeight: 1.3, padding: 4, textAlign: "center",
-              }}>QR PromptPay<br /><b>{baht(calc.total)} ฿</b></div>
-              <div style={{ fontSize: 10.5, color: "#64748b", marginTop: 4 }}>{form.promptpay_target}</div>
-            </div>
-          )}
-          {form.note && (
-            <div>
-              <div style={{ fontSize: 11, color: "#1e40af", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>หมายเหตุ</div>
-              <div style={{ fontSize: 12, color: "#444", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{form.note}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div style={{ marginTop: 22, textAlign: "center", fontSize: 10.5, color: "#94a3b8", letterSpacing: 0.5 }}>
-        — preview · ค่าจริงจะอยู่ใน PDF —
-      </div>
     </div>
   )
 }
