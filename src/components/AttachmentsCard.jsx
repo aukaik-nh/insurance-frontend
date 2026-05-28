@@ -69,6 +69,7 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
   const [loading, setLoading]   = useState(true)
   const [uploading, setUpload]  = useState(false)
   const [typePicker, setTypePicker] = useState(false)        // modal เลือกประเภท
+  const [open, setOpen]         = useState(true)              // collapse ทั้งการ์ด
   const fileRef = useRef(null)
   const pendingType = useRef(null)
 
@@ -190,13 +191,23 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
 
   return (
     <div className="info-card">
-      <div className="info-card-hd">
+      <div
+        className="info-card-hd"
+        onClick={() => setOpen(o => !o)}
+        style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center" }}
+      >
         <Ico n="doc" s={20} />
         <span className="info-card-title">เอกสารแนบ</span>
+        {items.length > 0 && (
+          <span style={{
+            marginLeft: 8, padding: "2px 10px", borderRadius: 99,
+            background: "var(--sur2)", fontSize: 12, fontWeight: 700, color: "var(--t2)",
+          }}>{items.length}</span>
+        )}
         {!hideHeaderButton && (
           <button
             className="btn btn-b"
-            onClick={() => setTypePicker(true)}
+            onClick={(e) => { e.stopPropagation(); setTypePicker(true) }}
             disabled={uploading}
             style={{ marginLeft: "auto", padding: "8px 16px", fontSize: 14 }}
           >
@@ -210,8 +221,19 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
             <div className="spin" style={{ width: 14, height: 14, borderWidth: 2 }} /> กำลังอัปโหลด…
           </span>
         )}
+        <div style={{
+          marginLeft: hideHeaderButton && !uploading ? "auto" : 10,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          width: 30, height: 30, borderRadius: 7,
+          background: "var(--sur2)",
+          transition: "transform 0.2s",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+        }}>
+          <Ico n="chevD" s={18} />
+        </div>
       </div>
 
+      {open && (
       <div className="info-card-bd" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
 
         {loading ? (
@@ -334,6 +356,7 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
           ))
         )}
       </div>
+      )}
 
       {/* hidden file input */}
       <input
