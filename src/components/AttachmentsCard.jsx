@@ -69,7 +69,6 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
   const [loading, setLoading]   = useState(true)
   const [uploading, setUpload]  = useState(false)
   const [typePicker, setTypePicker] = useState(false)        // modal เลือกประเภท
-  const [picker, setPicker]     = useState(null)             // { docType, file, label, note }
   const fileRef = useRef(null)
   const pendingType = useRef(null)
 
@@ -120,18 +119,31 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
       alert("กรุณาเลือกไฟล์ PDF เท่านั้น")
       return
     }
-    // auto-detect ถ้าผู้ใช้ยังไม่ระบุประเภท (ไม่ใช้ในตอนนี้ แต่เก็บไว้)
     const finalType = docType || detectDocType(f.name) || "prb"
 
     if (finalType === "main") {
-      // อัปโหลดกรมธรรม์หลัก: ไม่ต้องถาม label/note — ทำเลย
       uploadMain(f)
     } else {
-      setPicker({
-        docType: finalType, file: f,
-        label: "", note: "",
-        net_premium: "", stamp_duty: "", vat: "", total_premium: "",
-      })
+      // one-click upload — backend จะ extract เลขเบี้ยให้เอง (เฉพาะ พ.ร.บ.)
+      uploadAttachmentAuto(f, finalType)
+    }
+  }
+
+  // อัปโหลดเอกสารแนบทันที — ไม่มี modal — backend auto-extract เลขเบี้ย
+  const uploadAttachmentAuto = async (f, docType) => {
+    setUpload(true)
+    try {
+      const form = new FormData()
+      form.append("file", f)
+      form.append("doc_type", docType)
+      // ไม่ส่ง label/note/premium → backend จะ auto-fill จาก AI (กรณี พ.ร.บ.)
+      await api.post(`/policies/${policyId}/attachments`, form)
+      await load()
+    } catch (e) {
+      alert("อัปโหลดไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+    } finally {
+      setUpload(false)
+      if (fileRef.current) fileRef.current.value = ""
     }
   }
 
@@ -145,32 +157,6 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
       const { pdf_url, pdf_filename, pdf_size } = up.data
       await api.put(`/policies/${policyId}`, { pdf_url, pdf_filename, pdf_size })
       onMainUpdated?.()
-    } catch (e) {
-      alert("อัปโหลดไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
-    } finally {
-      setUpload(false)
-      if (fileRef.current) fileRef.current.value = ""
-    }
-  }
-
-  // อัปโหลดเอกสารแนบ (พ.ร.บ. / สลักหลัง)
-  const submitAttachment = async () => {
-    if (!picker?.file) return
-    setUpload(true)
-    try {
-      const form = new FormData()
-      form.append("file", picker.file)
-      form.append("doc_type", picker.docType)
-      if (picker.label) form.append("label", picker.label)
-      if (picker.note)  form.append("note",  picker.note)
-      // เบี้ย (ใส่เฉพาะที่กรอก)
-      if (picker.net_premium   !== "") form.append("net_premium",   String(picker.net_premium))
-      if (picker.stamp_duty    !== "") form.append("stamp_duty",    String(picker.stamp_duty))
-      if (picker.vat           !== "") form.append("vat",           String(picker.vat))
-      if (picker.total_premium !== "") form.append("total_premium", String(picker.total_premium))
-      await api.post(`/policies/${policyId}/attachments`, form)
-      setPicker(null)
-      await load()
     } catch (e) {
       alert("อัปโหลดไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally {
@@ -408,122 +394,6 @@ export function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpda
         </div>
       )}
 
-      {/* Modal B: ใส่ label/note ก่อนอัปโหลด (เฉพาะ prb/endorsement) */}
-      {picker?.file && (
-        <div className="ov" onClick={e => e.target === e.currentTarget && setPicker(null)}>
-          <div className="modal" style={{ maxWidth: 480 }}>
-            <div className="modal-hd">
-              <div>
-                <div className="modal-title">{typeMeta(picker.docType).label}</div>
-                <div className="modal-sub">{picker.file.name} · {fmtKB(picker.file.size)}</div>
-              </div>
-              <button className="xbtn" onClick={() => setPicker(null)} disabled={uploading}>
-                <Ico n="x" s={18} />
-              </button>
-            </div>
-            <div className="modal-bd" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div className="fi">
-                <label>ป้ายกำกับ (ไม่บังคับ)</label>
-                <input
-                  value={picker.label}
-                  onChange={e => setPicker(p => ({ ...p, label: e.target.value }))}
-                  placeholder={
-                    picker.docType === "prb"         ? "เช่น พ.ร.บ. ปี 2569"
-                    : picker.docType === "endorsement" ? "เช่น เปลี่ยนชื่อผู้ขับ"
-                    : "ระบุชื่อเอกสาร"
-                  }
-                  autoFocus
-                />
-              </div>
-              <div className="fi">
-                <label>หมายเหตุ (ไม่บังคับ)</label>
-                <input
-                  value={picker.note}
-                  onChange={e => setPicker(p => ({ ...p, note: e.target.value }))}
-                  placeholder="รายละเอียดเพิ่มเติม"
-                />
-              </div>
-
-              {/* เบี้ย — แสดงเฉพาะ พ.ร.บ. */}
-              {picker.docType === "prb" && (
-                <>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4, marginBottom: -4 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t2)", letterSpacing: ".2px" }}>
-                      เบี้ย พ.ร.บ.
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const calc = calcPrbPremium(picker.net_premium)
-                        setPicker(p => ({ ...p, ...calc }))
-                      }}
-                      style={{
-                        background: "var(--blue-bg)", border: "1.5px solid var(--blue-mid)",
-                        color: "var(--blue)", borderRadius: 8, padding: "5px 12px",
-                        fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        fontFamily: "inherit",
-                      }}
-                      title="คำนวณ อากร/VAT/รวม จากเบี้ยสุทธิ"
-                    >
-                      <Ico n="bolt" s={13} /> คำนวณอัตโนมัติ
-                    </button>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    {[
-                      { k: "net_premium",   l: "เบี้ยสุทธิ" },
-                      { k: "stamp_duty",    l: "อากร" },
-                      { k: "vat",           l: "ภาษี (VAT 7%)" },
-                      { k: "total_premium", l: "รวม", hi: true },
-                    ].map(f => (
-                      <div key={f.k} className="fi">
-                        <label>{f.l}</label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={picker[f.k] ?? ""}
-                          onChange={e => {
-                            const v = e.target.value
-                            setPicker(p => {
-                              // auto-calc total = net + stamp + vat ทุกครั้งที่แก้ field ใดๆ
-                              if (f.k === "net_premium") {
-                                // เปลี่ยนเบี้ยสุทธิ → คำนวณ stamp/vat/total อัตโนมัติ
-                                const calc = calcPrbPremium(v)
-                                return { ...p, net_premium: v, ...calc }
-                              }
-                              const next = { ...p, [f.k]: v }
-                              if (f.k !== "total_premium") {
-                                next.total_premium = calcTotal(next.net_premium, next.stamp_duty, next.vat)
-                              }
-                              return next
-                            })
-                          }}
-                          placeholder="0.00"
-                          style={{
-                            textAlign: "right",
-                            fontFamily: "'SF Mono','Fira Code',Consolas,monospace",
-                            ...(f.hi ? { background: "var(--blue-bg)", color: "var(--blue)", fontWeight: 700 } : {}),
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 4 }}>
-                <button className="btn btn-w" onClick={() => setPicker(null)} disabled={uploading}>
-                  ยกเลิก
-                </button>
-                <button className="btn btn-b" onClick={submitAttachment} disabled={uploading}>
-                  {uploading
-                    ? <><div className="spin" style={{ width: 16, height: 16, borderWidth: 2 }} /> กำลังบันทึก…</>
-                    : <><Ico n="check" s={17} /> บันทึก</>}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
