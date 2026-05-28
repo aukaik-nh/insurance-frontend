@@ -188,6 +188,7 @@ export function InvoicePage() {
   const { notify } = useOutletContext()
 
   const [form, setForm] = useState({
+    template:     "tm1",          // "default" | "tm1" | "tm2"
     invoice_no:   genInvoiceNo(),
     invoice_date: todayStr(),
     seller: { name: "", address: "", phone: "", tax_id: "" },
@@ -201,6 +202,15 @@ export function InvoicePage() {
     own_damage: 0,
     promptpay_target: "",
     note: "",
+    // ── tm1/tm2 extra fields ──
+    coverage_start: "",          // dd/mm/yyyy
+    coverage_end:   "",
+    policy_no:      "",
+    endorsement_no: "",
+    branch:         "",
+    insurance_type: "PERSONAL PROPERTY INSURANCE",
+    original_policy_no: "",
+    series:         "UPPOR0",
   })
   const [generating, setGenerating] = useState(false)
   const [err, setErr] = useState("")
@@ -251,6 +261,7 @@ export function InvoicePage() {
     setGenerating(true)
     try {
       const res = await api.post("/invoice/generate", {
+        template:         form.template,
         invoice_no:       form.invoice_no,
         invoice_date:     form.invoice_date,
         seller:           form.seller,
@@ -260,6 +271,15 @@ export function InvoicePage() {
         vat_rate:         form.vat_rate,
         promptpay_target: form.promptpay_target || null,
         note:             form.note,
+        // tm1/tm2 extras
+        coverage_start:    form.coverage_start || null,
+        coverage_end:      form.coverage_end || null,
+        policy_no:         form.policy_no || null,
+        endorsement_no:    form.endorsement_no || null,
+        branch:            form.branch || null,
+        insurance_type:    form.insurance_type || null,
+        original_policy_no: form.original_policy_no || null,
+        series:            form.series || null,
       }, { responseType: "blob" })
 
       const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }))
@@ -312,6 +332,36 @@ export function InvoicePage() {
 
         <div className="detail-split">
         <div>
+        {/* ── Template selector ── */}
+        <Sec ico="doc" title="รูปแบบใบแจ้งหนี้">
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              { v: "tm1",     l: "Tokio Marine — DEBIT NOTE",      d: "แบบสั้น · ลูกค้าจ่ายเบี้ย" },
+              { v: "tm2",     l: "Tokio Marine — DEBIT NOTE COPY", d: "แบบละเอียด · เพิ่มข้อมูลรถ (ยังไม่พร้อม)" , dis: true },
+              { v: "default", l: "Minimalist (เดิม)",                d: "ฟอร์มเรียบของระบบ" },
+            ].map(opt => (
+              <button
+                key={opt.v}
+                disabled={opt.dis}
+                onClick={() => !opt.dis && setForm(f => ({ ...f, template: opt.v }))}
+                style={{
+                  flex: 1, minWidth: 220, textAlign: "left",
+                  padding: "14px 16px", borderRadius: 11,
+                  border: `2px solid ${form.template === opt.v ? "var(--blue)" : "var(--brd)"}`,
+                  background: form.template === opt.v ? "var(--blue-bg)" : "var(--sur)",
+                  cursor: opt.dis ? "not-allowed" : "pointer", opacity: opt.dis ? 0.45 : 1,
+                  fontFamily: "inherit",
+                }}
+              >
+                <div style={{ fontSize: 14.5, fontWeight: 700, color: form.template === opt.v ? "var(--blue)" : "var(--t1)" }}>
+                  {opt.l}
+                </div>
+                <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 3 }}>{opt.d}</div>
+              </button>
+            ))}
+          </div>
+        </Sec>
+
         <Sec ico="doc" title="ข้อมูลใบแจ้งหนี้">
           <div className="info-row">
             <Inp label="เลขที่ใบแจ้งหนี้" value={form.invoice_no}
@@ -333,6 +383,36 @@ export function InvoicePage() {
             <Inp label="เลขผู้เสียภาษี" value={form.seller.tax_id} onChange={v => updateParty("seller", "tax_id", v)} />
           </div>
         </Sec>
+
+        {/* ── ข้อมูลกรมธรรม์ (แสดงเฉพาะ tm1/tm2) ── */}
+        {(form.template === "tm1" || form.template === "tm2") && (
+          <Sec ico="doc" title="ข้อมูลกรมธรรม์">
+            <div className="info-row" style={{ marginBottom: 16 }}>
+              <Inp label="กรมธรรม์เลขที่ / Policy No." value={form.policy_no}
+                onChange={v => setForm(f => ({ ...f, policy_no: v }))} placeholder="D0-36-69/000600" />
+              <Inp label="สลักหลังเลขที่ / Endt. No." value={form.endorsement_no}
+                onChange={v => setForm(f => ({ ...f, endorsement_no: v }))} />
+            </div>
+            <div className="info-row" style={{ marginBottom: 16 }}>
+              <Inp label="เริ่มคุ้มครอง (dd/mm/yyyy)" value={form.coverage_start}
+                onChange={v => setForm(f => ({ ...f, coverage_start: v }))} placeholder="15/05/2026" />
+              <Inp label="สิ้นสุดคุ้มครอง (dd/mm/yyyy)" value={form.coverage_end}
+                onChange={v => setForm(f => ({ ...f, coverage_end: v }))} placeholder="15/05/2027" />
+            </div>
+            <div className="info-row" style={{ marginBottom: 16 }}>
+              <Inp label="สาขา / Branch" value={form.branch}
+                onChange={v => setForm(f => ({ ...f, branch: v }))} placeholder="(ปล่อยว่างถ้าไม่มี)" />
+              <Inp label="Series" value={form.series}
+                onChange={v => setForm(f => ({ ...f, series: v }))} placeholder="UPPOR0" />
+            </div>
+            <div className="info-row">
+              <Inp label="ประเภทประกัน / Type" value={form.insurance_type}
+                onChange={v => setForm(f => ({ ...f, insurance_type: v }))} placeholder="PERSONAL PROPERTY INSURANCE" />
+              <Inp label="กรมธรรม์เดิมเลขที่" value={form.original_policy_no}
+                onChange={v => setForm(f => ({ ...f, original_policy_no: v }))} placeholder="(เลขเดิม ถ้ามี)" />
+            </div>
+          </Sec>
+        )}
 
         <Sec ico="person" title="ผู้ซื้อ (ลูกค้า)">
           <div className="info-row" style={{ marginBottom: 20 }}>
