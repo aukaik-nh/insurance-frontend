@@ -177,7 +177,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
 .pvp{
   width:46%;min-width:460px;max-width:720px;flex-shrink:0;
   background:var(--sur);border-left:1px solid var(--brd);
-  position:sticky;top:126px;height:calc(100vh - 126px);
+  position:sticky;top:80px;height:calc(100vh - 96px);
   display:flex;flex-direction:column;overflow:hidden;
   animation:pvp-in .2s ease;
 }
