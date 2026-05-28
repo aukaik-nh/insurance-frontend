@@ -116,13 +116,9 @@ function InvoicePreview({ form, calc }) {
             <div style={{ fontSize: 8.5, color: "#333" }}>แขวงสุริยวงศ์ เขตบางรัก กรุงเทพมหานคร 10500</div>
             <div style={{ fontSize: 8.5, color: "#333", marginTop: 4 }}>เลขประจำตัวผู้เสียภาษี / ทะเบียนเลขที่: 0107563000011</div>
           </div>
-          {/* gold seal */}
-          <div style={{
-            width: 38, height: 38, borderRadius: "50%",
-            background: "radial-gradient(circle, #fce98a 0%, #d4a017 70%, #7c5807 100%)",
-            border: "1px solid #7c5807",
-            opacity: 0.85,
-          }} />
+          {/* ประกันคุ้มภัย logo (แทนตรา/seal) */}
+          <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย"
+            style={{ width: 44, height: 44, objectFit: "contain" }} />
         </div>
 
         {/* ── Series row ── */}
