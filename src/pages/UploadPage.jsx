@@ -52,17 +52,20 @@ export function UploadPage() {
     if (!(f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))) {
       setErr("กรุณาเลือกไฟล์ PDF เท่านั้น"); return
     }
+    // เก็บไฟล์ไว้ใน browser — ยังไม่อัปขึ้น R2 (จะอัปตอนกด "บันทึก")
     setFile(f); setErr(""); setHasData(false)
     setFilename(f.name)
     setLoading(true)
     const form = new FormData()
     form.append("file", f)
     try {
-      const res = await api.post("/upload-pdf", form)
-      if (!res.data?.parsed) throw new Error("ไม่พบข้อมูลใน PDF")
-      setParsed({ ...res.data.parsed, pdf_filename: f.name })
-      setHasData(true)
-      setAiWarn(res.data.used_ai === false ? (res.data.ai_error || null) : null)
+      // /preview-pdf — extract เฉพาะ ไม่ upload storage
+      const res = await api.post("/preview-pdf", form)
+      const parsedData = res.data?.parsed || {}
+      const hasAny = Object.values(parsedData).some(v => v !== null && v !== "" && v !== undefined)
+      setParsed({ ...parsedData, pdf_filename: f.name })
+      setHasData(hasAny)
+      setAiWarn(hasAny ? null : "AI ไม่ได้ดึงข้อมูล — กรุณากรอกเอง")
     } catch (e) {
       setErr("อ่าน PDF ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setLoading(false) }
@@ -111,8 +114,29 @@ export function UploadPage() {
   const doSave = async () => {
     setSaving(true); setErr("")
     try {
-      // 1) บันทึก policy หลัก
-      const res = await api.post("/save-policy", { ...parsed, pdf_filename: filename || parsed.pdf_filename })
+      // 1a) ถ้ามีไฟล์ PDF หลัก — upload ไป R2 ก่อน (ไม่ทำตอนเลือกไฟล์)
+      let pdfMeta = {}
+      if (file) {
+        const upForm = new FormData()
+        upForm.append("file", file)
+        try {
+          const up = await api.post("/upload-pdf-only", upForm)
+          pdfMeta = {
+            pdf_url:      up.data?.pdf_url,
+            pdf_filename: filename || up.data?.pdf_filename,
+            pdf_size:     up.data?.pdf_size,
+          }
+        } catch (e) {
+          throw new Error("อัปโหลด PDF หลักล้มเหลว: " + (e.response?.data?.detail || e.message))
+        }
+      }
+
+      // 1b) บันทึก policy หลัก (พร้อม pdf_url ถ้ามี)
+      const res = await api.post("/save-policy", {
+        ...parsed,
+        ...pdfMeta,
+        pdf_filename: pdfMeta.pdf_filename || filename || parsed.pdf_filename,
+      })
       const newId = res.data?.id
       if (!newId) throw new Error("ไม่ได้ id ของ policy ใหม่")
 
