@@ -33,6 +33,18 @@ export function ListPage({ tab }) {
   const [dateTo, setDateTo]     = useState("")
   const [hasPdf, setHasPdf]     = useState("")   // "" | "true" | "false"
   const [showFilter, setShowFilter] = useState(false)
+  // ── Expiring filter — เลือกช่วงเวลาหมดอายุ ──
+  // val: number = วันข้างหน้า, -1 = หมดอายุแล้ว
+  const [expiryRange, setExpiryRange] = useState(30)
+  const EXPIRY_RANGES = [
+    { val: 1,   label: "1 วัน",      icon: "⚠️" },
+    { val: 7,   label: "1 อาทิตย์",  icon: "🔴" },
+    { val: 30,  label: "1 เดือน",    icon: "🟠" },
+    { val: 60,  label: "2 เดือน",    icon: "🟡" },
+    { val: 90,  label: "3 เดือน",    icon: "🟢" },
+    { val: -1,  label: "หมดอายุแล้ว", icon: "❌" },
+  ]
+  const rangeMeta = EXPIRY_RANGES.find(r => r.val === expiryRange) || EXPIRY_RANGES[2]
 
   const activeFilters = [status, dateFrom, dateTo, hasPdf].filter(Boolean).length
 
@@ -157,16 +169,20 @@ export function ListPage({ tab }) {
   const expiring = rows.filter(r => {
     if (!r.coverage_end) return false
     const d = (new Date(r.coverage_end) - new Date()) / 86400000
-    return d >= 0 && d < 30
+    if (expiryRange === -1) return d < 0          // หมดอายุแล้ว
+    return d >= 0 && d < expiryRange              // ภายใน N วันข้างหน้า
   })
   const active     = rows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
   const sumPremium = rows.reduce((s, r) => s + (Number(r.total_premium) || 0), 0)
   const pages      = Math.ceil(total / LIMIT)
 
+  const expiringSubText = expiryRange === -1
+    ? `${expiring.length} รายการ · หมดอายุแล้ว`
+    : `${expiring.length} รายการ · ภายใน ${rangeMeta.label}`
   const tabMeta = {
     dashboard: { title: "ภาพรวมระบบ",         sub: "สรุปสถานะกรมธรรม์ประกันภัยรถยนต์" },
     policies:  { title: "กรมธรรม์ทั้งหมด",     sub: `${total.toLocaleString()} รายการในระบบ` },
-    expiring:  { title: "กรมธรรม์ใกล้หมดอายุ", sub: `${expiring.length} รายการ · ต้องต่ออายุภายใน 30 วัน` },
+    expiring:  { title: "กรมธรรม์ใกล้หมดอายุ", sub: expiringSubText },
   }
 
   const baseRows    = tab === "expiring" ? expiring : rows
@@ -294,6 +310,47 @@ export function ListPage({ tab }) {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Filter chips ช่วงเวลาหมดอายุ (เฉพาะหน้า expiring) ── */}
+          {tab === "expiring" && (
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: 8,
+              marginBottom: 16, padding: "12px 14px",
+              background: "var(--sur)", border: "1px solid var(--brd)",
+              borderRadius: 12,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t2)", alignSelf: "center", marginRight: 4 }}>
+                แสดงรายการ:
+              </div>
+              {EXPIRY_RANGES.map(opt => {
+                const active = expiryRange === opt.val
+                return (
+                  <button key={opt.val}
+                    onClick={() => setExpiryRange(opt.val)}
+                    style={{
+                      padding: "8px 14px", borderRadius: 999,
+                      border: `1.5px solid ${active ? "var(--blue)" : "var(--brd)"}`,
+                      background: active ? "var(--blue)" : "var(--sur)",
+                      color: active ? "#fff" : "var(--t2)",
+                      fontWeight: active ? 700 : 500,
+                      fontSize: 13.5, cursor: "pointer",
+                      fontFamily: "inherit",
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                      transition: "all .15s",
+                    }}>
+                    <span style={{ fontSize: 12 }}>{opt.icon}</span>
+                    {opt.label}
+                    {active && (
+                      <span style={{
+                        marginLeft: 4, padding: "1px 8px", borderRadius: 99,
+                        background: "rgba(255,255,255,.25)", fontSize: 12, fontWeight: 700,
+                      }}>{expiring.length}</span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )}
 
