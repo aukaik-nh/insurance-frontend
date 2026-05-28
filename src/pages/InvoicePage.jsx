@@ -36,12 +36,17 @@ function Sec({ ico, title, children }) {
 }
 
 function Inp({ label, value, onChange, type = "text", placeholder, full, suffix, highlight }) {
+  // number → text+inputMode (no spinner, mobile-friendly keyboard)
+  const isNum = type === "number"
+  const inputType = isNum ? "text" : type
+  const inputMode = isNum ? "decimal" : undefined
   return (
     <div className="info-field" style={full ? { gridColumn: "1 / -1" } : undefined}>
       <label className="info-label" style={{ marginBottom: 6 }}>{label}</label>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input
-          type={type}
+          type={inputType}
+          inputMode={inputMode}
           value={value ?? ""}
           placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
@@ -51,7 +56,7 @@ function Inp({ label, value, onChange, type = "text", placeholder, full, suffix,
             borderRadius: 10, fontSize: 17, fontFamily: "inherit",
             background: highlight ? "var(--blue-bg)" : "var(--sur)",
             color: "var(--t1)",
-            textAlign: type === "number" ? "right" : "left"
+            textAlign: isNum ? "right" : "left"
           }}
         />
         {suffix && <span style={{ fontSize: 16, color: "var(--t2)", whiteSpace: "nowrap", fontWeight: 500 }}>{suffix}</span>}
