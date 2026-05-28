@@ -79,6 +79,14 @@ export function PreviewPanel({ p, onClose, onOpen }) {
     <>
       <div className="pvp-backdrop" onClick={onClose} />
       <div className="pvp">
+        {/* drag handle — กดเพื่อปิด (mobile) */}
+        <button
+          className="pvp-pill"
+          onClick={onClose}
+          aria-label="ปิด"
+          title="กดเพื่อปิด"
+        />
+
         {/* header */}
         <div className="pvp-hd">
           <div style={{ flex: 1, minWidth: 0 }}>

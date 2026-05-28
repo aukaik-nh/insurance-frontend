@@ -211,16 +211,27 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
 }
 .pvp-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .pvp-backdrop{display:none}
+/* pill ที่กดได้ — ปิด sheet (desktop ซ่อน, mobile โชว์) */
+.pvp-pill{display:none}
 @media(max-width:767px){
   .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
   /* mobile: ใหญ่ขึ้นเพื่อกดง่าย */
   .pvp-close{width:42px;height:42px}
-  /* drag handle indicator */
-  .pvp-hd::before{
-    content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);
-    width:42px;height:4px;border-radius:99px;background:#cbd5e1;
+  /* drag handle = ปุ่มจริง คลิกแล้วปิด */
+  .pvp-pill{
+    display:block;flex-shrink:0;
+    width:100%;padding:10px 0 6px;
+    background:transparent;border:none;cursor:pointer;
+    position:relative;
   }
-  .pvp-hd{padding-top:18px;position:relative}
+  .pvp-pill::after{
+    content:"";display:block;margin:0 auto;
+    width:48px;height:5px;border-radius:99px;
+    background:#94a3b8;transition:all .15s;
+  }
+  .pvp-pill:hover::after,.pvp-pill:active::after{
+    background:var(--t1);width:64px;
+  }
 }
 .pvp-body{overflow-y:auto;padding:14px 18px;flex-shrink:0}
 .pvp-sec{margin-bottom:10px}
