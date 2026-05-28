@@ -68,13 +68,31 @@ export function UploadPage() {
     } finally { setLoading(false) }
   }
 
-  const pickPrb = f => {
+  const pickPrb = async f => {
     if (!f) return
     if (!(f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))) {
       setErr("พ.ร.บ.: กรุณาเลือกไฟล์ PDF เท่านั้น"); return
     }
     setPrbFile(f)
+    // เริ่มต้นใส่ค่าว่าง — รอ AI extract
     setPrb(p => ({ ...(p || {}), pdf_filename: f.name }))
+    // เรียก AI extract เลขเบี้ย
+    const form = new FormData()
+    form.append("file", f)
+    try {
+      const res = await api.post("/preview-pdf", form)
+      const p = res.data?.parsed || {}
+      setPrb(prev => ({
+        ...(prev || {}),
+        pdf_filename: f.name,
+        net_premium:   p.net_premium   ?? prev?.net_premium   ?? "",
+        stamp_duty:    p.stamp_duty    ?? prev?.stamp_duty    ?? "",
+        vat:           p.vat           ?? prev?.vat           ?? "",
+        total_premium: p.total_premium ?? prev?.total_premium ?? "",
+      }))
+    } catch (e) {
+      console.warn("preview พ.ร.บ. failed:", e.response?.data?.detail || e.message)
+    }
   }
 
   // toggle PRB column
