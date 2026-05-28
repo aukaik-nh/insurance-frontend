@@ -738,7 +738,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .page-body{padding:18px 28px 22px;flex:1}      /* header เป็น static แล้ว ไม่ต้องชดเชยความสูง */
 
 .detail-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
-.detail-aside{position:sticky;top:80px;max-height:calc(100vh - 96px);overflow-y:auto}
+.detail-aside{position:sticky;top:80px}
 .info-card{background:var(--sur);border:1px solid var(--brd);border-radius:16px;box-shadow:var(--sh0);margin-bottom:28px;overflow:hidden}
 .info-card-hd{display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--sur2);border-bottom:1px solid var(--brd)}
 .info-card-hd svg{color:var(--blue)}
@@ -753,7 +753,7 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .info-val.mono{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:15.5px;letter-spacing:.3px}
 
 .upload-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
-.upload-aside{position:sticky;top:80px;max-height:calc(100vh - 96px);overflow-y:auto}
+.upload-aside{position:sticky;top:80px}
 .upload-aside .pdf-preview-wrap{box-shadow:var(--sh1)}
 
 .drop-h{
