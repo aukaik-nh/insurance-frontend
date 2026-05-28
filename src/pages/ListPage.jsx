@@ -177,6 +177,18 @@ export function ListPage({ tab }) {
     <>
       {/* subtitle bar */}
       <div className="top">
+        {tab !== "dashboard" && (
+          <button onClick={() => navigate("/")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "9px 14px", borderRadius: 9,
+              border: "1.5px solid var(--brd)", background: "var(--sur)",
+              color: "var(--t2)", cursor: "pointer", fontSize: 14, fontWeight: 600,
+              fontFamily: "inherit", marginRight: 12, flexShrink: 0,
+            }}>
+            <Ico n="chevL" s={16} /> กลับ
+          </button>
+        )}
         <div className="top-l">
           <div className="top-title">{tabMeta[tab]?.title}</div>
           <div className="top-sub">{tabMeta[tab]?.sub}</div>

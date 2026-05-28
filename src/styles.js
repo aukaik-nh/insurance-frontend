@@ -202,29 +202,25 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
   display:flex;align-items:center;gap:12px;flex-shrink:0;
 }
 .pvp-title{font-size:18px;font-weight:700;color:var(--t1);line-height:1.3}
+/* X close button — แดงเด่น เห็นชัดทุกหน้าจอ */
 .pvp-close{
-  background:var(--red-bg);border:1.5px solid var(--red-brd);border-radius:10px;
+  background:var(--red);border:none;border-radius:10px;
   width:38px;height:38px;cursor:pointer;display:flex;
   align-items:center;justify-content:center;
-  color:var(--red);flex-shrink:0;transition:all .15s;margin-left:auto;
+  color:#fff;flex-shrink:0;transition:all .15s;margin-left:auto;
+  box-shadow:0 2px 6px rgba(239,68,68,.35);
 }
-.pvp-close:hover{background:var(--red);border-color:var(--red);color:#fff}
+.pvp-close:hover{background:#dc2626;transform:scale(1.05)}
 .pvp-backdrop{display:none}
 @media(max-width:767px){
   .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
-  /* drag handle bar — บอกผู้ใช้ว่าลากปิดได้ */
-  .pvp::before{
-    content:"";display:block;width:48px;height:5px;border-radius:99px;
-    background:var(--brd2,#cbd5e1);margin:8px auto -2px;flex-shrink:0;
+  .pvp-close{width:44px;height:44px}
+  /* drag handle indicator */
+  .pvp-hd::before{
+    content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);
+    width:42px;height:4px;border-radius:99px;background:#cbd5e1;
   }
-  .pvp-close{
-    width:44px;height:44px;
-    /* เด่น — กลม + แดงเข้ม + แสง */
-    background:var(--red);border-color:var(--red);color:#fff;
-    box-shadow:0 2px 6px rgba(239,68,68,.35);
-  }
-  .pvp-close:hover{background:#dc2626}
-  .pvp-hd{padding:10px 14px 12px;position:sticky;top:0;background:var(--sur);z-index:5}
+  .pvp-hd{padding-top:18px;position:relative}
 }
 .pvp-body{overflow-y:auto;padding:14px 18px;flex-shrink:0}
 .pvp-sec{margin-bottom:10px}
@@ -945,6 +941,15 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 @media(max-width:639px){
   /* ซ่อน live preview ฝั่งขวาบนจอเล็ก (กว้าง < 640px) — กว้างเกินจะดูไม่รู้เรื่อง */
   .detail-aside{display:none !important}
+  /* PremiumGrid compact — ลด padding/font ให้พอดี viewport */
+  .premium-grid-table th, .premium-grid-table td{padding:6px 4px !important;font-size:12.5px !important}
+  .premium-grid-table input{padding:6px 8px !important;font-size:13px !important;min-width:60px !important}
+  .premium-grid-table{min-width:0 !important}
+  /* "รวม" column sticky right — ผู้ใช้เห็นยอดรวมตลอด แม้ scroll กลาง */
+  .premium-grid-table th:last-child, .premium-grid-table td:last-child{
+    position:sticky;right:0;background:var(--blue-bg);
+    box-shadow:-4px 0 8px -4px rgba(0,0,0,.08);
+  }
   .page-hd{padding:8px 12px;gap:8px;flex-wrap:nowrap;align-items:center}
   .page-hd-div{display:none}
   .page-body{padding:12px}                 /* mobile */

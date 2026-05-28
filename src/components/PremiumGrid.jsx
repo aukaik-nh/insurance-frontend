@@ -195,15 +195,15 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
         )}
       </div>
 
-      {open && <div className="info-card-bd">
-        <div style={{ overflowX: "auto" }}>
-          <table style={{
-            width: "100%", minWidth: 600,
+      {open && <div className="info-card-bd" style={{ padding: 12 }}>
+        <div className="premium-grid-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table className="premium-grid-table" style={{
+            width: "100%",
             borderCollapse: "separate", borderSpacing: 0,
           }}>
             <thead>
               <tr>
-                <th style={thStyle(140)}>รายการ</th>
+                <th style={thStyle(110)}>รายการ</th>
                 <th style={{ ...thStyle(), color: "var(--blue)" }}>กรมธรรม์</th>
                 {hasPrb && <th style={{ ...thStyle(), color: "var(--green)" }}>พ.ร.บ.</th>}
                 <th style={{ ...thStyle(), color: "var(--t1)", background: "var(--blue-bg)" }}>รวม</th>
