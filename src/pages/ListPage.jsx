@@ -116,6 +116,22 @@ export function ListPage({ tab }) {
     if (dateTo)   params.date_to   = dateTo
     if (hasPdf)   params.has_pdf   = hasPdf
 
+    // ── /expiring tab: ส่ง filter ไป backend (ไม่ใช่ filter client-side ของ page เดียว) ──
+    if (tab === "expiring") {
+      params.limit = 500    // ดึงมาเยอะหน่อยให้ครอบคลุม
+      params.sort  = "coverage_end"
+      params.order = "asc"
+      if (expiryRange === -1) {
+        params.status = "expired"
+      } else {
+        const today = new Date()
+        const future = new Date(); future.setDate(future.getDate() + expiryRange)
+        params.date_from = ymd(today)
+        params.date_to   = ymd(future)
+        params.status    = "active"  // ยังไม่หมด แต่ใกล้
+      }
+    }
+
     const cacheKey = `policies-cache:${JSON.stringify(params)}`
     let hadCache = false
     try {
@@ -163,14 +179,16 @@ export function ListPage({ tab }) {
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [page, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf])
+  }, [page, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange])
   useEffect(() => { setPreviewPolicy(null) }, [tab])
+  useEffect(() => { setPage(1) }, [expiryRange])
 
-  const expiring = rows.filter(r => {
+  // expiring = rows ที่ backend filter มาแล้ว (เมื่อ tab=expiring) — ไม่ต้อง filter ซ้ำ
+  // ส่วน dashboard ยังคำนวณ client-side เพื่อโชว์ count การ์ด "ใกล้หมดอายุ" ทันที
+  const expiring = tab === "expiring" ? rows : rows.filter(r => {
     if (!r.coverage_end) return false
     const d = (new Date(r.coverage_end) - new Date()) / 86400000
-    if (expiryRange === -1) return d < 0          // หมดอายุแล้ว
-    return d >= 0 && d < expiryRange              // ภายใน N วันข้างหน้า
+    return d >= 0 && d < 30
   })
   const active     = rows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
   const sumPremium = rows.reduce((s, r) => s + (Number(r.total_premium) || 0), 0)
