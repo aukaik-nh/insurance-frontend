@@ -108,6 +108,20 @@ function Layout({ onLogout }) {
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
   const isActive = navPath => navPath === "/" ? path === "/" : path.startsWith(navPath)
 
+  // ⚡ Prefetch route chunk on hover → กดแล้วเปิดทันที (chunk loaded อยู่แล้ว)
+  const prefetched = new Set()
+  const prefetch = (p) => {
+    if (prefetched.has(p)) return
+    prefetched.add(p)
+    switch (p) {
+      case "/upload":   import("./pages/UploadPage"); break
+      case "/invoice":  import("./pages/InvoicePage"); break
+      case "/manual":   import("./pages/ManualPage"); break
+      // DetailPage prefetch — เผื่อ user คลิก row
+      default: if (p.startsWith("/policies/")) import("./pages/DetailPage")
+    }
+  }
+
   return (
     <>
       <style>{CSS}</style>
@@ -142,7 +156,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                     transition: "all 0.13s",
                     height: 42,
                   }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--sur2)" }}
+                  onMouseEnter={e => { prefetch(it.path); if (!active) e.currentTarget.style.background = "var(--sur2)" }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
                 >
                   <Ico n={it.ico} s={17} />
@@ -180,7 +194,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                     transition: "all 0.13s",
                     height: 42,
                   }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--sur2)" }}
+                  onMouseEnter={e => { prefetch(it.path); if (!active) e.currentTarget.style.background = "var(--sur2)" }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
                 >
                   <Ico n={it.ico} s={17} />

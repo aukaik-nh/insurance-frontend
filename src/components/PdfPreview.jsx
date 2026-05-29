@@ -15,7 +15,7 @@ export function PdfPreview({ fileUrl, file, filename, onFullscreen }) {
       </div>
       {fileUrl ? (
         <iframe className="pdf-iframe" src={fileUrl} title="PDF Preview"
-          style={{ height: PDF_H }} />
+          loading="lazy" style={{ height: PDF_H }} />
       ) : (
         <div className="pdf-placeholder" style={{ height: PDF_H, minHeight: 360 }}>
           <Ico n="doc" s={52} sw={1} />
