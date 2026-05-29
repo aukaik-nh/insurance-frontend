@@ -649,16 +649,10 @@ th{
 }
 tbody tr{
   border-bottom:1px solid var(--brd);cursor:pointer;
-  transition:background .15s ease,transform .15s ease,box-shadow .15s ease;
-  position:relative;
+  transition:background .15s ease;
 }
 tbody tr:last-child{border-bottom:none}
-tbody tr::before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:var(--blue);opacity:0;transition:opacity .18s ease;
-}
 tbody tr:hover{background:linear-gradient(90deg,#EEF4FF 0%,#F8FAFF 100%)}
-tbody tr:hover::before{opacity:1}
 td{padding:16px 20px;font-size:16px;color:var(--t2);line-height:1.45}
 td.tw{color:var(--t1);font-weight:600}
 td.tm{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:15px;color:var(--t1);font-weight:600;letter-spacing:.3px}
