@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo_no_bg.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ⚡ Preconnect — เปิด TCP+TLS handshake กับ backend + R2 ตั้งแต่ตอน parse HTML (กัน cold start เพิ่ม latency) -->
+    <link rel="preconnect" href="https://insurance-backend-c2s2.onrender.com" />
+    <link rel="dns-prefetch" href="https://insurance-backend-c2s2.onrender.com" />
+    <link rel="preconnect" href="https://pub-95530059095343c18d9e81398cfc49b8.r2.dev" crossorigin />
+
+    <!-- Preload โลโก้ — แสดงทันทีไม่ต้องรอ JS render -->
+    <link rel="preload" as="image" href="/logo_no_bg.png" />
+
     <title>ประกันคุ้มภัย</title>
   </head>
   <body>
