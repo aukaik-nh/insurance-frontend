@@ -1,14 +1,22 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route, Outlet, useNavigate, useLocation } from "react-router-dom"
 import CSS from "./styles"
 import { Ico } from "./icons"
 import { Toast } from "./components/Toast"
-import { ListPage } from "./pages/ListPage"
-import { UploadPage } from "./pages/UploadPage"
-import { ManualPage } from "./pages/ManualPage"
-import { DetailPage } from "./pages/DetailPage"
-import { InvoicePage } from "./pages/InvoicePage"
-import { LoginPage } from "./pages/LoginPage"
+import { ListPage } from "./pages/ListPage"        // หน้าแรก → eager
+import { LoginPage } from "./pages/LoginPage"      // login → eager
+// ── lazy load หน้าอื่น เพื่อให้ initial bundle เล็ก โหลดหน้าแรกเร็ว ──
+const UploadPage  = lazy(() => import("./pages/UploadPage").then(m  => ({ default: m.UploadPage })))
+const ManualPage  = lazy(() => import("./pages/ManualPage").then(m  => ({ default: m.ManualPage })))
+const DetailPage  = lazy(() => import("./pages/DetailPage").then(m  => ({ default: m.DetailPage })))
+const InvoicePage = lazy(() => import("./pages/InvoicePage").then(m => ({ default: m.InvoicePage })))
+
+const _Loading = () => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+    <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
+  </div>
+)
+const Lazy = (C) => <Suspense fallback={<_Loading />}><C /></Suspense>
 
 /* ── Layout shell (nav + outlet) ── */
 function Layout({ onLogout }) {
@@ -419,10 +427,10 @@ export default function App() {
           <Route index              element={<ListPage tab="dashboard" />} />
           <Route path="policies"    element={<ListPage tab="policies" />} />
           <Route path="expiring"    element={<ListPage tab="expiring" />} />
-          <Route path="upload"      element={<UploadPage />} />
-          <Route path="manual"      element={<ManualPage />} />
-          <Route path="invoice"     element={<InvoicePage />} />
-          <Route path="policies/:id" element={<DetailPage />} />
+          <Route path="upload"      element={<Suspense fallback={<_Loading />}><UploadPage /></Suspense>} />
+          <Route path="manual"      element={<Suspense fallback={<_Loading />}><ManualPage /></Suspense>} />
+          <Route path="invoice"     element={<Suspense fallback={<_Loading />}><InvoicePage /></Suspense>} />
+          <Route path="policies/:id" element={<Suspense fallback={<_Loading />}><DetailPage /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>
