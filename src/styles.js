@@ -85,6 +85,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
 }
 .mob-menu.open{display:flex;animation:slideDown .18s ease}
 @keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .mob-item{
   display:flex;align-items:center;gap:12px;
   padding:14px 14px;border-radius:10px;cursor:pointer;

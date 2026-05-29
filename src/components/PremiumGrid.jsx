@@ -20,7 +20,7 @@ const num = v => {
 const sum = (a, b) => num(a) + num(b)
 
 // ── Cell (top-level เพื่อไม่ให้ re-create ทุก render — กัน focus loss) ──
-function Cell({ value, onChange, readOnly, color, bold, highlight, displayFormat }) {
+function Cell({ value, onChange, readOnly, color, bold, highlight, displayFormat, placeholder }) {
   // ในโหมด readOnly + displayFormat → แสดงค่าที่ format แล้ว (มี comma + 2 ตำแหน่งทศนิยม)
   // ในโหมดแก้ไข → แสดงค่าดิบ (ให้ user พิมพ์ตัวเลขได้ปกติ)
   const shown = displayFormat
@@ -37,6 +37,7 @@ function Cell({ value, onChange, readOnly, color, bold, highlight, displayFormat
       inputMode="decimal"
       value={shown}
       readOnly={readOnly}
+      placeholder={placeholder || ""}
       onChange={onChange ? e => onChange(e.target.value) : undefined}
       style={{
         width: "100%", textAlign: "right",
@@ -196,20 +197,19 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
       </div>
 
       {open && <div className="info-card-bd" style={{ padding: 12, position: "relative" }}>
+        {/* แถบ banner บนสุดของ PremiumGrid — เห็นทันทีไม่ต้องมองข้าม */}
         {prbLoading && (
           <div style={{
-            position: "absolute", inset: 0, background: "rgba(255,255,255,.85)",
-            zIndex: 5, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 12,
-            borderRadius: 12,
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 14px", marginBottom: 10,
+            background: "linear-gradient(90deg, var(--green-bg), var(--blue-bg))",
+            border: "1.5px solid var(--green-brd)", borderRadius: 10,
+            animation: "pulse 1.5s ease-in-out infinite",
           }}>
-            <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
-            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--green)" }}>
-              AI กำลังอ่านเลขเบี้ย พ.ร.บ. ...
-            </div>
-            <div style={{ fontSize: 12, color: "var(--t3)" }}>
-              รอสักครู่ ระบบจะใส่ตัวเลขให้อัตโนมัติ
-            </div>
+            <div className="spin" style={{ width: 18, height: 18, borderWidth: 2, borderColor: "var(--green)", borderTopColor: "transparent" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--green)" }}>
+              AI กำลังอ่านเลขเบี้ย พ.ร.บ. — รอประมาณ 5-10 วินาที
+            </span>
           </div>
         )}
         <div className="premium-grid-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -221,7 +221,14 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
               <tr>
                 <th style={thStyle(110)}>รายการ</th>
                 <th style={{ ...thStyle(), color: "var(--blue)" }}>กรมธรรม์</th>
-                {hasPrb && <th style={{ ...thStyle(), color: "var(--green)" }}>พ.ร.บ.</th>}
+                {hasPrb && (
+                  <th style={{ ...thStyle(), color: "var(--green)" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      พ.ร.บ.
+                      {prbLoading && <span className="spin" style={{ width: 12, height: 12, borderWidth: 1.5, borderColor: "var(--green)", borderTopColor: "transparent" }} />}
+                    </span>
+                  </th>
+                )}
                 <th style={{ ...thStyle(), color: "var(--t1)", background: "var(--blue-bg)" }}>รวม</th>
               </tr>
             </thead>
@@ -296,6 +303,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                           displayFormat={readOnly}
                           bold={row.bold}
                           color="var(--green)"
+                          placeholder={prbLoading ? "⏳ AI กำลังอ่าน..." : ""}
                         />
                       </td>
                     )}
