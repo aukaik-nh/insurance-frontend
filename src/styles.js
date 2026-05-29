@@ -526,6 +526,16 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .body{padding:20px 28px}
 
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px}
+/* เมื่อ preview panel เปิด พื้นที่หดลง → stats เป็น 2 cols + ขนาดเล็กลง */
+.list-layout.has-pvp .stats{grid-template-columns:1fr 1fr;gap:12px}
+.list-layout.has-pvp .sc{padding:14px 16px;gap:12px}
+.list-layout.has-pvp .sc-ico{width:44px;height:44px;border-radius:12px}
+.list-layout.has-pvp .sc-ico svg{width:22px;height:22px}
+.list-layout.has-pvp .sc-val{font-size:22px}
+.list-layout.has-pvp .sc-lbl{font-size:13px;margin-bottom:4px}
+.list-layout.has-pvp .sc-sub{font-size:12.5px}
+/* ทางลัด nav cards ก็ stack ได้ */
+.list-layout.has-pvp .navcards{grid-template-columns:1fr !important}
 .sc{
   position:relative;overflow:hidden;
   background:var(--sur);border:none;
