@@ -197,11 +197,8 @@ export function ListPage({ tab }) {
   const expiringSubText = expiryRange === -1
     ? `${expiring.length} รายการ · หมดอายุแล้ว`
     : `${expiring.length} รายการ · ภายใน ${rangeMeta.label}`
-  // greeting ตามเวลา — friendly mod
-  const hr = new Date().getHours()
-  const greet = hr < 12 ? "สวัสดีตอนเช้า 🌅" : hr < 17 ? "สวัสดีตอนบ่าย ☀️" : "สวัสดีตอนเย็น 🌙"
   const tabMeta = {
-    dashboard: { title: greet,                  sub: "สรุปสถานะกรมธรรม์ประกันภัยรถยนต์ของคุณ" },
+    dashboard: { title: "ภาพรวมระบบ",          sub: "สรุปสถานะกรมธรรม์ประกันภัยรถยนต์" },
     policies:  { title: "กรมธรรม์ทั้งหมด",     sub: `${total.toLocaleString()} รายการในระบบ` },
     expiring:  { title: "กรมธรรม์ใกล้หมดอายุ", sub: expiringSubText },
   }
