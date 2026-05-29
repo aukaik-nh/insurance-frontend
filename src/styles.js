@@ -975,8 +975,18 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   .page-hd-info > div:first-child{display:flex !important;align-items:center;gap:8px !important;min-width:0;flex-wrap:nowrap;overflow:hidden}
   .page-hd-info > div:first-child .badge{flex-shrink:0}
   .page-hd-right{gap:6px;margin-left:auto;flex-shrink:0;flex-wrap:nowrap}
-  .page-hd-right .btn{padding:9px 12px;font-size:13.5px;gap:6px;border-radius:9px}
-  .page-back{padding:9px 12px;font-size:14px;flex-shrink:0}
+  /* ปุ่ม mobile — ขนาดอย่างน้อย 44x44 ตาม guideline + ไม่ทับซ้อน */
+  .page-hd-right .btn{
+    padding:0 !important;
+    width:44px;height:44px;
+    min-width:44px;min-height:44px;
+    font-size:13.5px;gap:0;border-radius:10px;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .page-back{padding:0 !important;width:44px;height:44px;min-width:44px;min-height:44px;
+    font-size:14px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+  .page-back .btn-label{display:none}
   /* ── PremiumGrid table — แน่นบนมือถือ ── */
   .info-card-bd table{min-width:380px !important}
   .info-card-bd table th{padding:8px 7px !important;font-size:12px !important}
