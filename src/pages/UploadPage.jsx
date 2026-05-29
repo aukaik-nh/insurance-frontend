@@ -29,6 +29,7 @@ export function UploadPage() {
   const [prb, setPrb]             = useState(null)
   const [prbFile, setPrbFile]     = useState(null)
   const [prbFileUrl, setPrbFileUrl] = useState(null)
+  const [prbLoading, setPrbLoading] = useState(false)  // AI กำลังอ่าน PRB
   const [activePreview, setActivePreview] = useState("main") // "main" | "prb"
 
   const ref = useRef()
@@ -77,9 +78,8 @@ export function UploadPage() {
       setErr("พ.ร.บ.: กรุณาเลือกไฟล์ PDF เท่านั้น"); return
     }
     setPrbFile(f)
-    // เริ่มต้นใส่ค่าว่าง — รอ AI extract
     setPrb(p => ({ ...(p || {}), pdf_filename: f.name }))
-    // เรียก AI extract เลขเบี้ย
+    setPrbLoading(true)
     const form = new FormData()
     form.append("file", f)
     try {
@@ -95,6 +95,8 @@ export function UploadPage() {
       }))
     } catch (e) {
       console.warn("preview พ.ร.บ. failed:", e.response?.data?.detail || e.message)
+    } finally {
+      setPrbLoading(false)
     }
   }
 
@@ -301,6 +303,7 @@ export function UploadPage() {
                   onTogglePrb={togglePrb}
                   prbFile={prbFile}
                   onPrbFile={pickPrb}
+                  prbLoading={prbLoading}
                   open={premiumOpen}
                   onToggle={() => setPremiumOpen(o => !o)}
                 />

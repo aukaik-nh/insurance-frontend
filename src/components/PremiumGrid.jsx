@@ -101,7 +101,7 @@ const tdInput = (highlight, totalCol) => ({
  *   prbFile, onPrbFile      — สำหรับอัปโหลด PDF พ.ร.บ. inline (optional)
  *   readOnly                — โหมดแสดงผลอย่างเดียว (ใช้ในหน้า DetailPage)
  */
-export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onTogglePrb, prbFile, onPrbFile, open = true, onToggle, readOnly = false, title }) {
+export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onTogglePrb, prbFile, onPrbFile, prbLoading = false, open = true, onToggle, readOnly = false, title }) {
   const hasPrb = prb !== null && prb !== undefined
   const prbFileRef = useRef(null)
 
@@ -195,7 +195,23 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
         )}
       </div>
 
-      {open && <div className="info-card-bd" style={{ padding: 12 }}>
+      {open && <div className="info-card-bd" style={{ padding: 12, position: "relative" }}>
+        {prbLoading && (
+          <div style={{
+            position: "absolute", inset: 0, background: "rgba(255,255,255,.85)",
+            zIndex: 5, display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", gap: 12,
+            borderRadius: 12,
+          }}>
+            <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--green)" }}>
+              AI กำลังอ่านเลขเบี้ย พ.ร.บ. ...
+            </div>
+            <div style={{ fontSize: 12, color: "var(--t3)" }}>
+              รอสักครู่ ระบบจะใส่ตัวเลขให้อัตโนมัติ
+            </div>
+          </div>
+        )}
         <div className="premium-grid-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="premium-grid-table" style={{
             width: "100%",
