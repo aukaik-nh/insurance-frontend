@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
+import { createPortal } from "react-dom"
 import { Ico } from "../icons"
 import api from "../api"
 import { openPdfTab, downloadPdf } from "../pdfUtils"
@@ -367,8 +368,8 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
         onChange={e => onFilePicked(e.target.files?.[0])}
       />
 
-      {/* Modal A: เลือกประเภทเอกสาร */}
-      {typePicker && (
+      {/* Modal A: เลือกประเภทเอกสาร — portal ไป body เพื่อให้แสดงแม้ parent ถูกซ่อน */}
+      {typePicker && createPortal(
         <div className="ov" onClick={e => e.target === e.currentTarget && setTypePicker(false)}>
           <div className="modal" style={{ maxWidth: 480 }}>
             <div className="modal-hd">
@@ -428,7 +429,8 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
