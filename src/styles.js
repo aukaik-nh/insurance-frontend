@@ -304,13 +304,31 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .navcard{
   flex:1 1 0;min-width:260px;scroll-snap-align:start;
   display:flex;align-items:center;gap:14px;
-  border:1.5px solid;border-radius:14px;
-  padding:16px 18px;cursor:pointer;text-align:left;
+  border:1.5px solid;border-radius:16px;
+  padding:18px 20px;cursor:pointer;text-align:left;
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
-  box-shadow:var(--sh0);transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease,border-color .18s ease;color:var(--t1);
-  min-height:84px;position:relative;
+  box-shadow:0 1px 3px rgba(15,23,42,.05);
+  transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s cubic-bezier(.4,0,.2,1),background .2s ease,color .2s ease,border-color .2s ease;
+  color:var(--t1);min-height:88px;position:relative;overflow:hidden;
+  animation:navIn .55s cubic-bezier(.4,0,.2,1) backwards;
 }
-.navcard:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.navcard:nth-child(1){animation-delay:60ms}
+.navcard:nth-child(2){animation-delay:140ms}
+.navcard:nth-child(3){animation-delay:220ms}
+.navcard:nth-child(4){animation-delay:300ms}
+@keyframes navIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.navcard::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);
+  background-size:220% 100%;background-position:100% 0;
+  opacity:0;transition:opacity .3s ease,background-position .6s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;border-radius:inherit;
+}
+.navcard:hover{
+  transform:translateY(-3px) scale(1.01);
+  box-shadow:0 14px 34px rgba(15,23,42,.14),0 2px 6px rgba(15,23,42,.06);
+}
+.navcard:hover::before{opacity:1;background-position:0 0}
 
 /* พื้น tinted ตามสีไอคอน + เส้นขอบเข้ม → ดูเป็นปุ่ม action ชัดเจน */
 .navcard.fcard-blue{background:var(--blue-bg);border-color:var(--blue-mid)}
@@ -544,7 +562,13 @@ tr.tr-active td{background:var(--blue-bg) !important}
   box-shadow:0 1px 2px rgba(15,23,42,.04);
   display:flex;align-items:flex-start;justify-content:space-between;
   transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+  animation:scIn .5s cubic-bezier(.4,0,.2,1) backwards;
 }
+.sc:nth-child(1){animation-delay:0ms}
+.sc:nth-child(2){animation-delay:60ms}
+.sc:nth-child(3){animation-delay:120ms}
+.sc:nth-child(4){animation-delay:180ms}
+@keyframes scIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .sc::before{
   content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:currentColor;opacity:0;transition:opacity .2s ease;
