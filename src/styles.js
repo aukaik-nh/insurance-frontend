@@ -961,8 +961,8 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 @media(max-width:860px){
   .detail-split,.upload-split{grid-template-columns:1fr}
   .detail-aside,.upload-aside{position:static;max-width:100%;overflow:hidden}
-  .upload-aside .pdf-iframe{height:400px !important}
-  .pdf-preview-wrap .pdf-iframe{height:60vh !important;min-height:320px !important}
+  .upload-aside .pdf-iframe{height:70vh !important;min-height:500px !important}
+  .pdf-preview-wrap .pdf-iframe{height:75vh !important;min-height:500px !important}
 }
 @media(max-width:639px){
   /* ซ่อน live preview ฝั่งขวาบนจอเล็ก (กว้าง < 640px) — กว้างเกินจะดูไม่รู้เรื่อง */

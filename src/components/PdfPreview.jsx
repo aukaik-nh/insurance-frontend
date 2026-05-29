@@ -1,6 +1,7 @@
 import { Ico } from "../icons"
 
-const PDF_H = "calc(100vh - 230px)"
+// PDF iframe สูง — ใช้พื้นที่เต็มที่ของหน้าจอ (เหลือพื้นที่สำหรับ nav + bar เท่านั้น)
+const PDF_H = "calc(100vh - 160px)"
 
 export function PdfPreview({ fileUrl, file, filename, onFullscreen }) {
   return (
@@ -15,7 +16,7 @@ export function PdfPreview({ fileUrl, file, filename, onFullscreen }) {
       </div>
       {fileUrl ? (
         <iframe className="pdf-iframe" src={fileUrl} title="PDF Preview"
-          loading="lazy" style={{ height: PDF_H }} />
+          loading="lazy" style={{ height: PDF_H, minHeight: 600 }} />
       ) : (
         <div className="pdf-placeholder" style={{ height: PDF_H, minHeight: 360 }}>
           <Ico n="doc" s={52} sw={1} />
