@@ -974,18 +974,30 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
   /* title + badge บรรทัดเดียวกัน, badge ไม่ wrap */
   .page-hd-info > div:first-child{display:flex !important;align-items:center;gap:8px !important;min-width:0;flex-wrap:nowrap;overflow:hidden}
   .page-hd-info > div:first-child .badge{flex-shrink:0}
-  .page-hd-right{gap:6px;margin-left:auto;flex-shrink:0;flex-wrap:nowrap}
-  /* ปุ่ม mobile — ขนาดอย่างน้อย 44x44 ตาม guideline + ไม่ทับซ้อน */
+  .page-hd-right{gap:8px;margin-left:auto;flex-shrink:0;flex-wrap:nowrap}
+  /* ปุ่ม mobile — ใหญ่ ชัด มี shadow */
   .page-hd-right .btn{
     padding:0 !important;
-    width:44px;height:44px;
-    min-width:44px;min-height:44px;
-    font-size:13.5px;gap:0;border-radius:10px;
+    width:46px;height:46px;
+    min-width:46px;min-height:46px;
+    font-size:13.5px;gap:0;border-radius:12px;
+    border-width:2px;
     display:inline-flex;align-items:center;justify-content:center;
     flex-shrink:0;
+    box-shadow:0 2px 6px rgba(0,0,0,.08);
+    transition:transform .12s, box-shadow .12s;
   }
-  .page-back{padding:0 !important;width:44px;height:44px;min-width:44px;min-height:44px;
-    font-size:14px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center}
+  .page-hd-right .btn:active{transform:scale(.94);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  /* icon ใหญ่ขึ้น เห็นชัดมือถือ */
+  .page-hd-right .btn svg{width:22px !important;height:22px !important}
+  .page-back{
+    padding:0 !important;width:46px;height:46px;min-width:46px;min-height:46px;
+    flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:12px;border-width:2px;
+    box-shadow:0 2px 6px rgba(0,0,0,.08);
+    background:var(--sur2);
+  }
+  .page-back svg{width:22px !important;height:22px !important}
   .page-back .btn-label{display:none}
   /* ── PremiumGrid table — แน่นบนมือถือ ── */
   .info-card-bd table{min-width:380px !important}
