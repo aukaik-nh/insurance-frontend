@@ -245,7 +245,7 @@ body{font-family:'Sarabun','Noto Sans Thai',sans-serif;font-size:16px;background
     background:var(--t1);width:64px;
   }
 }
-.pvp-body{overflow-y:auto;padding:14px 18px;flex-shrink:0}
+.pvp-body{overflow-y:auto;padding:14px 18px;flex:1 1 auto;min-height:0}
 .pvp-sec{margin-bottom:10px}
 .pvp-sec-title{
   font-size:13px;font-weight:700;color:var(--t2);
