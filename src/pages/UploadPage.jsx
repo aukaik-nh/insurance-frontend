@@ -106,12 +106,47 @@ export function UploadPage() {
     else     { setPrb({ net_premium: "", stamp_duty: "", vat: "", total_premium: "" }); setPremiumOpen(true) }
   }
 
-  const onMainChange = (k, v) => setParsed(p => ({ ...p, [k]: v }))
+  // คำนวณเบี้ย: stamp = ⌈net × 0.4%⌉, VAT = (net+stamp) × 7%, total = net+stamp+VAT
+  const num = v => { const n = parseFloat(String(v ?? "").replace(/,/g, "")); return isNaN(n) ? 0 : n }
+  const calcPrb = (net) => {
+    const n = num(net)
+    if (n <= 0) return { stamp_duty: "", vat: "", total_premium: "" }
+    const stamp = Math.ceil(n * 0.004)
+    const vat   = Math.round((n + stamp) * 0.07 * 100) / 100
+    const total = Math.round((n + stamp + vat) * 100) / 100
+    return { stamp_duty: stamp, vat, total_premium: total }
+  }
+  const calcTotal = (net, stamp, vat) => {
+    const t = num(net) + num(stamp) + num(vat)
+    return t > 0 ? Math.round(t * 100) / 100 : ""
+  }
+
+  const onMainChange = (k, v) => setParsed(p => {
+    // เปลี่ยน net → recalc stamp/vat/total ทั้งหมด
+    if (k === "net_premium") return { ...p, net_premium: v, ...calcPrb(v) }
+    // เปลี่ยน stamp/vat → update total
+    if (k === "stamp_duty" || k === "vat") {
+      const next = { ...p, [k]: v }
+      next.total_premium = calcTotal(next.net_premium, next.stamp_duty, next.vat)
+      return next
+    }
+    return { ...p, [k]: v }
+  })
 
   // ปุ่มบันทึก active เมื่อมีข้อมูลใดๆ
   const hasAnyInput = hasData || prb !== null
     || Object.values(parsed).some(v => v !== "" && v !== null && v !== undefined)
-  const onPrbChange  = (k, v) => setPrb(p => ({ ...(p || {}), [k]: v }))
+
+  const onPrbChange  = (k, v) => setPrb(p => {
+    const cur = p || {}
+    if (k === "net_premium") return { ...cur, net_premium: v, ...calcPrb(v) }
+    if (k === "stamp_duty" || k === "vat") {
+      const next = { ...cur, [k]: v }
+      next.total_premium = calcTotal(next.net_premium, next.stamp_duty, next.vat)
+      return next
+    }
+    return { ...cur, [k]: v }
+  })
 
   const doSave = async () => {
     setSaving(true); setErr("")
