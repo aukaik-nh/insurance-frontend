@@ -831,7 +831,7 @@ export function InvoicePage() {
         <div className="detail-aside">
           <div style={{ fontSize: 13, color: "var(--t3)", fontWeight: 600, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
             <Ico n="doc" s={15} />
-            ตัวอย่างใบแจ้งหนี้ (อัปเดตสด)
+            ตัวอย่างใบแจ้งหนี้
           </div>
           <InvoicePreview form={form} calc={calc} />
         </div>
