@@ -304,13 +304,20 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .navcard{
   flex:1 1 0;min-width:260px;scroll-snap-align:start;
   display:flex;align-items:center;gap:14px;
-  border:1.5px solid;border-radius:14px;
-  padding:16px 18px;cursor:pointer;text-align:left;
+  border:1.5px solid;border-radius:16px;
+  padding:18px 20px;cursor:pointer;text-align:left;
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
-  box-shadow:var(--sh0);transition:all .15s;color:var(--t1);
-  min-height:84px;position:relative;
+  box-shadow:0 1px 3px rgba(15,23,42,.04);transition:all .3s cubic-bezier(.4,0,.2,1);color:var(--t1);
+  min-height:88px;position:relative;overflow:hidden;
+  animation:scIn .5s cubic-bezier(.4,0,.2,1) backwards;
 }
-.navcard:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.navcard::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 50%,rgba(255,255,255,.12) 100%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.navcard:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 12px 32px rgba(15,23,42,.14)}
+.navcard:hover::before{opacity:1}
 
 /* พื้น tinted ตามสีไอคอน + เส้นขอบเข้ม → ดูเป็นปุ่ม action ชัดเจน */
 .navcard.fcard-blue{background:var(--blue-bg);border-color:var(--blue-mid)}
@@ -540,32 +547,53 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .sc{
   position:relative;overflow:hidden;
   background:var(--sur);border:none;
-  border-radius:16px;padding:20px 22px 18px;
-  box-shadow:0 2px 8px rgba(15,23,42,.08),0 0 0 1px rgba(15,23,42,.04);
+  border-radius:18px;padding:22px 24px 20px;
+  box-shadow:0 1px 3px rgba(15,23,42,.04),0 0 0 1px rgba(15,23,42,.05);
   display:flex;align-items:flex-start;justify-content:space-between;
-  transition:box-shadow .25s,transform .25s;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  animation:scIn .5s cubic-bezier(.4,0,.2,1) backwards;
 }
+.sc:nth-child(1){animation-delay:0ms}
+.sc:nth-child(2){animation-delay:60ms}
+.sc:nth-child(3){animation-delay:120ms}
+.sc:nth-child(4){animation-delay:180ms}
+@keyframes scIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .sc::before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:currentColor;opacity:0;transition:opacity .2s;
+  content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:currentColor;opacity:0;transition:opacity .3s;
 }
-.sc:hover{box-shadow:0 12px 28px rgba(15,23,42,.14),0 0 0 1px rgba(15,23,42,.05);transform:translateY(-3px)}
-.sc:hover::before{opacity:.55}
-.sc-ico{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .25s}
-.sc:hover .sc-ico{transform:scale(1.06) rotate(-3deg)}
-.sc-ico.bl{background:linear-gradient(135deg,#E8F0FE,#C7D9FD);color:#1E6FE5}
-.sc-ico.gr{background:linear-gradient(135deg,#E6F9F0,#BCEDD7);color:#0D9C6B}
-.sc-ico.am{background:linear-gradient(135deg,#FFF7E0,#FDEDB0);color:#C07000}
-.sc-ico.pu{background:linear-gradient(135deg,#F2EEFF,#DACCFF);color:#6C3CE0}
+.sc::after{
+  content:"";position:absolute;right:-30px;bottom:-30px;
+  width:120px;height:120px;border-radius:50%;
+  background:currentColor;opacity:0;transition:opacity .3s;
+  pointer-events:none;
+}
+.sc:hover{
+  box-shadow:0 16px 40px rgba(15,23,42,.12),0 0 0 1px rgba(15,23,42,.06);
+  transform:translateY(-4px);
+}
+.sc:hover::before{opacity:1}
+.sc:hover::after{opacity:.04}
+.sc-ico{
+  width:54px;height:54px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+.sc:hover .sc-ico{transform:scale(1.08) rotate(-4deg);box-shadow:0 8px 20px rgba(0,0,0,.1)}
+.sc-ico.bl{background:linear-gradient(135deg,#3B82F6,#1E6FE5);color:#fff}
+.sc-ico.gr{background:linear-gradient(135deg,#10B981,#059669);color:#fff}
+.sc-ico.am{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff}
+.sc-ico.pu{background:linear-gradient(135deg,#8B5CF6,#6C3CE0);color:#fff}
 /* แต่ละการ์ดให้ accent bar ตรงสีไอคอน */
 .sc:has(.sc-ico.bl){color:#1E6FE5}
 .sc:has(.sc-ico.gr){color:#0D9C6B}
 .sc:has(.sc-ico.am){color:#C07000}
 .sc:has(.sc-ico.pu){color:#6C3CE0}
 .sc-bd{min-width:0;flex:1}
-.sc-lbl{font-size:14.5px;font-weight:600;color:var(--t2);margin-bottom:8px;line-height:1.3;letter-spacing:.1px}
-.sc-val{font-size:36px;font-weight:700;color:var(--t1);letter-spacing:-1px;line-height:1;font-family:'Sarabun',sans-serif;font-variant-numeric:tabular-nums}
-.sc-sub{font-size:13.5px;color:var(--t3);margin-top:9px;font-weight:400;display:flex;align-items:center;gap:6px}
+.sc-lbl{font-size:13px;font-weight:700;color:var(--t3);margin-bottom:6px;line-height:1.3;letter-spacing:.4px;text-transform:uppercase}
+.sc-val{font-size:38px;font-weight:800;color:var(--t1);letter-spacing:-1.5px;line-height:1;font-family:'Sarabun',sans-serif;font-variant-numeric:tabular-nums;background:linear-gradient(135deg,var(--t1) 0%,#374151 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sc-sub{font-size:13px;color:var(--t3);margin-top:10px;font-weight:500;display:flex;align-items:center;gap:6px;letter-spacing:.1px}
 
 .card{background:var(--sur);border:1px solid var(--brd);border-radius:16px;overflow:hidden;box-shadow:var(--sh0)}
 .card-hd{padding:18px 24px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between}
