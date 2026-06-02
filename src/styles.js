@@ -2159,12 +2159,15 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 @media(max-width:480px){
   .sb{padding:0 10px}
   .sb-logo{padding:0 8px 0 0;margin-right:6px;gap:6px}
+  .sb-logo::after{display:none}  /* hide divider on tiny */
   .sb-logo img:first-child{height:36px !important;width:36px !important}
   .sb-logo img:nth-child(2){display:none}  /* hide avatar on tiny screens */
   .sb-brand{font-size:14px}
-  /* status dot only on tiny screens (no pulse text) */
-  .theme-btn,.ham{width:34px;height:34px}
-  .theme-btn svg,.ham svg{width:16px;height:16px}
+  /* right area: ensure visible spacing between buttons */
+  .sb > div:last-child{gap:6px !important}
+  .theme-btn,.ham{width:36px;height:36px}
+  .theme-btn svg,.ham svg{width:17px;height:17px}
+  .sb-dot{margin:0 4px 0 2px}
 }
 @media(max-width:639px){
   .stats{grid-template-columns:1fr 1fr;gap:10px}

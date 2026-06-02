@@ -385,14 +385,10 @@ export function ListPage({ tab }) {
 
     const labels = buckets.map(labelFmt)
     const allSeries = [
-      { name: "เบี้ยประกัน (฿)", color: "#319795", color2: "#4FD1C5", values: buckets.map(b => b.premium), isPrimary: true, format: "money" },
-      { name: "กรมธรรม์ใหม่",   color: "#7C3AED", color2: "#A855F7", values: buckets.map(b => b.newCount) },
-      { name: "ต่ออายุ",         color: "#EC4899", color2: "#F472B6", values: buckets.map(b => b.renewCount) },
+      { name: "ไฟล์ที่อัปโหลด", color: "#319795", color2: "#4FD1C5", values: buckets.map(b => b.count) },
     ]
     const series = allSeries.filter(s => s.values.reduce((a, b) => a + b, 0) > 0)
-    const totalPremium = buckets.reduce((a, b) => a + b.premium, 0)
-    const totalCount = buckets.reduce((a, b) => a + b.count, 0)
-    return { months: labels, series, totalAll: totalCount, totalPremium }
+    return { months: labels, series, totalAll: buckets.reduce((a, b) => a + b.count, 0) }
   })()
 
   const expiringSubText = expiryRange === -1
@@ -552,16 +548,7 @@ export function ListPage({ tab }) {
                   const pts = s.values.map((v, i) => ({ x: xAt(i), y: yAt(v) }))
                   return { ...s, pts, d: smoothPath(pts), gradId: `lg-${si}` }
                 })
-                // Y-axis label formatter (รองรับเงิน k/M)
-                const fmtMoney = (n) => {
-                  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/,"") + "M"
-                  if (n >= 1000) return (n / 1000).toFixed(0) + "k"
-                  return Math.round(n).toLocaleString()
-                }
-                const yTicks = [0, .25, .5, .75, 1].map(t => ({
-                  y: padT + innerH * t,
-                  v: fmtMoney(maxCount * (1 - t))
-                }))
+                const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: Math.round(maxCount * (1 - t)) }))
 
                 return (
                   <div className="charts-grid">
@@ -655,16 +642,12 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* LINE — premium revenue chart */}
+                    {/* LINE — daily upload chart */}
                     <div className="chart-card">
                       <div className="chart-hd">
                         <div>
-                          <div className="chart-ttl">รายได้เบี้ยประกัน</div>
-                          <div className="chart-sub">
-                            ยอดเบี้ยรวม · ฿<b style={{color:"var(--t1)"}}>{(seriesData.totalPremium || 0).toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b>
-                            <span style={{ color: "var(--t3)", margin: "0 6px" }}>·</span>
-                            <b style={{color:"var(--t1)"}}>{seriesData.totalAll || 0}</b> กรมธรรม์
-                          </div>
+                          <div className="chart-ttl">รายงานการอัปโหลด</div>
+                          <div className="chart-sub">จำนวนไฟล์ที่อัป · รวม <b style={{color:"var(--t1)"}}>{seriesData.totalAll || 0}</b> ไฟล์</div>
                         </div>
                         <select className="chart-period" value={chartRange}
                           onChange={e => setChartRange(e.target.value)}>
