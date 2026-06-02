@@ -541,7 +541,6 @@ export function InvoicePage() {
             {[
               { v: "tm1",     l: "Tokio Marine — DEBIT NOTE",      d: "แบบสั้น · ลูกค้าจ่ายเบี้ย" },
               { v: "tm2",     l: "Tokio Marine — DEBIT NOTE COPY", d: "แบบละเอียด · เพิ่มข้อมูลรถ" },
-              { v: "default", l: "Minimalist (เดิม)",                d: "ฟอร์มเรียบของระบบ" },
             ].map(opt => (
               <button
                 key={opt.v}

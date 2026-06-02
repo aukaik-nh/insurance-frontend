@@ -131,9 +131,12 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         <header className="sb" style={{ position: "relative" }}>
           {/* โลโก้ */}
           <div className="sb-logo" style={{ cursor: "pointer" }} onClick={() => navTo("/")}>
-            <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย" style={{ height: 46, width: 46, objectFit: "contain" }} />
-            <img src="/image.png" alt="" style={{ height: 36, width: 36, objectFit: "cover", borderRadius: "50%" }} />
-            <div className="sb-brand">ประกันคุ้มภัย</div>
+            <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย" style={{ height: 56, width: 56, objectFit: "contain" }} />
+            <img src="/image.png" alt="" style={{ height: 40, width: 40, objectFit: "cover", borderRadius: "50%" }} />
+            <div className="sb-brand-wrap">
+              <div className="sb-brand">ประกันคุ้มภัย</div>
+              <div className="sb-brand-sub">ระบบจัดการกรมธรรม์</div>
+            </div>
           </div>
 
           {/* เมนูหลัก (desktop) */}
@@ -361,6 +364,29 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
       </div>
 
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* ── Scroll-to-top floating button (always visible) ── */}
+      <button
+        className="scroll-top"
+        onClick={() => {
+          // Custom smooth scroll — easeOutQuart curve, ~800ms duration
+          const startY = window.scrollY
+          if (startY === 0) return
+          const startTime = performance.now()
+          const duration = Math.min(900, 400 + startY * 0.4)  // scale by distance, cap 900ms
+          const easeOutQuart = t => 1 - Math.pow(1 - t, 4)
+          const step = (now) => {
+            const t = Math.min((now - startTime) / duration, 1)
+            window.scrollTo(0, startY * (1 - easeOutQuart(t)))
+            if (t < 1) requestAnimationFrame(step)
+          }
+          requestAnimationFrame(step)
+        }}
+        title="กลับไปด้านบน"
+        aria-label="กลับไปด้านบน"
+      >
+        <Ico n="chevU" s={22} />
+      </button>
     </>
   )
 }

@@ -21,6 +21,8 @@ export function ListPage({ tab }) {
   const { search, setSearch, page, setPage, notify, setExpiringCount } = useOutletContext()
 
   const [rows, setRows]               = useState([])
+  const [allRows, setAllRows]         = useState([])  // ⚡ สำหรับ dashboard analytics (ทั้งหมด ไม่ใช่หน้านี้)
+  const [todayAttachments, setTodayAttachments] = useState({}) // { policyId: [att, ...] } สำหรับนับ พ.ร.บ.
   const [total, setTotal]             = useState(0)
   const [loading, setLoading]         = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
@@ -37,12 +39,12 @@ export function ListPage({ tab }) {
   // val: number = วันข้างหน้า, -1 = หมดอายุแล้ว
   const [expiryRange, setExpiryRange] = useState(30)
   const EXPIRY_RANGES = [
-    { val: 1,   label: "1 วัน",      icon: "⚠️" },
-    { val: 7,   label: "1 อาทิตย์",  icon: "🔴" },
-    { val: 30,  label: "1 เดือน",    icon: "🟠" },
-    { val: 60,  label: "2 เดือน",    icon: "🟡" },
-    { val: 90,  label: "3 เดือน",    icon: "🟢" },
-    { val: -1,  label: "หมดอายุแล้ว", icon: "❌" },
+    { val: 1,   label: "1 วัน",      ico: "warn" },
+    { val: 7,   label: "1 อาทิตย์",  ico: "bell" },
+    { val: 30,  label: "1 เดือน",    ico: "clock" },
+    { val: 60,  label: "2 เดือน",    ico: "cal" },
+    { val: 90,  label: "3 เดือน",    ico: "cal" },
+    { val: -1,  label: "หมดอายุแล้ว", ico: "xc" },
   ]
   const rangeMeta = EXPIRY_RANGES.find(r => r.val === expiryRange) || EXPIRY_RANGES[2]
 
@@ -183,16 +185,197 @@ export function ListPage({ tab }) {
   useEffect(() => { setPreviewPolicy(null) }, [tab])
   useEffect(() => { setPage(1) }, [expiryRange])
 
-  // expiring = rows ที่ backend filter มาแล้ว (เมื่อ tab=expiring) — ไม่ต้อง filter ซ้ำ
-  // ส่วน dashboard ยังคำนวณ client-side เพื่อโชว์ count การ์ด "ใกล้หมดอายุ" ทันที
-  const expiring = tab === "expiring" ? rows : rows.filter(r => {
+  // ⚡ Analytics fetch ทั้งหมด (limit=20000) แล้ว cache 30 นาที
+  // ใช้สำหรับ dashboard charts + expiring page stat strip
+  useEffect(() => {
+    if (tab !== "dashboard" && tab !== "expiring") return
+    let cancelled = false
+    const CACHE_KEY = "policies-stats-cache:v1"
+    const TTL = 30 * 60 * 1000  // 30 นาที
+    try {
+      const raw = localStorage.getItem(CACHE_KEY)
+      if (raw) {
+        const { data, ts } = JSON.parse(raw)
+        if (data && Date.now() - (ts || 0) < TTL) {
+          setAllRows(data)
+        }
+      }
+    } catch {}
+    api.get("/policies", { params: { limit: 20000, sort: "created_at", order: "desc" } })
+      .then(res => {
+        if (cancelled) return
+        const data = res.data.data || []
+        setAllRows(data)
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })) } catch {}
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [tab])
+
+  // expiring: tab=expiring ใช้ rows (backend filter), dashboard ใช้ allRows คำนวณเอง
+  const _expiringSource = tab === "dashboard" && allRows.length ? allRows : rows
+  const expiring = tab === "expiring" ? rows : _expiringSource.filter(r => {
     if (!r.coverage_end) return false
     const d = (new Date(r.coverage_end) - new Date()) / 86400000
     return d >= 0 && d < 30
   })
-  const active     = rows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
-  const sumPremium = rows.reduce((s, r) => s + (Number(r.total_premium) || 0), 0)
+  // ⚡ Dashboard/Expiring ใช้ allRows (ทั้งหมดในระบบ) — tab อื่นใช้ rows (หน้านี้)
+  const statsRows  = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
+  const active     = statsRows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
+  const expired    = statsRows.filter(r => r.coverage_end && new Date(r.coverage_end) <= new Date()).length
+  const sumPremium = statsRows.reduce((s, r) => s + (Number(r.total_premium) || 0), 0)
   const pages      = Math.ceil(total / LIMIT)
+
+  // ── Today's work breakdown (by policy_type) + last 7 days stacked bar
+  const dailyReport = (() => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const dayMs = 86400000
+    const DAY_TH = ["อา.","จ.","อ.","พ.","พฤ.","ศ.","ส."]
+    const localKey = (d) =>
+      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+    // 3 categories: กรมธรรม์ (M/STY/รถยนต์), พ.ร.บ. (P/พรบ), อื่นๆ
+    const catOf = (t) => {
+      const x = String(t || "").trim().toUpperCase()
+      if (!x || x === "OTHER" || x === "UNKNOWN") return "policy" // ค่าว่าง = ถือว่ากรมธรรม์ปกติ
+      if (x === "P" || x === "PRB" || x.includes("พ.ร.บ") || x.includes("พรบ") || x.includes("PROR") || x.includes("COMPULSORY")) return "prb"
+      if (x === "M" || x === "STY" || x === "MOTOR" || x.includes("รถ") || x.includes("CAR") || x.includes("AUTO") || x.includes("ประกัน")) return "policy"
+      return "other"
+    }
+    const CATS = [
+      { key: "policy", label: "กรมธรรม์",  c1: "#6366F1", c2: "#A855F7" },  // indigo→purple
+      { key: "prb",    label: "พ.ร.บ.",    c1: "#10B981", c2: "#06B6D4" },  // green→cyan
+      { key: "other",  label: "อื่นๆ",      c1: "#94A3B8", c2: "#CBD5E1" },  // gray
+    ]
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today.getTime() - (6 - i) * dayMs)
+      return { date: d, key: localKey(d), label: DAY_TH[d.getDay()], breakdown: { policy: 0, prb: 0, other: 0 }, count: 0 }
+    })
+    const todayKey = localKey(today)
+    const todayBreakdown = { policy: 0, prb: 0, other: 0 }
+    const todayItems = []
+    statsRows.forEach(r => {
+      if (!r.created_at) return
+      const t = new Date(r.created_at)
+      if (isNaN(t)) return
+      const dKey = localKey(t)
+      const cat = catOf(r.policy_type)
+      const bucket = days.find(d => d.key === dKey)
+      if (bucket) { bucket.breakdown[cat] += 1; bucket.count += 1 }
+      if (dKey === todayKey) {
+        todayBreakdown[cat] += 1
+        todayItems.push(r)
+      }
+    })
+    const todayCount = todayItems.length
+    return {
+      todayCount,
+      todayItems: todayItems.slice(0, 6),
+      todayBreakdown,
+      days,
+      maxCount: Math.max(1, ...days.map(d => d.count)),
+      todayKey,
+      cats: CATS,
+    }
+  })()
+
+  // ── Expiry Forecast — focus on actionable (upcoming) buckets; expired = separate stat
+  const expiryForecast = (() => {
+    const now = new Date()
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const buckets = [
+      { key: "30",   label: "ภายใน 30 วัน",  min: 0,   max: 30,        c1: "#F59E0B", c2: "#FBBF24", count: 0, urgent: true },
+      { key: "60",   label: "31-60 วัน",     min: 31,  max: 60,        c1: "#FB923C", c2: "#F97316", count: 0 },
+      { key: "90",   label: "61-90 วัน",     min: 61,  max: 90,        c1: "#06B6D4", c2: "#22D3EE", count: 0 },
+      { key: "180",  label: "91-180 วัน",    min: 91,  max: 180,       c1: "#6366F1", c2: "#818CF8", count: 0 },
+      { key: "year", label: "> 180 วัน",     min: 181, max: Infinity,  c1: "#10B981", c2: "#34D399", count: 0 },
+    ]
+    let expiredCount = 0
+    let unknownCount = 0
+    statsRows.forEach(r => {
+      if (!r.coverage_end) { unknownCount += 1; return }
+      const t = new Date(r.coverage_end)
+      if (isNaN(t)) { unknownCount += 1; return }
+      const daysLeft = Math.floor((t - today0) / 86400000)
+      if (daysLeft < 0) { expiredCount += 1; return }
+      const b = buckets.find(b => daysLeft >= b.min && daysLeft <= b.max)
+      if (b) b.count += 1
+    })
+    const max = Math.max(1, ...buckets.map(b => b.count))
+    const total = buckets.reduce((a, b) => a + b.count, 0)
+    return { buckets, max, total, expiredCount, unknownCount }
+  })()
+
+  // ── Upload chart: รายวัน / รายอาทิตย์ / รายเดือน
+  const [chartRange, setChartRange] = useState("d30") // d7 | d30 | w12 | m12
+  const seriesData = (() => {
+    const MONTH_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
+    const now = new Date()
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    let buckets = []
+    let labelFmt
+
+    if (chartRange === "d7" || chartRange === "d30") {
+      const DAYS = chartRange === "d7" ? 7 : 30
+      buckets = Array.from({ length: DAYS }, (_, i) => {
+        const d = new Date(today0.getTime() - (DAYS - 1 - i) * 86400000)
+        return { date: d, count: 0, ts: d.getTime() }
+      })
+      const skip = Math.max(1, Math.floor(DAYS / 7))
+      labelFmt = (b, i) => (i % skip === 0 || i === buckets.length - 1)
+        ? `${b.date.getDate()} ${MONTH_SHORT[b.date.getMonth()]}` : ""
+      statsRows.forEach(r => {
+        if (!r.created_at) return
+        const t = new Date(r.created_at)
+        if (isNaN(t)) return
+        const td = new Date(t.getFullYear(), t.getMonth(), t.getDate())
+        const idx = Math.floor((td.getTime() - buckets[0].ts) / 86400000)
+        if (idx >= 0 && idx < buckets.length) buckets[idx].count += 1
+      })
+    } else if (chartRange === "w12") {
+      // start each week on Monday — last 12 weeks
+      const WEEKS = 12
+      const dayOfWeek = today0.getDay() // 0=Sun, 1=Mon...
+      const offsetToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const thisMon = new Date(today0.getTime() + offsetToMon * 86400000)
+      buckets = Array.from({ length: WEEKS }, (_, i) => {
+        const d = new Date(thisMon.getTime() - (WEEKS - 1 - i) * 7 * 86400000)
+        return { date: d, count: 0, ts: d.getTime() }
+      })
+      labelFmt = (b) => `${b.date.getDate()} ${MONTH_SHORT[b.date.getMonth()]}`
+      statsRows.forEach(r => {
+        if (!r.created_at) return
+        const t = new Date(r.created_at)
+        if (isNaN(t)) return
+        const td = new Date(t.getFullYear(), t.getMonth(), t.getDate())
+        const days = Math.floor((td.getTime() - buckets[0].ts) / 86400000)
+        const idx = Math.floor(days / 7)
+        if (idx >= 0 && idx < buckets.length) buckets[idx].count += 1
+      })
+    } else {
+      // monthly (m12) — last 12 months
+      const MONTHS = 12
+      buckets = Array.from({ length: MONTHS }, (_, i) => {
+        const d = new Date(today0.getFullYear(), today0.getMonth() - (MONTHS - 1 - i), 1)
+        return { date: d, count: 0, ts: d.getTime() }
+      })
+      labelFmt = (b) => `${MONTH_SHORT[b.date.getMonth()]} ${(b.date.getFullYear() + 543).toString().slice(-2)}`
+      statsRows.forEach(r => {
+        if (!r.created_at) return
+        const t = new Date(r.created_at)
+        if (isNaN(t)) return
+        const idx = buckets.findIndex(b => b.date.getFullYear() === t.getFullYear() && b.date.getMonth() === t.getMonth())
+        if (idx >= 0) buckets[idx].count += 1
+      })
+    }
+
+    const labels = buckets.map(labelFmt)
+    const allSeries = [
+      { name: "ไฟล์ที่อัปโหลด", color: "#319795", color2: "#4FD1C5", values: buckets.map(b => b.count) },
+    ]
+    const series = allSeries.filter(s => s.values.reduce((a, b) => a + b, 0) > 0)
+    return { months: labels, series, totalAll: buckets.reduce((a, b) => a + b.count, 0) }
+  })()
 
   const expiringSubText = expiryRange === -1
     ? `${expiring.length} รายการ · หมดอายุแล้ว`
@@ -203,15 +386,19 @@ export function ListPage({ tab }) {
     expiring:  { title: "กรมธรรม์ใกล้หมดอายุ", sub: expiringSubText },
   }
 
-  const baseRows    = tab === "expiring" ? expiring : rows
-  const displayRows = baseRows
+  const baseRows     = tab === "expiring" ? expiring : rows
+  // Client-side pagination สำหรับ expiring (500 รายการ → 10 ต่อหน้า)
+  const displayRows  = tab === "expiring"
+    ? baseRows.slice((page - 1) * LIMIT, page * LIMIT)
+    : baseRows
   const displayTotal = tab === "expiring" ? expiring.length : total
+  const displayPages = tab === "expiring" ? Math.max(1, Math.ceil(expiring.length / LIMIT)) : pages
 
   return (
     <>
-      {/* subtitle bar */}
-      <div className="top">
-        {tab !== "dashboard" && (
+      {/* subtitle bar — hidden on dashboard (hero covers it) */}
+      {tab !== "dashboard" && (
+        <div className="top">
           <button onClick={() => navigate("/")}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
@@ -222,12 +409,10 @@ export function ListPage({ tab }) {
             }}>
             <Ico n="chevL" s={16} /> กลับ
           </button>
-        )}
-        <div className="top-l">
-          <div className="top-title">{tabMeta[tab]?.title}</div>
-          <div className="top-sub">{tabMeta[tab]?.sub}</div>
-        </div>
-        {tab !== "dashboard" && (
+          <div className="top-l">
+            <div className="top-title">{tabMeta[tab]?.title}</div>
+            <div className="top-sub">{tabMeta[tab]?.sub}</div>
+          </div>
           <div className="top-srch">
             <Ico n="search" s={18} />
             <input
@@ -241,32 +426,311 @@ export function ListPage({ tab }) {
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className={`list-layout${previewPolicy ? " has-pvp" : ""}`}>
         <div className="body">
 
           {tab === "dashboard" && (
             <>
-              <div className="stats">
-                {[
-                  { ico: "doc",      cls: "bl", lbl: "กรมธรรม์",  val: total.toLocaleString(),  sub: "ทั้งหมดในระบบ" },
-                  { ico: "shield",   cls: "gr", lbl: "คุ้มครองอยู่", val: active,                  sub: "ยังไม่หมดอายุ" },
-                  { ico: "bell",     cls: "am", lbl: "ใกล้หมดอายุ", val: expiring.length,         sub: "ภายใน 30 วัน" },
-                  { ico: "banknote", cls: "pu", lbl: "เบี้ยรวม",   val: sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 }), sub: "บาท (หน้านี้)" },
-                ].map(c => (
-                  <div key={c.lbl} className="sc">
-                    <div className="sc-bd">
-                      <div className="sc-lbl">{c.lbl}</div>
-                      <div className="sc-val">{c.val}</div>
-                      <div className="sc-sub">{c.sub}</div>
+              {/* ── Compact page header — ไม่หนา ไม่มี gradient ── */}
+              {(() => {
+                const today = new Date()
+                const MONTH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
+                const DAY = ["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"]
+                const dateLabel = `${DAY[today.getDay()]} · ${today.getDate()} ${MONTH[today.getMonth()]} ${today.getFullYear() + 543}`
+                return (
+                  <div className="dash-bar">
+                    <div className="dash-bar-l">
+                      <div className="dash-bar-ttl">ภาพรวมระบบ</div>
+                      <div className="dash-bar-sub">สรุปสถานะกรมธรรม์ประกันภัยรถยนต์ทั้งหมดในระบบ</div>
                     </div>
-                    <div className={`sc-ico ${c.cls}`}><Ico n={c.ico} s={28} /></div>
+                    <div className="dash-bar-r">
+                      <div className="dash-chip">
+                        <span className="dash-chip-dot" />
+                        {dateLabel}
+                      </div>
+                    </div>
                   </div>
+                )
+              })()}
+
+              {/* ── 1. เมนูหลัก 4 ใบ — ขึ้นบนสุดตามที่ user ขอ ── */}
+              <div className="sec-hd">
+                <Ico n="grid" s={14} />
+                <span>เมนูหลัก</span>
+                <small>เข้าถึงได้รวดเร็ว</small>
+              </div>
+              <div className="svc-grid">
+                {[
+                  { path: "/policies", ico: "doc",      cls: "svc-green",  lbl: "กรมธรรม์ทั้งหมด", badge: total.toLocaleString(), bIco: "doc" },
+                  { path: "/upload",   ico: "upload",   cls: "svc-blue",   lbl: "เพิ่มกรมธรรม์",   badge: "ใหม่",                bIco: "plus" },
+                  { path: "/invoice",  ico: "banknote", cls: "svc-purple", lbl: "สร้างเอกสาร",     badge: "QR",                  bIco: "banknote" },
+                  { path: "/expiring", ico: "bell",     cls: "svc-amber",  lbl: "ใกล้หมดอายุ",     badge: expiring.length.toLocaleString(), bIco: "bell", urgent: expiring.length > 0 },
+                ].map((c, idx) => (
+                  <button key={c.path} className={`svc-card ${c.cls}`} onClick={() => navigate(c.path)}>
+                    <svg className="svc-wave" viewBox="0 0 240 240" preserveAspectRatio="none" aria-hidden="true">
+                      {idx === 0 && (<>
+                        <path d="M0,60 Q60,30 130,70 T240,40 L240,0 L0,0 Z" fill="rgba(255,255,255,.16)" />
+                        <path d="M0,150 Q70,180 140,150 T240,170 L240,240 L0,240 Z" fill="rgba(255,255,255,.10)" />
+                        <circle cx="210" cy="50" r="36" fill="rgba(255,255,255,.10)" />
+                      </>)}
+                      {idx === 1 && (<>
+                        <path d="M0,90 Q70,40 140,80 T240,50 L240,0 L0,0 Z" fill="rgba(255,255,255,.14)" />
+                        <path d="M240,140 Q170,160 100,130 T0,150 L0,240 L240,240 Z" fill="rgba(255,255,255,.10)" />
+                        <circle cx="40" cy="60" r="28" fill="rgba(255,255,255,.12)" />
+                      </>)}
+                      {idx === 2 && (<>
+                        <path d="M0,40 Q80,80 160,40 T240,60 L240,0 L0,0 Z" fill="rgba(255,255,255,.16)" />
+                        <path d="M0,180 Q60,150 130,170 T240,140 L240,240 L0,240 Z" fill="rgba(255,255,255,.10)" />
+                        <circle cx="200" cy="200" r="40" fill="rgba(255,255,255,.10)" />
+                      </>)}
+                      {idx === 3 && (<>
+                        <path d="M0,70 Q90,30 150,80 T240,50 L240,0 L0,0 Z" fill="rgba(255,255,255,.15)" />
+                        <path d="M0,160 Q80,200 160,160 T240,180 L240,240 L0,240 Z" fill="rgba(255,255,255,.10)" />
+                        <circle cx="30" cy="190" r="32" fill="rgba(255,255,255,.10)" />
+                      </>)}
+                    </svg>
+                    <div className="svc-icon">
+                      <Ico n={c.ico} s={36} />
+                    </div>
+                    <div className="svc-foot">
+                      <div className="svc-title">{c.lbl}</div>
+                      <div className={`svc-badge ${c.urgent ? "svc-badge-pulse" : ""}`}>
+                        <b>{c.badge}</b>
+                        <Ico n={c.bIco} s={14} />
+                      </div>
+                    </div>
+                  </button>
                 ))}
               </div>
 
+              {/* ── 2. Charts: Forecast (action) + Line chart (trend) ── */}
+              <div className="sec-hd">
+                <Ico n="bolt" s={14} />
+                <span>งานที่ต้องทำ + สถิติ</span>
+                <small>วางแผนติดต่อลูกค้า + แนวโน้มการอัปโหลด</small>
+              </div>
+              {(() => {
+                const lineW = 720, lineH = 220, padL = 44, padR = 60, padT = 24, padB = 58
+                const innerW = lineW - padL - padR, innerH = lineH - padT - padB
+                const allVals = seriesData.series.flatMap(s => s.values)
+                const maxCount = Math.max(1, ...allVals)
+                const xAt = (i) => padL + (seriesData.months.length === 1 ? innerW / 2 : (i * innerW) / (seriesData.months.length - 1))
+                const yAt = (v) => padT + innerH - (v / maxCount) * innerH
+                const smoothPath = (pts) => {
+                  if (pts.length < 2) return pts.length === 1 ? `M${pts[0].x},${pts[0].y}` : ""
+                  const out = [`M${pts[0].x},${pts[0].y}`]
+                  for (let i = 0; i < pts.length - 1; i++) {
+                    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2
+                    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6
+                    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6
+                    out.push(`C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`)
+                  }
+                  return out.join(" ")
+                }
+                const seriesPaths = seriesData.series.map((s, si) => {
+                  const pts = s.values.map((v, i) => ({ x: xAt(i), y: yAt(v) }))
+                  return { ...s, pts, d: smoothPath(pts), gradId: `lg-${si}` }
+                })
+                const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: Math.round(maxCount * (1 - t)) }))
+
+                return (
+                  <div className="charts-grid">
+                    {/* EXPIRY FORECAST — donut focuses on actionable upcoming buckets */}
+                    {(() => {
+                      const r = 70, c = 2 * Math.PI * r
+                      const fcTotal = Math.max(1, expiryForecast.total)
+                      let acc = 0
+                      const arcs = expiryForecast.buckets.filter(b => b.count > 0).map(b => {
+                        const dash = (b.count / fcTotal) * c
+                        const offset = -acc
+                        acc += dash
+                        return { ...b, dash, offset }
+                      })
+                      return (
+                        <div className="chart-card">
+                          <div className="chart-hd">
+                            <div>
+                              <div className="chart-ttl">การหมดอายุล่วงหน้า</div>
+                              <div className="chart-sub">เฉพาะที่ยังไม่หมดอายุ — วางแผนติดต่อต่ออายุ</div>
+                            </div>
+                            <button className="chart-tag" onClick={() => navigate("/expiring")}
+                              style={{ cursor: "pointer", fontFamily: "inherit", border: "1px solid var(--blue-mid)" }}>
+                              ดูทั้งหมด →
+                            </button>
+                          </div>
+
+                          {(expiryForecast.expiredCount > 0 || expiryForecast.unknownCount > 0) && (
+                            <div className="fc-meta">
+                              {expiryForecast.expiredCount > 0 && (
+                                <div className="fc-meta-pill fc-meta-expired" onClick={() => navigate("/expiring")}>
+                                  <span className="lg-dot" style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)" }} />
+                                  <span>หมดอายุแล้ว</span>
+                                  <b>{expiryForecast.expiredCount.toLocaleString()}</b>
+                                </div>
+                              )}
+                              {expiryForecast.unknownCount > 0 && (
+                                <div className="fc-meta-pill">
+                                  <span className="lg-dot" style={{ background: "var(--brd2)" }} />
+                                  <span>ไม่ระบุวันหมด</span>
+                                  <b>{expiryForecast.unknownCount.toLocaleString()}</b>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="chart-bd donut-row">
+                            <div className="donut-wrap fc-donut-wrap">
+                              <svg viewBox="0 0 180 180" width="180" height="180" className="donut-svg">
+                                <defs>
+                                  {arcs.map((a, i) => (
+                                    <linearGradient key={i} id={`fc-grad-${a.key}`} x1="0" y1="0" x2="1" y2="1">
+                                      <stop offset="0%" stopColor={a.c1} />
+                                      <stop offset="100%" stopColor={a.c2} />
+                                    </linearGradient>
+                                  ))}
+                                </defs>
+                                <circle cx="90" cy="90" r={r} fill="none" stroke="var(--brd)" strokeWidth="14" />
+                                {arcs.map((a, i) => (
+                                  <circle key={i} cx="90" cy="90" r={r} fill="none" stroke={`url(#fc-grad-${a.key})`} strokeWidth="14"
+                                    strokeDasharray={`${a.dash} ${c}`}
+                                    strokeDashoffset={a.offset}
+                                    strokeLinecap="butt"
+                                    style={{ transition: "stroke-dasharray .8s var(--ez-out), stroke-dashoffset .8s var(--ez-out)" }}
+                                  />
+                                ))}
+                              </svg>
+                              <div className="donut-center">
+                                <div className="donut-num">{expiryForecast.total.toLocaleString()}</div>
+                                <div className="donut-lbl">ยังคุ้มครองอยู่</div>
+                              </div>
+                            </div>
+                            <div className="donut-legend fc-legend">
+                              {expiryForecast.buckets.map(b => {
+                                const pct = expiryForecast.total > 0 ? Math.round((b.count / expiryForecast.total) * 100) : 0
+                                const clickable = (b.key === "30" || b.key === "60" || b.key === "90") && b.count > 0
+                                return (
+                                  <div key={b.key}
+                                    className={`fc-lg-row ${b.urgent ? "fc-urgent" : ""} ${clickable ? "fc-clickable" : ""}`}
+                                    onClick={() => clickable && navigate("/expiring")}>
+                                    <span className="lg-dot" style={{ background: `linear-gradient(135deg, ${b.c1}, ${b.c2})` }} />
+                                    <span className="lg-lbl">{b.label}</span>
+                                    <span className="lg-val">{b.count.toLocaleString()}</span>
+                                    <span className="lg-pct">{pct}%</span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
+
+                    {/* LINE — daily upload chart */}
+                    <div className="chart-card">
+                      <div className="chart-hd">
+                        <div>
+                          <div className="chart-ttl">รายงานการอัปโหลด</div>
+                          <div className="chart-sub">จำนวนไฟล์ที่อัป · รวม <b style={{color:"var(--t1)"}}>{seriesData.totalAll || 0}</b> ไฟล์</div>
+                        </div>
+                        <select className="chart-period" value={chartRange}
+                          onChange={e => setChartRange(e.target.value)}>
+                          <option value="d7">7 วัน</option>
+                          <option value="d30">30 วัน</option>
+                          <option value="w12">12 สัปดาห์</option>
+                          <option value="m12">12 เดือน</option>
+                        </select>
+                      </div>
+                      <div className="chart-bd">
+                        {seriesData.months.length ? (
+                          <>
+                            <svg viewBox={`0 0 ${lineW} ${lineH}`} className="line-svg" preserveAspectRatio="none">
+                              <defs>
+                                {seriesPaths.map((s, i) => (
+                                  <linearGradient key={i} id={s.gradId} x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%" stopColor={s.color} />
+                                    <stop offset="100%" stopColor={s.color2} />
+                                  </linearGradient>
+                                ))}
+                                <linearGradient id="areaFillG0" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#319795" stopOpacity=".35" />
+                                  <stop offset="55%" stopColor="#4FD1C5" stopOpacity=".12" />
+                                  <stop offset="100%" stopColor="#4FD1C5" stopOpacity="0" />
+                                </linearGradient>
+                                <filter id="dotGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                  <feGaussianBlur stdDeviation="3" result="b" />
+                                  <feMerge>
+                                    <feMergeNode in="b" />
+                                    <feMergeNode in="SourceGraphic" />
+                                  </feMerge>
+                                </filter>
+                              </defs>
+                              {yTicks.map((t, i) => (
+                                <g key={i}>
+                                  <line x1={padL} x2={lineW - padR} y1={t.y} y2={t.y}
+                                    stroke="var(--brd)" strokeDasharray="3 5" strokeWidth="1" />
+                                  <text x={padL - 8} y={t.y + 4} textAnchor="end"
+                                    fill="var(--t3)" fontSize="10.5" fontWeight="500"
+                                    fontFamily="Sarabun, sans-serif">{t.v}</text>
+                                </g>
+                              ))}
+                              {seriesPaths[0]?.d && (
+                                <path d={`${seriesPaths[0].d} L${seriesPaths[0].pts[seriesPaths[0].pts.length-1].x},${padT+innerH} L${seriesPaths[0].pts[0].x},${padT+innerH} Z`}
+                                  fill="url(#areaFillG0)" />
+                              )}
+                              {seriesPaths.map((s, i) => (
+                                <path key={i} d={s.d} fill="none" stroke={`url(#${s.gradId})`}
+                                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                              ))}
+                              {/* dots: glow on last + emphasize peaks */}
+                              {seriesPaths.map((s, si) => {
+                                const maxV = Math.max(...s.values)
+                                return s.pts.map((p, i) => {
+                                  const isLast = i === s.pts.length - 1
+                                  const isPeak = s.values[i] === maxV && maxV > 0
+                                  if (!isLast && !isPeak && s.values[i] === 0) return null
+                                  return (
+                                    <g key={`${si}-${i}`}>
+                                      {(isLast || isPeak) && (
+                                        <circle cx={p.x} cy={p.y} r="10" fill={s.color} opacity=".24" filter="url(#dotGlow)" />
+                                      )}
+                                      <circle cx={p.x} cy={p.y} r={isLast ? "5.5" : (isPeak ? "5" : "3.5")}
+                                        fill="#fff" stroke={s.color} strokeWidth={isLast ? "3" : "2.4"} />
+                                    </g>
+                                  )
+                                })
+                              })}
+                              {seriesData.months.map((m, i) => (
+                                <text key={i} x={xAt(i)} y={lineH - 30} textAnchor="middle"
+                                  fill="var(--t3)" fontSize="11" fontWeight="500"
+                                  fontFamily="Sarabun, sans-serif">{m}</text>
+                              ))}
+                            </svg>
+                            <div className="chart-legend">
+                              {seriesPaths.map((s, i) => (
+                                <div key={i} className="cl-item">
+                                  <span className="cl-line" style={{ background: `linear-gradient(90deg, ${s.color}, ${s.color2})` }} />
+                                  <span className="cl-name">{s.name}</span>
+                                  <span className="cl-sum">{s.values.reduce((a, b) => a + b, 0)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="chart-empty">
+                            <Ico n="doc" s={32} />
+                            <div>ยังไม่มีข้อมูลในหน้านี้</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* daily report below */}
               {expiring.length > 0 && (
                 <div className="bnr am">
                   <Ico n="bell" s={22} />
@@ -284,9 +748,140 @@ export function ListPage({ tab }) {
             </>
           )}
 
-          {/* ── Search (filter UI removed) ── */}
-          <div className="filter-wrap">
-            <div className="big-srch">
+          {/* ── Dashboard: Daily activity report (back on home, polished) ── */}
+          {tab === "dashboard" && (
+            <>
+              <div className="sec-hd">
+                <Ico n="cal" s={14} />
+                <span>กิจกรรมวันนี้</span>
+                <small>ไฟล์ที่อัปโหลด · แนวโน้ม 7 วันล่าสุด</small>
+              </div>
+              {(() => {
+                const tb = dailyReport.todayBreakdown
+                const cats = dailyReport.cats
+                const cTotal = Math.max(1, dailyReport.todayCount)
+                const dr = 48, dc = 2 * Math.PI * dr
+                let acc = 0
+                const arcs = cats.map(c => {
+                  const v = tb[c.key]
+                  const dash = (v / cTotal) * dc
+                  const off = -acc
+                  if (v > 0) acc += dash
+                  return { ...c, v, dash, off }
+                }).filter(a => a.v > 0)
+                return (
+                  <div className="report-card">
+                    <div className="report-hd">
+                      <div className="report-hd-ico"><Ico n="bolt" s={22} /></div>
+                      <div className="report-hd-l">
+                        <div className="report-hd-ttl">วันนี้ทำงานไปเท่าไหร่</div>
+                        <div className="report-hd-sub">แยกตามประเภทเอกสาร · แนวโน้ม 7 วันล่าสุด</div>
+                      </div>
+                      <div className="report-hd-r">
+                        <div className="report-hd-num">{dailyReport.todayCount.toLocaleString()}</div>
+                        <div className="report-hd-lbl">ไฟล์วันนี้</div>
+                      </div>
+                    </div>
+
+                    <div className="work-body">
+                      {/* LEFT: small donut + category breakdown */}
+                      <div className="work-breakdown">
+                        <div className="work-donut-wrap">
+                          <svg viewBox="0 0 120 120" className="work-donut">
+                            <defs>
+                              {arcs.map((a, i) => (
+                                <linearGradient key={i} id={`wd-${a.key}`} x1="0" y1="0" x2="1" y2="1">
+                                  <stop offset="0%" stopColor={a.c1} />
+                                  <stop offset="100%" stopColor={a.c2} />
+                                </linearGradient>
+                              ))}
+                            </defs>
+                            <circle cx="60" cy="60" r={dr} fill="none" stroke="var(--brd)" strokeWidth="10" />
+                            {arcs.map((a, i) => (
+                              <circle key={i} cx="60" cy="60" r={dr} fill="none"
+                                stroke={`url(#wd-${a.key})`} strokeWidth="10"
+                                strokeDasharray={`${a.dash} ${dc}`}
+                                strokeDashoffset={a.off}
+                                strokeLinecap="butt"
+                                style={{ transition: "stroke-dasharray .7s var(--ez-out), stroke-dashoffset .7s var(--ez-out)" }}
+                              />
+                            ))}
+                          </svg>
+                          <div className="work-donut-center">
+                            <div className="wd-num">{dailyReport.todayCount}</div>
+                            <div className="wd-lbl">วันนี้</div>
+                          </div>
+                        </div>
+                        <div className="work-cat-list">
+                          {cats.map(c => {
+                            const v = tb[c.key]
+                            const pct = dailyReport.todayCount > 0 ? Math.round((v / dailyReport.todayCount) * 100) : 0
+                            return (
+                              <div key={c.key} className={`wc-row ${v === 0 ? "wc-zero" : ""}`}>
+                                <span className="wc-dot" style={{ background: `linear-gradient(135deg,${c.c1},${c.c2})` }} />
+                                <span className="wc-lbl">{c.label}</span>
+                                <span className="wc-val">{v}</span>
+                                <span className="wc-pct">{pct}%</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* RIGHT: 7-day stacked bar chart */}
+                      <div className="work-bars-wrap">
+                        <div className="work-bars-hd">
+                          <span><Ico n="bolt" s={14} /> &nbsp;7 วันล่าสุด</span>
+                          <span>รวม <b>{dailyReport.days.reduce((a, b) => a + b.count, 0)}</b> ไฟล์</span>
+                        </div>
+                        <div className="work-bars">
+                          {dailyReport.days.map(d => {
+                            const isToday = d.key === dailyReport.todayKey
+                            const pct = (d.count / dailyReport.maxCount) * 100
+                            return (
+                              <div key={d.key} className={`wb-col ${isToday ? "wb-today" : ""} ${d.count === 0 ? "wb-zero" : ""}`}
+                                title={`${d.key}: ${d.count} ไฟล์ (กธ ${d.breakdown.policy}, พรบ ${d.breakdown.prb}, อื่นๆ ${d.breakdown.other})`}>
+                                <div className="wb-bar-wrap" style={{ height: `${Math.max(pct, d.count > 0 ? 8 : 3)}%` }}>
+                                  {d.count > 0 && cats.map(c => {
+                                    const seg = d.breakdown[c.key]
+                                    if (!seg) return null
+                                    const segPct = (seg / d.count) * 100
+                                    return (
+                                      <div key={c.key} className="wb-seg"
+                                        style={{
+                                          flex: segPct,
+                                          background: `linear-gradient(180deg,${c.c1},${c.c2})`
+                                        }}
+                                      />
+                                    )
+                                  })}
+                                  {d.count > 0 && <span className="wb-val">{d.count}</span>}
+                                </div>
+                                <div className="wb-day">{d.label}</div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        {/* Mini legend */}
+                        <div className="work-legend">
+                          {cats.map(c => (
+                            <div key={c.key} className="wl-item">
+                              <span className="wl-dot" style={{ background: `linear-gradient(135deg,${c.c1},${c.c2})` }} />
+                              <span>{c.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+            </>
+          )}
+
+          {/* ── Search + Excel export ── */}
+          <div className="filter-wrap" style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
+            <div className="big-srch" style={{ flex: 1 }}>
               <Ico n="search" s={20} />
               <input
                 placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
@@ -299,90 +894,112 @@ export function ListPage({ tab }) {
                 </button>
               )}
             </div>
+            <button
+              className="btn btn-w"
+              style={{ flexShrink: 0, padding: "0 20px", fontSize: 14.5, fontWeight: 600 }}
+              title="ดาวน์โหลด Excel (CSV รองรับภาษาไทย)"
+              onClick={() => {
+                const exportRows = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
+                const targetRows = tab === "expiring" ? expiring : exportRows
+                const HEADERS = [
+                  "เลขกรมธรรม์","ผู้เอาประกัน","เบอร์","ทะเบียน","จังหวัด",
+                  "ยี่ห้อ","รุ่น","ปีรถ","เลขตัวถัง",
+                  "เริ่มคุ้มครอง","สิ้นสุดคุ้มครอง","วันที่บันทึก",
+                  "ประเภท","ใหม่/ต่ออายุ","ตัวแทน",
+                  "เบี้ยสุทธิ","อากร","VAT","เบี้ยรวม","ทุนเอาประกัน"
+                ]
+                const csvEscape = v => {
+                  const s = v == null ? "" : String(v)
+                  return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s
+                }
+                const rowsCsv = targetRows.map(r => [
+                  r.policy_number, r.insured_name, r.phone, r.license_plate, r.license_province,
+                  r.car_make, r.car_model, r.car_year, r.chassis_no,
+                  r.coverage_start, r.coverage_end, r.created_at ? String(r.created_at).slice(0, 10) : "",
+                  r.policy_type, r.new_renew, r.broker_name,
+                  r.net_premium, r.stamp_duty, r.vat, r.total_premium, r.sum_insured
+                ].map(csvEscape).join(","))
+                const csv = "﻿" + [HEADERS.join(","), ...rowsCsv].join("\r\n")  // BOM for Excel UTF-8
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                const dt = new Date()
+                const stamp = `${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,"0")}${String(dt.getDate()).padStart(2,"0")}-${String(dt.getHours()).padStart(2,"0")}${String(dt.getMinutes()).padStart(2,"0")}`
+                a.href = url
+                a.download = `กรมธรรม์-${stamp}.csv`
+                document.body.appendChild(a); a.click(); document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+                notify(`ดาวน์โหลด ${targetRows.length.toLocaleString()} รายการเป็น Excel/CSV เรียบร้อย`)
+              }}
+            >
+              <Ico n="download" s={17} />
+              Export Excel
+            </button>
           </div>
 
-          {/* ── Quick nav cards (horizontal scroll) — เฉพาะหน้า dashboard ── */}
-          {tab === "dashboard" && (
-            <div className="navcards-wrap">
-              <div className="navcards-hd">
-                <Ico n="grid" s={16} />
-                <span className="navcards-ttl">ทางลัด</span>
-                <span className="navcards-sub">กดเพื่อเข้าเมนู</span>
-              </div>
-              <div className="navcards">
-                {[
-                  { path: "/upload",   ico: "upload",   cls: "fcard-blue",   lbl: "อัปโหลด PDF",      desc: "เพิ่มกรมธรรม์ใหม่" },
-                  { path: "/invoice",  ico: "banknote", cls: "fcard-purple", lbl: "ใบแจ้งหนี้",        desc: "สร้าง invoice + QR" },
-                  { path: "/expiring", ico: "bell",     cls: "fcard-amber",  lbl: "ใกล้หมดอายุ",      desc: "ภายใน 30 วัน",     badge: expiring.length },
-                ].map(it => (
-                  <button key={it.path} className={`navcard ${it.cls}`} onClick={() => navigate(it.path)}>
-                    <span className="fcard-ico"><Ico n={it.ico} s={20} /></span>
-                    <div className="navcard-body">
-                      <div className="navcard-ttl">
-                        {it.lbl}
-                        {it.badge > 0 && <span className="navcard-badge">{it.badge}</span>}
-                      </div>
-                      <div className="navcard-desc">{it.desc}</div>
-                    </div>
-                    <Ico n="arrowR" s={18} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Filter chips ช่วงเวลาหมดอายุ (เฉพาะหน้า expiring) ── */}
-          {tab === "expiring" && (
-            <div style={{
-              display: "flex", flexWrap: "wrap", gap: 8,
-              marginBottom: 16, padding: "12px 14px",
-              background: "var(--sur)", border: "1px solid var(--brd)",
-              borderRadius: 12,
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t2)", alignSelf: "center", marginRight: 4 }}>
-                แสดงรายการ:
-              </div>
-              {EXPIRY_RANGES.map(opt => {
-                const active = expiryRange === opt.val
-                return (
-                  <button key={opt.val}
-                    onClick={() => setExpiryRange(opt.val)}
-                    style={{
-                      padding: "8px 14px", borderRadius: 999,
-                      border: `1.5px solid ${active ? "var(--blue)" : "var(--brd)"}`,
-                      background: active ? "var(--blue)" : "var(--sur)",
-                      color: active ? "#fff" : "var(--t2)",
-                      fontWeight: active ? 700 : 500,
-                      fontSize: 13.5, cursor: "pointer",
-                      fontFamily: "inherit",
-                      display: "inline-flex", alignItems: "center", gap: 5,
-                      transition: "all .15s",
-                    }}>
-                    <span style={{ fontSize: 12 }}>{opt.icon}</span>
-                    {opt.label}
-                    {active && (
-                      <span style={{
-                        marginLeft: 4, padding: "1px 8px", borderRadius: 99,
-                        background: "rgba(255,255,255,.25)", fontSize: 12, fontWeight: 700,
-                      }}>{expiring.length}</span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          )}
+          {/* ── Expiring page: stat strip + filter chips ── */}
+          {tab === "expiring" && (() => {
+            // เกาะข้อมูลจาก statsRows (allRows ทั้งหมด) — แตกย่อยตามช่วงเวลา
+            const now = new Date()
+            const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            const counts = { d1: 0, w1: 0, m1: 0, m2: 0, m3: 0, expired: 0 }
+            statsRows.forEach(r => {
+              if (!r.coverage_end) return
+              const t = new Date(r.coverage_end)
+              if (isNaN(t)) return
+              const dl = Math.floor((t - today0) / 86400000)
+              if (dl < 0) counts.expired += 1
+              else {
+                if (dl <= 1)  counts.d1 += 1
+                if (dl <= 7)  counts.w1 += 1
+                if (dl <= 30) counts.m1 += 1
+                if (dl <= 60) counts.m2 += 1
+                if (dl <= 90) counts.m3 += 1
+              }
+            })
+            const rangeCount = (val) => {
+              if (val === -1) return counts.expired
+              if (val === 1)  return counts.d1
+              if (val === 7)  return counts.w1
+              if (val === 30) return counts.m1
+              if (val === 60) return counts.m2
+              if (val === 90) return counts.m3
+              return 0
+            }
+            return (
+              <>
+                <div className="exp-stats">
+                  {EXPIRY_RANGES.map(opt => {
+                    const active = expiryRange === opt.val
+                    const cnt = rangeCount(opt.val)
+                    return (
+                      <button key={opt.val}
+                        className={`exp-stat ${active ? "exp-stat-on" : ""} exp-stat-${opt.val === -1 ? "expired" : (opt.val <= 1 ? "urg1" : opt.val <= 7 ? "urg7" : opt.val <= 30 ? "urg30" : opt.val <= 60 ? "urg60" : "urg90")}`}
+                        onClick={() => setExpiryRange(opt.val)}>
+                        <div className="exp-stat-hd">
+                          <span className="exp-stat-icn"><Ico n={opt.ico} s={16} /></span>
+                          <span className="exp-stat-lbl">{opt.label}</span>
+                        </div>
+                        <div className="exp-stat-num">{cnt.toLocaleString()}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )
+          })()}
 
           <PolicyTable
             rows={displayRows}
             loading={loading}
             total={displayTotal}
-            page={tab === "expiring" ? 1 : page}
-            pages={tab === "expiring" ? 1 : pages}
-            setPage={tab === "expiring" ? () => {} : setPage}
+            page={page}
+            pages={displayPages}
+            setPage={setPage}
             onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
             onRowHover={prefetchPolicy}
             activeId={previewPolicy?.id}
-            pageOffset={tab === "expiring" ? 0 : (page - 1) * LIMIT}
+            pageOffset={(page - 1) * LIMIT}
             sortKey={sortKey}
             sortDir={sortDir}
             onSort={onSort}

@@ -162,10 +162,18 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           {/* ปุ่ม toggle PRB — ซ่อนในโหมด readOnly */}
           {!readOnly && onTogglePrb && (
             <button
-              className={`btn ${hasPrb ? "btn-w" : "btn-b"} btn-prb`}
+              className={hasPrb ? "btn" : "btn btn-b btn-prb"}
               onClick={e => { e.stopPropagation(); onTogglePrb() }}
               style={hasPrb
-                ? { padding: "10px 18px", fontSize: 14.5, fontWeight: 600 }
+                ? {
+                    padding: "9px 14px",
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    border: "1.5px solid var(--red-brd)",
+                    background: "var(--red-bg)",
+                    color: "var(--red)",
+                    borderRadius: 10,
+                  }
                 : {
                     padding: "12px 22px",
                     fontSize: 15.5,
@@ -174,10 +182,12 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                     letterSpacing: ".2px",
                   }
               }
+              onMouseEnter={e => { if (hasPrb) { e.currentTarget.style.background = "var(--red)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "var(--red)" } }}
+              onMouseLeave={e => { if (hasPrb) { e.currentTarget.style.background = "var(--red-bg)"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "var(--red-brd)" } }}
             >
               {hasPrb
-                ? <><Ico n="x" s={16} /> เอา พ.ร.บ. ออก</>
-                : <><Ico n="plus" s={18} /> เพิ่ม พ.ร.บ.</>}
+                ? <><Ico n="trash" s={15} /> เอา พ.ร.บ. ออก</>
+                : <><Ico n="shield" s={18} /> <Ico n="plus" s={14} /> เพิ่ม พ.ร.บ.</>}
             </button>
           )}
         </div>
