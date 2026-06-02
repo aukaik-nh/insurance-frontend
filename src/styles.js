@@ -1581,7 +1581,13 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .btn-b{background:linear-gradient(135deg,#234E52 0%,#319795 50%,#4FD1C5 100%);color:#fff;box-shadow:var(--shB)}
 .btn-b:hover{box-shadow:0 14px 30px rgba(49,151,149,.42),0 4px 10px rgba(79,209,197,.24);transform:translateY(-2px)}
 .btn-b:active{transform:translateY(0) scale(.98);box-shadow:0 2px 6px rgba(49,151,149,.28)}
-.btn-b:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;background:linear-gradient(135deg,#9DECF9,#B2F5EA)}
+.btn-b:disabled{
+  opacity:.75;cursor:not-allowed;transform:none;
+  background:linear-gradient(135deg,#234E52 0%,#319795 100%);
+  box-shadow:0 4px 12px rgba(49,151,149,.22);
+  color:rgba(255,255,255,.92);
+}
+.btn-b:disabled::after{display:none}
 .btn-w{background:var(--sur);color:var(--t2);border:1.5px solid var(--brd);box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .btn-w:hover{background:var(--sur2);border-color:var(--brd2);color:var(--t1);transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,23,42,.08)}
 .btn-w:active{transform:translateY(0)}
@@ -2255,6 +2261,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .info-val.mono{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:15.5px;letter-spacing:.3px}
 
 .upload-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
+.upload-split:not(:has(.upload-aside)){grid-template-columns:1fr;max-width:780px;margin:0 auto}
 .upload-aside{position:sticky;top:80px}
 .upload-aside .pdf-preview-wrap{box-shadow:var(--sh1)}
 

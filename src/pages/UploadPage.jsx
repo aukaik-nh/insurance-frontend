@@ -344,7 +344,8 @@ export function UploadPage() {
                 />
             </div>
 
-            {/* right: PDF preview + doc tabs */}
+            {/* right: PDF preview + doc tabs — ซ่อนถ้ายังไม่มีไฟล์ */}
+            {(file || prbFile) && (
             <div className="upload-aside">
               {/* tab bar — แสดงเมื่อมีไฟล์ พ.ร.บ. */}
               {prbFile && file && (
@@ -390,6 +391,7 @@ export function UploadPage() {
                 onFullscreen={() => setPdfFull(true)}
               />
             </div>
+            )}
           </div>
         </div>
       </div>
