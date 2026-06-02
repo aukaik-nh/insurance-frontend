@@ -2261,7 +2261,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .info-val.mono{font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:15.5px;letter-spacing:.3px}
 
 .upload-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
-.upload-split:not(:has(.upload-aside)){grid-template-columns:1fr;max-width:780px;margin:0 auto}
+.upload-split:not(:has(.upload-aside)){grid-template-columns:1fr;max-width:1180px;margin:0 auto}
 .upload-aside{position:sticky;top:80px}
 .upload-aside .pdf-preview-wrap{box-shadow:var(--sh1)}
 
