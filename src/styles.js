@@ -2076,7 +2076,12 @@ tr:hover .plate{border-color:var(--blue);transform:scale(1.02);box-shadow:inset 
   0%,100%{transform:scale(.96);opacity:.9}
   50%{transform:scale(1.12);opacity:.4}
 }
-@media(max-width:639px){.scroll-top{width:48px;height:48px;bottom:20px;right:20px}}
+@media(max-width:767px){
+  .scroll-top{width:44px;height:44px;bottom:14px;right:14px;box-shadow:0 0 0 2px #234E52 inset,0 6px 16px rgba(49,151,149,.45)}
+  .scroll-top svg{width:18px;height:18px}
+  .scroll-top::before{inset:-8px;border-width:1px}
+  .scroll-top::after{inset:-16px;border-width:1px}
+}
 
 .toast{
   position:fixed;bottom:26px;right:26px;

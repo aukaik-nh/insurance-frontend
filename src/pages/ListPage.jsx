@@ -306,7 +306,7 @@ export function ListPage({ tab }) {
     return { buckets, max, total, expiredCount, unknownCount }
   })()
 
-  // ── Upload chart: รายวัน / รายอาทิตย์ / รายเดือน
+  // ── Chart: รายได้เบี้ยประกัน (premium revenue) by period
   const [chartRange, setChartRange] = useState("d30") // d7 | d30 | w12 | m12
   const seriesData = (() => {
     const MONTH_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
@@ -314,12 +314,13 @@ export function ListPage({ tab }) {
     const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     let buckets = []
     let labelFmt
+    const num = v => { const n = Number(v); return isNaN(n) ? 0 : n }
 
     if (chartRange === "d7" || chartRange === "d30") {
       const DAYS = chartRange === "d7" ? 7 : 30
       buckets = Array.from({ length: DAYS }, (_, i) => {
         const d = new Date(today0.getTime() - (DAYS - 1 - i) * 86400000)
-        return { date: d, count: 0, ts: d.getTime() }
+        return { date: d, premium: 0, count: 0, newCount: 0, renewCount: 0, ts: d.getTime() }
       })
       const skip = Math.max(1, Math.floor(DAYS / 7))
       labelFmt = (b, i) => (i % skip === 0 || i === buckets.length - 1)
@@ -330,17 +331,21 @@ export function ListPage({ tab }) {
         if (isNaN(t)) return
         const td = new Date(t.getFullYear(), t.getMonth(), t.getDate())
         const idx = Math.floor((td.getTime() - buckets[0].ts) / 86400000)
-        if (idx >= 0 && idx < buckets.length) buckets[idx].count += 1
+        if (idx >= 0 && idx < buckets.length) {
+          buckets[idx].premium += num(r.total_premium)
+          buckets[idx].count += 1
+          if (r.new_renew === "R" || r.new_renew === "r") buckets[idx].renewCount += 1
+          else buckets[idx].newCount += 1
+        }
       })
     } else if (chartRange === "w12") {
-      // start each week on Monday — last 12 weeks
       const WEEKS = 12
-      const dayOfWeek = today0.getDay() // 0=Sun, 1=Mon...
+      const dayOfWeek = today0.getDay()
       const offsetToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
       const thisMon = new Date(today0.getTime() + offsetToMon * 86400000)
       buckets = Array.from({ length: WEEKS }, (_, i) => {
         const d = new Date(thisMon.getTime() - (WEEKS - 1 - i) * 7 * 86400000)
-        return { date: d, count: 0, ts: d.getTime() }
+        return { date: d, premium: 0, count: 0, newCount: 0, renewCount: 0, ts: d.getTime() }
       })
       labelFmt = (b) => `${b.date.getDate()} ${MONTH_SHORT[b.date.getMonth()]}`
       statsRows.forEach(r => {
@@ -350,14 +355,18 @@ export function ListPage({ tab }) {
         const td = new Date(t.getFullYear(), t.getMonth(), t.getDate())
         const days = Math.floor((td.getTime() - buckets[0].ts) / 86400000)
         const idx = Math.floor(days / 7)
-        if (idx >= 0 && idx < buckets.length) buckets[idx].count += 1
+        if (idx >= 0 && idx < buckets.length) {
+          buckets[idx].premium += num(r.total_premium)
+          buckets[idx].count += 1
+          if (r.new_renew === "R" || r.new_renew === "r") buckets[idx].renewCount += 1
+          else buckets[idx].newCount += 1
+        }
       })
     } else {
-      // monthly (m12) — last 12 months
       const MONTHS = 12
       buckets = Array.from({ length: MONTHS }, (_, i) => {
         const d = new Date(today0.getFullYear(), today0.getMonth() - (MONTHS - 1 - i), 1)
-        return { date: d, count: 0, ts: d.getTime() }
+        return { date: d, premium: 0, count: 0, newCount: 0, renewCount: 0, ts: d.getTime() }
       })
       labelFmt = (b) => `${MONTH_SHORT[b.date.getMonth()]} ${(b.date.getFullYear() + 543).toString().slice(-2)}`
       statsRows.forEach(r => {
@@ -365,16 +374,25 @@ export function ListPage({ tab }) {
         const t = new Date(r.created_at)
         if (isNaN(t)) return
         const idx = buckets.findIndex(b => b.date.getFullYear() === t.getFullYear() && b.date.getMonth() === t.getMonth())
-        if (idx >= 0) buckets[idx].count += 1
+        if (idx >= 0) {
+          buckets[idx].premium += num(r.total_premium)
+          buckets[idx].count += 1
+          if (r.new_renew === "R" || r.new_renew === "r") buckets[idx].renewCount += 1
+          else buckets[idx].newCount += 1
+        }
       })
     }
 
     const labels = buckets.map(labelFmt)
     const allSeries = [
-      { name: "ไฟล์ที่อัปโหลด", color: "#319795", color2: "#4FD1C5", values: buckets.map(b => b.count) },
+      { name: "เบี้ยประกัน (฿)", color: "#319795", color2: "#4FD1C5", values: buckets.map(b => b.premium), isPrimary: true, format: "money" },
+      { name: "กรมธรรม์ใหม่",   color: "#7C3AED", color2: "#A855F7", values: buckets.map(b => b.newCount) },
+      { name: "ต่ออายุ",         color: "#EC4899", color2: "#F472B6", values: buckets.map(b => b.renewCount) },
     ]
     const series = allSeries.filter(s => s.values.reduce((a, b) => a + b, 0) > 0)
-    return { months: labels, series, totalAll: buckets.reduce((a, b) => a + b.count, 0) }
+    const totalPremium = buckets.reduce((a, b) => a + b.premium, 0)
+    const totalCount = buckets.reduce((a, b) => a + b.count, 0)
+    return { months: labels, series, totalAll: totalCount, totalPremium }
   })()
 
   const expiringSubText = expiryRange === -1
@@ -534,7 +552,16 @@ export function ListPage({ tab }) {
                   const pts = s.values.map((v, i) => ({ x: xAt(i), y: yAt(v) }))
                   return { ...s, pts, d: smoothPath(pts), gradId: `lg-${si}` }
                 })
-                const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: Math.round(maxCount * (1 - t)) }))
+                // Y-axis label formatter (รองรับเงิน k/M)
+                const fmtMoney = (n) => {
+                  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/,"") + "M"
+                  if (n >= 1000) return (n / 1000).toFixed(0) + "k"
+                  return Math.round(n).toLocaleString()
+                }
+                const yTicks = [0, .25, .5, .75, 1].map(t => ({
+                  y: padT + innerH * t,
+                  v: fmtMoney(maxCount * (1 - t))
+                }))
 
                 return (
                   <div className="charts-grid">
@@ -628,12 +655,16 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* LINE — daily upload chart */}
+                    {/* LINE — premium revenue chart */}
                     <div className="chart-card">
                       <div className="chart-hd">
                         <div>
-                          <div className="chart-ttl">รายงานการอัปโหลด</div>
-                          <div className="chart-sub">จำนวนไฟล์ที่อัป · รวม <b style={{color:"var(--t1)"}}>{seriesData.totalAll || 0}</b> ไฟล์</div>
+                          <div className="chart-ttl">รายได้เบี้ยประกัน</div>
+                          <div className="chart-sub">
+                            ยอดเบี้ยรวม · ฿<b style={{color:"var(--t1)"}}>{(seriesData.totalPremium || 0).toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b>
+                            <span style={{ color: "var(--t3)", margin: "0 6px" }}>·</span>
+                            <b style={{color:"var(--t1)"}}>{seriesData.totalAll || 0}</b> กรมธรรม์
+                          </div>
                         </div>
                         <select className="chart-period" value={chartRange}
                           onChange={e => setChartRange(e.target.value)}>
