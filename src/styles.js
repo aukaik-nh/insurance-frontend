@@ -1834,23 +1834,26 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .card-title{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.3px}
 .card-sub{font-size:14px;color:var(--t3);margin-top:4px;font-weight:400}
 
-table{width:100%;border-collapse:separate;border-spacing:0}
+table{width:100%;border-collapse:separate;border-spacing:0;table-layout:auto}
 thead{background:linear-gradient(180deg,var(--sur2),var(--sur))}
 th{
-  padding:13px 20px;text-align:left;font-size:12px;font-weight:700;
-  color:var(--t3);text-transform:uppercase;letter-spacing:.8px;
+  padding:11px 16px;text-align:left;font-size:11.5px;font-weight:700;
+  color:var(--t3);text-transform:uppercase;letter-spacing:.7px;
   border-bottom:1px solid var(--brd);white-space:nowrap;
 }
-tbody tr{cursor:pointer;transition:background .2s var(--ez-out),box-shadow .2s var(--ez-out)}
+tbody tr{cursor:pointer;transition:background .15s var(--ez-out),box-shadow .15s var(--ez-out);height:54px}
 tbody tr:hover{background:var(--blue-bg);box-shadow:inset 3px 0 0 var(--blue)}
 td{
-  padding:15px 20px;font-size:15px;color:var(--t2);line-height:1.45;
-  border-bottom:1px solid var(--brd);
+  padding:10px 16px;font-size:14px;color:var(--t2);line-height:1.4;
+  border-bottom:1px solid var(--brd);vertical-align:middle;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;
 }
 tbody tr:last-child td{border-bottom:none}
 td.tw{color:var(--t1);font-weight:600}
-td.tm{font-family:'JetBrains Mono','SF Mono','Fira Code','Consolas',monospace;font-size:14px;color:var(--t1);font-weight:600;letter-spacing:.2px}
+td.tm{font-family:'JetBrains Mono','SF Mono','Fira Code','Consolas',monospace;font-size:13.5px;color:var(--t1);font-weight:600;letter-spacing:.2px}
 td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--t1)}
+/* ผู้เอาประกัน column — ให้ขยายได้ */
+td:nth-child(4){max-width:none;width:auto;min-width:200px}
 
 .badge{
   display:inline-flex;align-items:center;gap:7px;

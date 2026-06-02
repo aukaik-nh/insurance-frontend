@@ -72,13 +72,13 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
         <table>
           <thead>
             <tr>
-              <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>#</th>
-              <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>PDF</th>
-              <SortHeader label="เลขกรมธรรม์"  col="policy_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <th style={{ width: 48, textAlign: "center", color: "var(--t3)" }}>#</th>
+              <th style={{ width: 48, textAlign: "center", color: "var(--t3)" }}>PDF</th>
+              <SortHeader label="เลขกรมธรรม์"  col="policy_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 180 }} />
               <SortHeader label="ผู้เอาประกัน" col="insured_name"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="ทะเบียน"      col="license_plate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="วันหมดอายุ"   col="coverage_end"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <th>สถานะ</th>
+              <SortHeader label="ทะเบียน"      col="license_plate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 140 }} />
+              <SortHeader label="วันหมดอายุ"   col="coverage_end"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 150 }} />
+              <th style={{ width: 130 }}>สถานะ</th>
             </tr>
           </thead>
           <tbody>
@@ -99,7 +99,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   onClick={() => onRow(r)}
                   onMouseEnter={() => onRowHover?.(r)}
                   className={activeId === r.id ? "tr-active" : ""}>
-                  <td style={{ textAlign: "center", color: "var(--t2)", fontSize: 15, fontVariantNumeric: "tabular-nums" }}>
+                  <td style={{ textAlign: "center", color: "var(--t2)", fontSize: 13.5, fontVariantNumeric: "tabular-nums" }}>
                     {pageOffset + idx + 1}
                   </td>
                   <td style={{ textAlign: "center" }}>
@@ -115,13 +115,13 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   </td>
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>
-                  <td><span className="plate">{r.license_plate || "—"}</span></td>
+                  <td>{r.license_plate ? <span className="plate">{r.license_plate}</span> : <span style={{color:"var(--t3)"}}>—</span>}</td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    <div style={{ color: "var(--t1)", fontSize: 16, fontWeight: 500, lineHeight: 1.2 }}>
+                    <div style={{ color: "var(--t1)", fontSize: 14, fontWeight: 500, lineHeight: 1.2 }}>
                       {fmtDate(r.coverage_end) || "—"}
                     </div>
                     {daysLabel && (
-                      <div style={{ fontSize: 12, fontWeight: 600, color: daysLabel.color, marginTop: 3 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: daysLabel.color, marginTop: 2 }}>
                         {daysLabel.txt}
                       </div>
                     )}
