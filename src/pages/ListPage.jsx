@@ -306,6 +306,37 @@ export function ListPage({ tab }) {
     return { buckets, max, total, expiredCount, unknownCount }
   })()
 
+  // ── Expiry Calendar: นับกรมธรรม์ที่หมดอายุแต่ละเดือนข้างหน้า (12 เดือน)
+  const expiryCalendar = (() => {
+    const MONTH_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
+    const now = new Date()
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(thisMonth.getFullYear(), thisMonth.getMonth() + i, 1)
+      return {
+        date: d,
+        label: `${MONTH_TH[d.getMonth()]} ${(d.getFullYear() + 543).toString().slice(-2)}`,
+        count: 0,
+        premium: 0,
+        isCurrent: i === 0,
+      }
+    })
+    statsRows.forEach(r => {
+      if (!r.coverage_end) return
+      const t = new Date(r.coverage_end)
+      if (isNaN(t)) return
+      const idx = months.findIndex(m => m.date.getFullYear() === t.getFullYear() && m.date.getMonth() === t.getMonth())
+      if (idx >= 0) {
+        months[idx].count += 1
+        months[idx].premium += Number(r.total_premium) || 0
+      }
+    })
+    const maxCount = Math.max(1, ...months.map(m => m.count))
+    const totalCount = months.reduce((a, b) => a + b.count, 0)
+    const totalPremium = months.reduce((a, b) => a + b.premium, 0)
+    return { months, maxCount, totalCount, totalPremium }
+  })()
+
   // ── Chart: รายได้เบี้ยประกัน (premium revenue) by period
   const [chartRange, setChartRange] = useState("d30") // d7 | d30 | w12 | m12
   const seriesData = (() => {
@@ -630,102 +661,55 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* LINE — daily upload chart */}
+                    {/* BAR — ปฏิทินกรมธรรม์หมดอายุ 12 เดือนข้างหน้า */}
                     <div className="chart-card">
                       <div className="chart-hd">
                         <div>
-                          <div className="chart-ttl">รายงานการอัปโหลด</div>
-                          <div className="chart-sub">จำนวนไฟล์ที่อัป · รวม <b style={{color:"var(--t1)"}}>{seriesData.totalAll || 0}</b> ไฟล์</div>
+                          <div className="chart-ttl">ปฏิทินกรมธรรม์หมดอายุ</div>
+                          <div className="chart-sub">
+                            12 เดือนข้างหน้า · <b style={{color:"var(--t1)"}}>{expiryCalendar.totalCount.toLocaleString()}</b> กรมธรรม์ · มูลค่า ฿<b style={{color:"var(--t1)"}}>{expiryCalendar.totalPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b>
+                          </div>
                         </div>
-                        <select className="chart-period" value={chartRange}
-                          onChange={e => setChartRange(e.target.value)}>
-                          <option value="d7">7 วัน</option>
-                          <option value="d30">30 วัน</option>
-                          <option value="w12">12 สัปดาห์</option>
-                          <option value="m12">12 เดือน</option>
-                        </select>
+                        <button className="chart-tag" onClick={() => navigate("/expiring")}
+                          style={{ cursor: "pointer", fontFamily: "inherit", border: "1px solid var(--blue-mid)" }}>
+                          ดูทั้งหมด →
+                        </button>
                       </div>
                       <div className="chart-bd">
-                        {seriesData.months.length ? (
-                          <>
-                            <svg viewBox={`0 0 ${lineW} ${lineH}`} className="line-svg" preserveAspectRatio="none">
-                              <defs>
-                                {seriesPaths.map((s, i) => (
-                                  <linearGradient key={i} id={s.gradId} x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stopColor={s.color} />
-                                    <stop offset="100%" stopColor={s.color2} />
-                                  </linearGradient>
-                                ))}
-                                <linearGradient id="areaFillG0" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#319795" stopOpacity=".35" />
-                                  <stop offset="55%" stopColor="#4FD1C5" stopOpacity=".12" />
-                                  <stop offset="100%" stopColor="#4FD1C5" stopOpacity="0" />
-                                </linearGradient>
-                                <filter id="dotGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                  <feGaussianBlur stdDeviation="3" result="b" />
-                                  <feMerge>
-                                    <feMergeNode in="b" />
-                                    <feMergeNode in="SourceGraphic" />
-                                  </feMerge>
-                                </filter>
-                              </defs>
-                              {yTicks.map((t, i) => (
-                                <g key={i}>
-                                  <line x1={padL} x2={lineW - padR} y1={t.y} y2={t.y}
-                                    stroke="var(--brd)" strokeDasharray="3 5" strokeWidth="1" />
-                                  <text x={padL - 8} y={t.y + 4} textAnchor="end"
-                                    fill="var(--t3)" fontSize="10.5" fontWeight="500"
-                                    fontFamily="Sarabun, sans-serif">{t.v}</text>
-                                </g>
-                              ))}
-                              {seriesPaths[0]?.d && (
-                                <path d={`${seriesPaths[0].d} L${seriesPaths[0].pts[seriesPaths[0].pts.length-1].x},${padT+innerH} L${seriesPaths[0].pts[0].x},${padT+innerH} Z`}
-                                  fill="url(#areaFillG0)" />
-                              )}
-                              {seriesPaths.map((s, i) => (
-                                <path key={i} d={s.d} fill="none" stroke={`url(#${s.gradId})`}
-                                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                              ))}
-                              {/* dots: glow on last + emphasize peaks */}
-                              {seriesPaths.map((s, si) => {
-                                const maxV = Math.max(...s.values)
-                                return s.pts.map((p, i) => {
-                                  const isLast = i === s.pts.length - 1
-                                  const isPeak = s.values[i] === maxV && maxV > 0
-                                  if (!isLast && !isPeak && s.values[i] === 0) return null
-                                  return (
-                                    <g key={`${si}-${i}`}>
-                                      {(isLast || isPeak) && (
-                                        <circle cx={p.x} cy={p.y} r="10" fill={s.color} opacity=".24" filter="url(#dotGlow)" />
-                                      )}
-                                      <circle cx={p.x} cy={p.y} r={isLast ? "5.5" : (isPeak ? "5" : "3.5")}
-                                        fill="#fff" stroke={s.color} strokeWidth={isLast ? "3" : "2.4"} />
-                                    </g>
-                                  )
-                                })
-                              })}
-                              {seriesData.months.map((m, i) => (
-                                <text key={i} x={xAt(i)} y={lineH - 30} textAnchor="middle"
-                                  fill="var(--t3)" fontSize="11" fontWeight="500"
-                                  fontFamily="Sarabun, sans-serif">{m}</text>
-                              ))}
-                            </svg>
-                            <div className="chart-legend">
-                              {seriesPaths.map((s, i) => (
-                                <div key={i} className="cl-item">
-                                  <span className="cl-line" style={{ background: `linear-gradient(90deg, ${s.color}, ${s.color2})` }} />
-                                  <span className="cl-name">{s.name}</span>
-                                  <span className="cl-sum">{s.values.reduce((a, b) => a + b, 0)}</span>
+                        <div className="exp-cal-wrap">
+                          {(() => {
+                            const max = expiryCalendar.maxCount
+                            return expiryCalendar.months.map((m, idx) => {
+                              const pct = (m.count / max) * 100
+                              const monthsAhead = idx
+                              // urgency color: 0-1 month = red, 2-3 = amber, 4-6 = teal, 7+ = soft
+                              const color = monthsAhead === 0 ? { c1: "#DC2626", c2: "#EF4444" }
+                                : monthsAhead <= 2 ? { c1: "#F97316", c2: "#FB923C" }
+                                : monthsAhead <= 5 ? { c1: "#319795", c2: "#4FD1C5" }
+                                : { c1: "#0EA5E9", c2: "#38BDF8" }
+                              return (
+                                <div key={idx} className={`exp-cal-col ${m.isCurrent ? "exp-cal-current" : ""} ${m.count === 0 ? "exp-cal-zero" : ""}`}
+                                  onClick={() => m.count > 0 && navigate("/expiring")}
+                                  title={`${m.label}: ${m.count} กรมธรรม์ · ฿${m.premium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}`}>
+                                  <div className="exp-cal-bar-wrap">
+                                    <span className="exp-cal-val">{m.count > 0 ? m.count : ""}</span>
+                                    <div className="exp-cal-bar" style={{
+                                      height: `${Math.max(pct, m.count > 0 ? 6 : 2)}%`,
+                                      background: m.count > 0 ? `linear-gradient(180deg, ${color.c1}, ${color.c2})` : "var(--brd)",
+                                    }} />
+                                  </div>
+                                  <div className="exp-cal-month">{m.label}</div>
                                 </div>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="chart-empty">
-                            <Ico n="doc" s={32} />
-                            <div>ยังไม่มีข้อมูลในหน้านี้</div>
-                          </div>
-                        )}
+                              )
+                            })
+                          })()}
+                        </div>
+                        <div className="exp-cal-legend">
+                          <div className="cl-item"><span className="cl-line" style={{ background: "linear-gradient(90deg,#DC2626,#EF4444)" }} /><span>เดือนนี้ (urgent)</span></div>
+                          <div className="cl-item"><span className="cl-line" style={{ background: "linear-gradient(90deg,#F97316,#FB923C)" }} /><span>1-2 เดือน</span></div>
+                          <div className="cl-item"><span className="cl-line" style={{ background: "linear-gradient(90deg,#319795,#4FD1C5)" }} /><span>3-5 เดือน</span></div>
+                          <div className="cl-item"><span className="cl-line" style={{ background: "linear-gradient(90deg,#0EA5E9,#38BDF8)" }} /><span>6+ เดือน</span></div>
+                        </div>
                       </div>
                     </div>
                   </div>

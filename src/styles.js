@@ -425,6 +425,48 @@ tr.tr-active td{background:var(--blue-bg) !important}
 }
 .chart-empty svg{opacity:.5}
 
+/* Expiry Calendar — 12 months ahead bar chart */
+.exp-cal-wrap{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:8px;height:220px;padding:14px 8px 6px;
+  background:linear-gradient(180deg,transparent,rgba(49,151,149,.04));
+  border-radius:12px;border:1px solid var(--brd);
+  position:relative;margin-bottom:12px;
+}
+.exp-cal-col{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:8px;height:100%;min-width:0;justify-content:flex-end;cursor:pointer;
+  transition:transform .2s var(--ez-out);
+}
+.exp-cal-col.exp-cal-zero{cursor:default}
+.exp-cal-col:not(.exp-cal-zero):hover{transform:translateY(-2px)}
+.exp-cal-bar-wrap{width:100%;max-width:36px;position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
+.exp-cal-bar{
+  width:100%;border-radius:7px 7px 0 0;
+  min-height:4px;transition:height .5s var(--ez-out);
+  box-shadow:0 -3px 8px rgba(11,16,32,.06);
+}
+.exp-cal-col.exp-cal-zero .exp-cal-bar{opacity:.4;box-shadow:none}
+.exp-cal-col.exp-cal-current .exp-cal-bar{outline:2.5px solid #DC2626;outline-offset:2px;border-radius:9px 9px 0 0}
+.exp-cal-val{
+  position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+  font-size:12px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.exp-cal-month{font-size:11.5px;color:var(--t3);font-weight:600;white-space:nowrap}
+.exp-cal-col.exp-cal-current .exp-cal-month{color:#DC2626;font-weight:700}
+.exp-cal-legend{
+  display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+  padding-top:4px;font-size:12px;
+}
+@media(max-width:639px){
+  .exp-cal-wrap{height:180px;gap:5px;padding:12px 4px 4px}
+  .exp-cal-bar-wrap{max-width:24px}
+  .exp-cal-val{font-size:10.5px;top:-18px}
+  .exp-cal-month{font-size:9.5px}
+  .exp-cal-legend{font-size:11px;gap:8px}
+}
+
 /* Expiry Forecast — top meta strip (expired + unknown) */
 .fc-meta{
   display:flex;gap:8px;flex-wrap:wrap;
