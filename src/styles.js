@@ -2470,19 +2470,21 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
   .pdf-preview-wrap .pdf-iframe{height:75vh !important;min-height:500px !important}
 }
 @media(max-width:639px){
-  /* mobile: เลื่อนตารางได้ + ไม่มี blank space ขวา */
+  /* mobile: กันทั้งหน้า horizontal scroll — เนื้อหากว้างเกิน clip ในกล่อง */
+  html,body{overflow-x:hidden;max-width:100vw}
+  .app,.main,.list-layout,.list-layout .body{
+    width:100%;min-width:0;max-width:100vw;overflow-x:hidden
+  }
   .body{padding:14px 10px}
-  .list-layout,.list-layout .body{width:100%;min-width:0;max-width:100vw}
   .card{width:100%;min-width:0;border-radius:14px;overflow:hidden}
-  /* table inner scroll — touch friendly */
-  .card > div[style*="overflow-x"]{
+  /* table inner scroll — touch friendly (ยกเว้น card นี้ ให้เลื่อนซ้ายขวาได้) */
+  .card > div[style*="overflow"]{
     -webkit-overflow-scrolling:touch !important;
-    overflow-x:auto !important;
+    overflow-x:auto !important;overflow-y:hidden;
     scrollbar-width:thin;
   }
-  .card > div[style*="overflow-x"]::-webkit-scrollbar{height:5px;display:block}
-  .card > div[style*="overflow-x"]::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:99px}
-  .card table{min-width:560px}  /* บังคับกว้างให้ scroll ได้ */
+  .card > div[style*="overflow"]::-webkit-scrollbar{height:5px;display:block}
+  .card > div[style*="overflow"]::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:99px}
   /* ซ่อน live preview ฝั่งขวาบนจอเล็ก (กว้าง < 640px) — กว้างเกินจะดูไม่รู้เรื่อง */
   .detail-aside{display:none !important}
   /* PremiumGrid compact — ลด padding/font ให้พอดี viewport */
