@@ -151,26 +151,31 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         style={{
           transform: closing ? "translateY(100%)" : (dragY ? `translateY(${dragY}px)` : undefined),
           transition: dragging ? "none" : "transform .22s var(--ez-out)",
+          // iOS animation: ลบ CSS animation ออกแล้วใช้ inline เพราะ animation conflict กับ inline transform
+          animation: dragY || closing ? "none" : undefined,
+          willChange: dragging || closing ? "transform" : undefined,
         }}
       >
-        {/* drag handle — เลื่อนลงเพื่อปิด */}
-        <div
-          ref={handleRef}
-          className="pvp-pill"
-          role="button"
-          tabIndex={0}
-          aria-label="ลากลงเพื่อปิด"
-        />
-
-        {/* header */}
-        <div className="pvp-hd">
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="pvp-title">{p.insured_name || "ไม่ระบุชื่อ"}</div>
-            <div style={{ marginTop: 4 }}>
-              <span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span>
+        {/* drag area — pill + header ทั้งแถบ = drag handle */}
+        <div ref={handleRef} className="pvp-drag-area" aria-label="ลากลงเพื่อปิด">
+          <div className="pvp-pill-bar" />
+          <div className="pvp-hd">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="pvp-title">{p.insured_name || "ไม่ระบุชื่อ"}</div>
+              <div style={{ marginTop: 4 }}>
+                <span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span>
+              </div>
             </div>
+            <button
+              className="pvp-close"
+              onClick={(e) => { e.stopPropagation(); onClose() }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <Ico n="x" s={20} />
+            </button>
           </div>
-          <button className="pvp-close" onClick={onClose}><Ico n="x" s={20} /></button>
         </div>
 
         {/* related PDFs (collapsible list — click ปุ่ม → iframe ล่างเปลี่ยน) */}

@@ -1,6 +1,15 @@
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* iOS Safari globals */
+html,body{
+  -webkit-text-size-adjust:100%;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-y:none;     /* ลด pull-to-refresh ที่ขัด swipe */
+}
+*{-webkit-tap-highlight-color:transparent}
+/* iOS: input font-size <16px จะ auto-zoom on focus — ป้องกัน */
+input,select,textarea{font-size:16px}
 /* hide number input spinner arrows — กรอกเอง ไม่ต้องการลูกศร */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -69,6 +78,7 @@ body{
     radial-gradient(at 95% 0%, rgba(49,151,149,.10) 0, transparent 40%);
   background-attachment:fixed;
   min-height:100vh;
+  min-height:100dvh;
 }
 body.dark{
   background-image:
@@ -81,7 +91,7 @@ body.dark{
 ::-webkit-scrollbar-track{background:transparent}
 ::selection{background:rgba(99,102,241,.22);color:inherit}
 
-.app{display:flex;flex-direction:column;min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
 
 .sb{
   width:100%;
@@ -239,10 +249,17 @@ body.dark .sb{background:rgba(23,28,50,.78);border-bottom-color:rgba(43,50,82,.8
 @media(max-width:767px){
   .pvp{
     position:fixed;inset:0;top:auto;bottom:0;
-    width:100%;height:88vh;border-left:none;
+    width:100%;
+    /* iOS: 100dvh = dynamic viewport (ตัด safe-area & toolbar ออก) */
+    height:88dvh;height:88vh;height:88svh;height:88dvh;
+    max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);
+    border-left:none;
     border-top:2px solid var(--brd);border-radius:16px 16px 0 0;
     z-index:150;box-shadow:0 -8px 32px rgba(0,0,0,.18);
     animation:pvp-up .22s ease;
+    animation-fill-mode:both;
+    /* iOS: padding bottom for home indicator */
+    padding-bottom:env(safe-area-inset-bottom,0);
   }
   @keyframes pvp-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .list-layout{position:relative}
@@ -265,31 +282,37 @@ body.dark .sb{background:rgba(23,28,50,.78);border-bottom-color:rgba(43,50,82,.8
 }
 .pvp-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .pvp-backdrop{display:none}
-/* pill ที่กดได้ — ปิด sheet (desktop ซ่อน, mobile โชว์) */
-.pvp-pill{display:none}
 @media(max-width:767px){
   .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
   /* mobile: ใหญ่ขึ้นเพื่อกดง่าย */
   .pvp-close{width:42px;height:42px}
-  /* drag handle = ลากลงเพื่อปิด (หรือกดเพื่อปิด) */
-  .pvp-pill{
-    display:block;flex-shrink:0;
-    width:100%;padding:14px 0 10px;
-    background:transparent;border:none;cursor:grab;
-    position:relative;
-    touch-action:none;      /* สำคัญ: บอก browser ว่า element นี้จัดการ touch เอง */
+  /* drag handle area: pill + header ทั้งแถบเป็นพื้นที่ลาก */
+  .pvp-drag-area{
+    flex-shrink:0;
+    touch-action:none !important;     /* บอก iOS Safari: เราจัดการ touch เอง */
     -webkit-user-select:none;user-select:none;
     -webkit-tap-highlight-color:transparent;
+    cursor:grab;
   }
-  .pvp-pill:active{cursor:grabbing}
-  .pvp-pill::after{
-    content:"";display:block;margin:0 auto;
+  .pvp-drag-area:active{cursor:grabbing}
+  .pvp-pill-bar{
+    display:block;
     width:48px;height:5px;border-radius:99px;
-    background:#94a3b8;transition:all .15s;
+    background:#94a3b8;
+    margin:10px auto 6px;
+    transition:all .15s;
+    pointer-events:none;
   }
-  .pvp-pill:hover::after,.pvp-pill:active::after{
-    background:var(--t1);width:64px;
+  .pvp-drag-area:active .pvp-pill-bar{background:var(--t1);width:64px}
+  /* ปุ่ม close ใน drag area — ยกเว้น touch-action เพื่อให้กดได้ */
+  .pvp-drag-area .pvp-close{
+    touch-action:auto !important;pointer-events:auto;
   }
+}
+@media(min-width:768px){
+  /* Desktop: hide pill bar, header เป็นแบบเดิม */
+  .pvp-pill-bar{display:none}
+  .pvp-drag-area{display:contents}
 }
 .pvp-body{overflow-y:auto;padding:14px 18px;flex:1 1 auto;min-height:0}
 .pvp-sec{margin-bottom:10px}
@@ -2273,7 +2296,9 @@ tr:hover .plate{border-color:var(--blue);transform:scale(1.02);box-shadow:inset 
 
 /* Scroll-to-top floating button — teal theme (Chakra) */
 .scroll-top{
-  position:fixed;bottom:30px;right:30px;z-index:300;
+  position:fixed;
+  bottom:calc(30px + env(safe-area-inset-bottom,0));
+  right:30px;z-index:300;
   width:52px;height:52px;border-radius:50%;
   background:linear-gradient(135deg,#234E52 0%,#319795 50%,#4FD1C5 100%);
   border:none;color:#fff;cursor:pointer;
@@ -2316,7 +2341,7 @@ tr:hover .plate{border-color:var(--blue);transform:scale(1.02);box-shadow:inset 
   50%{transform:scale(1.12);opacity:.4}
 }
 @media(max-width:767px){
-  .scroll-top{width:44px;height:44px;bottom:22px;right:22px;box-shadow:0 0 0 2px #234E52 inset,0 6px 16px rgba(49,151,149,.45)}
+  .scroll-top{width:44px;height:44px;bottom:calc(22px + env(safe-area-inset-bottom,0));right:22px;box-shadow:0 0 0 2px #234E52 inset,0 6px 16px rgba(49,151,149,.45)}
   .scroll-top svg{width:18px;height:18px}
   .scroll-top::before{inset:-8px;border-width:1px}
   .scroll-top::after{inset:-16px;border-width:1px}
@@ -2450,7 +2475,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .sc-val{font-size:22px}
 }
 
-.page-wrap{display:block;min-height:calc(100vh - 76px);overflow-x:hidden}
+.page-wrap{display:block;min-height:calc(100vh - 76px);min-height:calc(100dvh - 76px);overflow-x:hidden}
 .page-hd{
   padding:14px 28px;background:var(--sur);
   border-bottom:1px solid var(--brd);
@@ -2570,7 +2595,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
    LOGIN PAGE — aurora gradient backdrop
    ═══════════════════════════════════════════════════════════ */
 .login-wrap{
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
   padding:20px;position:relative;overflow:hidden;
   background:var(--bg);
   background-image:
