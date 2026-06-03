@@ -683,80 +683,95 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* สถิติการทำงาน — business KPIs */}
+                    {/* วันนี้ทำงานไปเท่าไหร่ — daily activity */}
                     {(() => {
-                      const totalCust = new Set(statsRows.map(r => r.insured_name).filter(Boolean)).size
-                      const sumNet    = statsRows.reduce((s, r) => s + (Number(r.net_premium) || 0), 0)
-                      const sumSI     = statsRows.reduce((s, r) => s + (Number(r.sum_insured) || 0), 0)
-                      const cntNew    = statsRows.filter(r => (r.new_renew || "").toUpperCase() === "N").length
-                      const cntRen    = statsRows.filter(r => (r.new_renew || "").toUpperCase() === "R").length
-                      const cntKnown  = cntNew + cntRen
-                      const avgPrem   = statsRows.length > 0 ? sumPremium / statsRows.length : 0
-                      // Top 5 ยี่ห้อรถ
-                      const makeMap = {}
-                      statsRows.forEach(r => {
-                        const k = (r.car_make || "").trim().toUpperCase()
-                        if (!k) return
-                        makeMap[k] = (makeMap[k] || 0) + 1
-                      })
-                      const topMakes = Object.entries(makeMap)
-                        .sort((a, b) => b[1] - a[1]).slice(0, 5)
-                      const maxMake = topMakes[0]?.[1] || 1
-                      const fmtM = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? (n / 1e3).toFixed(0) + "k" : Math.round(n).toLocaleString()
+                      const tb = dailyReport.todayBreakdown
+                      const cats = dailyReport.cats
+                      const dr = dailyReport
+                      const sum7 = dr.days.reduce((a, b) => a + b.count, 0)
                       return (
                         <div className="chart-card">
                           <div className="chart-hd">
                             <div>
-                              <div className="chart-ttl">สถิติการทำงาน</div>
-                              <div className="chart-sub">ภาพรวมข้อมูลทั้งหมดในระบบ</div>
+                              <div className="chart-ttl">วันนี้ทำงานไปเท่าไหร่</div>
+                              <div className="chart-sub">
+                                {dr.todayCount > 0
+                                  ? <>อัปโหลด <b style={{color:"var(--t1)"}}>{dr.todayCount}</b> ไฟล์วันนี้ · 7 วันรวม <b style={{color:"var(--t1)"}}>{sum7}</b></>
+                                  : <>ยังไม่มีไฟล์อัปโหลดวันนี้ · 7 วันรวม <b style={{color:"var(--t1)"}}>{sum7}</b> ไฟล์</>}
+                              </div>
+                            </div>
+                            <div className="da-today-num">
+                              <b>{dr.todayCount}</b>
+                              <span>วันนี้</span>
                             </div>
                           </div>
-                          <div className="chart-bd stats-bd">
-                            <div className="stats-grid">
-                              <div className="stat-tile stat-teal">
-                                <div className="stat-lbl">เบี้ยรวม</div>
-                                <div className="stat-val">฿{fmtM(sumPremium)}</div>
-                              </div>
-                              <div className="stat-tile stat-blue">
-                                <div className="stat-lbl">ลูกค้า (ไม่ซ้ำ)</div>
-                                <div className="stat-val">{totalCust.toLocaleString()}</div>
-                              </div>
-                              <div className="stat-tile stat-purple">
-                                <div className="stat-lbl">เบี้ยเฉลี่ย / กธ</div>
-                                <div className="stat-val">฿{Math.round(avgPrem).toLocaleString()}</div>
-                              </div>
-                              <div className="stat-tile stat-amber">
-                                <div className="stat-lbl">ทุนเอาประกันรวม</div>
-                                <div className="stat-val">฿{fmtM(sumSI)}</div>
-                              </div>
+                          <div className="chart-bd da-bd">
+                            {/* category pills */}
+                            <div className="da-cats">
+                              {cats.map(c => {
+                                const v = tb[c.key]
+                                const pct = dr.todayCount > 0 ? Math.round((v / dr.todayCount) * 100) : 0
+                                return (
+                                  <div key={c.key} className={`da-cat ${v === 0 ? "da-zero" : ""}`}>
+                                    <span className="da-dot" style={{ background: `linear-gradient(135deg,${c.c1},${c.c2})` }} />
+                                    <span className="da-lbl">{c.label}</span>
+                                    <b className="da-val">{v}</b>
+                                    <span className="da-pct">{pct}%</span>
+                                  </div>
+                                )
+                              })}
                             </div>
-                            {cntKnown > 0 && (
-                              <div className="stats-nr">
-                                <div className="nr-bar">
-                                  <div className="nr-seg nr-new" style={{ flex: cntNew }} title={`ใหม่ ${cntNew}`} />
-                                  <div className="nr-seg nr-ren" style={{ flex: cntRen }} title={`ต่ออายุ ${cntRen}`} />
-                                </div>
-                                <div className="nr-legend">
-                                  <span><span className="nr-dot nr-new" /> ใหม่ <b>{cntNew.toLocaleString()}</b> ({Math.round(cntNew / cntKnown * 100)}%)</span>
-                                  <span><span className="nr-dot nr-ren" /> ต่ออายุ <b>{cntRen.toLocaleString()}</b> ({Math.round(cntRen / cntKnown * 100)}%)</span>
-                                </div>
-                              </div>
-                            )}
-                            {topMakes.length > 0 && (
-                              <div className="stats-makes">
-                                <div className="sm-hd">ยี่ห้อรถยอดนิยม</div>
-                                <div className="sm-list">
-                                  {topMakes.map(([name, count], i) => (
-                                    <div key={name} className="sm-row">
-                                      <span className="sm-rank">{i + 1}</span>
-                                      <span className="sm-name">{name}</span>
-                                      <div className="sm-bar-wrap">
-                                        <div className="sm-bar" style={{ width: `${(count / maxMake) * 100}%` }} />
-                                      </div>
-                                      <span className="sm-cnt">{count.toLocaleString()}</span>
+
+                            {/* 7-day stacked bars */}
+                            <div className="da-bars-hd">
+                              <span>7 วันล่าสุด</span>
+                              <span style={{ color: "var(--t3)" }}>รวม <b style={{ color: "var(--t1)" }}>{sum7}</b> ไฟล์</span>
+                            </div>
+                            <div className="da-bars">
+                              {dr.days.map(d => {
+                                const isToday = d.key === dr.todayKey
+                                const pct = (d.count / dr.maxCount) * 100
+                                return (
+                                  <div key={d.key} className={`da-col ${isToday ? "da-today" : ""}`}
+                                    title={`${d.key}: ${d.count} (กธ ${d.breakdown.policy}, พรบ ${d.breakdown.prb}, อื่นๆ ${d.breakdown.other})`}>
+                                    <div className="da-bar-wrap" style={{ height: `${Math.max(pct, d.count > 0 ? 8 : 3)}%` }}>
+                                      {d.count > 0 && cats.map(c => {
+                                        const seg = d.breakdown[c.key]
+                                        if (!seg) return null
+                                        return (
+                                          <div key={c.key} className="da-seg"
+                                            style={{
+                                              flex: seg,
+                                              background: `linear-gradient(180deg,${c.c1},${c.c2})`,
+                                            }}
+                                          />
+                                        )
+                                      })}
+                                      {d.count > 0 && <span className="da-bar-val">{d.count}</span>}
                                     </div>
-                                  ))}
-                                </div>
+                                    <div className="da-day">{d.label}</div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+
+                            {/* today's items list */}
+                            {dr.todayItems.length > 0 && (
+                              <div className="da-items">
+                                <div className="da-items-hd">ไฟล์ที่อัปวันนี้</div>
+                                {dr.todayItems.map(r => {
+                                  const cat = cats.find(c => c.key === (
+                                    (r.policy_type || "").toUpperCase() === "P" || /พ\.?ร\.?บ|PRB/i.test(r.policy_type || "") ? "prb" : "policy"
+                                  )) || cats[2]
+                                  return (
+                                    <div key={r.id} className="da-item" onClick={() => navigate(`/policy/${r.id}`)}>
+                                      <span className="da-item-dot" style={{ background: `linear-gradient(135deg,${cat.c1},${cat.c2})` }} />
+                                      <span className="da-item-cat">{cat.label}</span>
+                                      <span className="da-item-name">{r.insured_name || "—"}</span>
+                                      <span className="plate" style={{ fontSize: 11 }}>{r.license_plate || "—"}</span>
+                                    </div>
+                                  )
+                                })}
                               </div>
                             )}
                           </div>

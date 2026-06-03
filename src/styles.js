@@ -379,6 +379,65 @@ tr.tr-active td{background:var(--blue-bg) !important}
   background:var(--sur2);padding:1px 8px;border-radius:99px;font-size:12px;
 }
 
+/* Daily activity panel — วันนี้ทำงานไปเท่าไหร่ */
+.da-today-num{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:64px;padding:6px 12px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(99,102,241,.10),rgba(168,85,247,.06));
+  border:1px solid rgba(99,102,241,.22);
+}
+.da-today-num b{font-size:22px;font-weight:800;color:#6366F1;font-variant-numeric:tabular-nums;line-height:1}
+.da-today-num span{font-size:10.5px;color:var(--t3);margin-top:2px;font-weight:500}
+
+.da-bd{display:flex;flex-direction:column;gap:14px}
+.da-cats{display:flex;gap:8px;flex-wrap:wrap}
+.da-cat{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 10px;
+  border-radius:99px;background:var(--sur2);border:1px solid var(--brd);
+  font-size:12.5px;color:var(--t2);
+}
+.da-cat.da-zero{opacity:.55}
+.da-dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+.da-lbl{font-weight:500}
+.da-val{color:var(--t1);font-variant-numeric:tabular-nums;font-weight:700}
+.da-pct{color:var(--t3);font-size:11px;font-variant-numeric:tabular-nums}
+
+.da-bars-hd{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;
+}
+.da-bars{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:6px;
+  height:90px;padding:6px 0;
+}
+.da-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.da-bar-wrap{
+  width:100%;max-width:32px;display:flex;flex-direction:column-reverse;
+  border-radius:6px 6px 2px 2px;overflow:hidden;background:var(--sur2);
+  position:relative;min-height:6px;transition:height .5s var(--ez-out);
+}
+.da-col:not(.da-today) .da-bar-wrap{opacity:.78}
+.da-today .da-bar-wrap{box-shadow:0 0 0 2px var(--blue-bg);outline:1.5px solid var(--blue);outline-offset:0}
+.da-seg{width:100%;transition:flex .5s var(--ez-out)}
+.da-bar-val{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  font-size:10.5px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.da-day{font-size:11px;color:var(--t3);font-weight:500}
+.da-today .da-day{color:var(--blue);font-weight:700}
+
+.da-items{display:flex;flex-direction:column;gap:5px;border-top:1px dashed var(--brd);padding-top:10px}
+.da-items-hd{font-size:11.5px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.da-item{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;
+  background:var(--sur2);cursor:pointer;font-size:12.5px;transition:background .15s;
+}
+.da-item:hover{background:var(--blue-bg)}
+.da-item-dot{width:6px;height:6px;border-radius:99px;flex-shrink:0}
+.da-item-cat{font-size:10.5px;color:var(--t3);font-weight:600;min-width:42px}
+.da-item-name{flex:1;color:var(--t1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 /* สถิติการทำงาน — work stats panel */
 .stats-bd{display:flex;flex-direction:column;gap:16px}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
