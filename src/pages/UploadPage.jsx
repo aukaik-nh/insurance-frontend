@@ -231,13 +231,13 @@ export function UploadPage() {
             <div className="page-sub">
               {loading ? "กำลังวิเคราะห์ด้วย AI…"
                 : hasData ? "ตรวจสอบและแก้ไขข้อมูลก่อนบันทึก"
-                : "วาง PDF ให้ AI ดึงข้อมูล หรือกรอกเองด้วยตนเอง"}
+                : "วาง PDF หรือกรอกเอง"}
             </div>
           </div>
           <div className="page-hd-right">
             <button className="btn btn-b" onClick={doSave} disabled={!hasAnyInput || saving}>
               <Ico n="save" s={18} />
-              {saving ? "กำลังบันทึก..." : "บันทึกลงฐานข้อมูล"}
+              {saving ? "กำลังบันทึก..." : "บันทึก"}
             </button>
           </div>
         </div>
