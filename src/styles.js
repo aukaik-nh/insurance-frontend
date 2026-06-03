@@ -379,6 +379,53 @@ tr.tr-active td{background:var(--blue-bg) !important}
   background:var(--sur2);padding:1px 8px;border-radius:99px;font-size:12px;
 }
 
+/* สถิติการทำงาน — work stats panel */
+.stats-bd{display:flex;flex-direction:column;gap:16px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-tile{
+  padding:12px 14px;border-radius:12px;display:flex;flex-direction:column;gap:4px;
+  border:1px solid var(--brd);background:var(--sur2);
+}
+.stat-lbl{font-size:11.5px;color:var(--t3);font-weight:500}
+.stat-val{font-size:20px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.stat-teal  {background:linear-gradient(135deg,rgba(49,151,149,.08),rgba(79,209,197,.04));border-color:rgba(49,151,149,.22)}
+.stat-teal   .stat-val{color:#319795}
+.stat-blue  {background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(96,165,250,.04));border-color:rgba(59,130,246,.22)}
+.stat-blue   .stat-val{color:#3B82F6}
+.stat-purple{background:linear-gradient(135deg,rgba(147,51,234,.08),rgba(168,85,247,.04));border-color:rgba(147,51,234,.22)}
+.stat-purple .stat-val{color:#9333EA}
+.stat-amber {background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(251,191,36,.04));border-color:rgba(245,158,11,.22)}
+.stat-amber  .stat-val{color:#D97706}
+
+.stats-nr{display:flex;flex-direction:column;gap:6px}
+.nr-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--sur2)}
+.nr-seg{transition:flex .6s var(--ez-out)}
+.nr-seg.nr-new{background:linear-gradient(90deg,#319795,#4FD1C5)}
+.nr-seg.nr-ren{background:linear-gradient(90deg,#9333EA,#C084FC)}
+.nr-legend{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);gap:8px;flex-wrap:wrap}
+.nr-legend b{color:var(--t1);font-variant-numeric:tabular-nums}
+.nr-dot{display:inline-block;width:10px;height:10px;border-radius:99px;margin-right:4px;vertical-align:middle}
+.nr-dot.nr-new{background:linear-gradient(135deg,#319795,#4FD1C5)}
+.nr-dot.nr-ren{background:linear-gradient(135deg,#9333EA,#C084FC)}
+
+.stats-makes{display:flex;flex-direction:column;gap:6px}
+.sm-hd{font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px}
+.sm-list{display:flex;flex-direction:column;gap:5px}
+.sm-row{
+  display:grid;grid-template-columns:18px 1fr 2fr 44px;align-items:center;gap:10px;
+  font-size:13px;
+}
+.sm-rank{
+  width:18px;height:18px;border-radius:99px;background:var(--sur2);color:var(--t3);
+  font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.sm-name{font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sm-bar-wrap{height:8px;background:var(--sur2);border-radius:99px;overflow:hidden}
+.sm-bar{height:100%;background:linear-gradient(90deg,#319795,#4FD1C5);border-radius:99px;transition:width .6s var(--ez-out)}
+.sm-cnt{
+  text-align:right;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums;font-size:12.5px;
+}
+
 /* call-list — ใกล้หมด 30 วัน */
 .call-list{display:flex;flex-direction:column;gap:6px}
 .call-row{

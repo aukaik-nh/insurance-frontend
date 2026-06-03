@@ -683,61 +683,86 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* ใกล้หมด 30 วัน — actionable call list */}
-                    <div className="chart-card">
-                      <div className="chart-hd">
-                        <div>
-                          <div className="chart-ttl">ใกล้หมดอายุ — ต้องตามวันนี้</div>
-                          <div className="chart-sub">
-                            {expiring.length > 0
-                              ? <>เรียงตามวันที่ใกล้สุด · มี <b style={{color:"var(--red)"}}>{expiring.length}</b> ราย ภายใน 30 วัน</>
-                              : "ไม่มีลูกค้าที่ใกล้หมดอายุภายใน 30 วัน 🎉"}
+                    {/* สถิติการทำงาน — business KPIs */}
+                    {(() => {
+                      const totalCust = new Set(statsRows.map(r => r.insured_name).filter(Boolean)).size
+                      const sumNet    = statsRows.reduce((s, r) => s + (Number(r.net_premium) || 0), 0)
+                      const sumSI     = statsRows.reduce((s, r) => s + (Number(r.sum_insured) || 0), 0)
+                      const cntNew    = statsRows.filter(r => (r.new_renew || "").toUpperCase() === "N").length
+                      const cntRen    = statsRows.filter(r => (r.new_renew || "").toUpperCase() === "R").length
+                      const cntKnown  = cntNew + cntRen
+                      const avgPrem   = statsRows.length > 0 ? sumPremium / statsRows.length : 0
+                      // Top 5 ยี่ห้อรถ
+                      const makeMap = {}
+                      statsRows.forEach(r => {
+                        const k = (r.car_make || "").trim().toUpperCase()
+                        if (!k) return
+                        makeMap[k] = (makeMap[k] || 0) + 1
+                      })
+                      const topMakes = Object.entries(makeMap)
+                        .sort((a, b) => b[1] - a[1]).slice(0, 5)
+                      const maxMake = topMakes[0]?.[1] || 1
+                      const fmtM = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? (n / 1e3).toFixed(0) + "k" : Math.round(n).toLocaleString()
+                      return (
+                        <div className="chart-card">
+                          <div className="chart-hd">
+                            <div>
+                              <div className="chart-ttl">สถิติการทำงาน</div>
+                              <div className="chart-sub">ภาพรวมข้อมูลทั้งหมดในระบบ</div>
+                            </div>
+                          </div>
+                          <div className="chart-bd stats-bd">
+                            <div className="stats-grid">
+                              <div className="stat-tile stat-teal">
+                                <div className="stat-lbl">เบี้ยรวม</div>
+                                <div className="stat-val">฿{fmtM(sumPremium)}</div>
+                              </div>
+                              <div className="stat-tile stat-blue">
+                                <div className="stat-lbl">ลูกค้า (ไม่ซ้ำ)</div>
+                                <div className="stat-val">{totalCust.toLocaleString()}</div>
+                              </div>
+                              <div className="stat-tile stat-purple">
+                                <div className="stat-lbl">เบี้ยเฉลี่ย / กธ</div>
+                                <div className="stat-val">฿{Math.round(avgPrem).toLocaleString()}</div>
+                              </div>
+                              <div className="stat-tile stat-amber">
+                                <div className="stat-lbl">ทุนเอาประกันรวม</div>
+                                <div className="stat-val">฿{fmtM(sumSI)}</div>
+                              </div>
+                            </div>
+                            {cntKnown > 0 && (
+                              <div className="stats-nr">
+                                <div className="nr-bar">
+                                  <div className="nr-seg nr-new" style={{ flex: cntNew }} title={`ใหม่ ${cntNew}`} />
+                                  <div className="nr-seg nr-ren" style={{ flex: cntRen }} title={`ต่ออายุ ${cntRen}`} />
+                                </div>
+                                <div className="nr-legend">
+                                  <span><span className="nr-dot nr-new" /> ใหม่ <b>{cntNew.toLocaleString()}</b> ({Math.round(cntNew / cntKnown * 100)}%)</span>
+                                  <span><span className="nr-dot nr-ren" /> ต่ออายุ <b>{cntRen.toLocaleString()}</b> ({Math.round(cntRen / cntKnown * 100)}%)</span>
+                                </div>
+                              </div>
+                            )}
+                            {topMakes.length > 0 && (
+                              <div className="stats-makes">
+                                <div className="sm-hd">ยี่ห้อรถยอดนิยม</div>
+                                <div className="sm-list">
+                                  {topMakes.map(([name, count], i) => (
+                                    <div key={name} className="sm-row">
+                                      <span className="sm-rank">{i + 1}</span>
+                                      <span className="sm-name">{name}</span>
+                                      <div className="sm-bar-wrap">
+                                        <div className="sm-bar" style={{ width: `${(count / maxMake) * 100}%` }} />
+                                      </div>
+                                      <span className="sm-cnt">{count.toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                        {expiring.length > 0 && (
-                          <button className="chart-tag" onClick={() => navigate("/expiring")}
-                            style={{ cursor: "pointer", fontFamily: "inherit", border: "1px solid var(--blue-mid)" }}>
-                            ดูทั้งหมด →
-                          </button>
-                        )}
-                      </div>
-                      <div className="chart-bd" style={{ display: "flex", flexDirection: "column" }}>
-                        {expiring.length === 0 ? (
-                          <div style={{
-                            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                            padding: "40px 20px", color: "var(--t3)", gap: 8, flex: 1,
-                          }}>
-                            <Ico n="check" s={42} />
-                            <div style={{ fontSize: 14, fontWeight: 500 }}>ทุกอย่างเรียบร้อย</div>
-                          </div>
-                        ) : (
-                          <div className="call-list">
-                            {[...expiring]
-                              .sort((a, b) => new Date(a.coverage_end) - new Date(b.coverage_end))
-                              .slice(0, 8)
-                              .map((r) => {
-                                const days = Math.ceil((new Date(r.coverage_end) - new Date()) / 86400000)
-                                const tone = days <= 7 ? "red" : days <= 14 ? "amber" : "teal"
-                                return (
-                                  <div key={r.id} className={`call-row call-${tone}`} onClick={() => navigate(`/policy/${r.id}`)}>
-                                    <div className="call-main">
-                                      <div className="call-name">{r.insured_name || "—"}</div>
-                                      <div className="call-meta">
-                                        <span className="plate" style={{ fontSize: 12 }}>{r.license_plate || "—"}</span>
-                                        {r.phone && <span className="call-phone"><Ico n="phone" s={12} /> {r.phone}</span>}
-                                      </div>
-                                    </div>
-                                    <div className="call-right">
-                                      <div className="call-days">{days === 0 ? "วันนี้" : `${days} วัน`}</div>
-                                      <div className="call-date">{fmtDate(r.coverage_end)}</div>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      )
+                    })()}
                   </div>
                 )
               })()}
