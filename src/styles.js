@@ -2477,6 +2477,10 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
   }
   .body{padding:14px 10px}
   .card{width:100%;min-width:0;border-radius:14px;overflow:hidden}
+  /* search row + Export Excel button: stack vertical on mobile (no overflow) */
+  .filter-wrap{flex-direction:column !important;gap:10px !important}
+  .filter-wrap > .big-srch{flex:initial !important;width:100%}
+  .filter-wrap > .btn{width:100%;justify-content:center;padding:11px 16px !important}
   /* table inner scroll — touch friendly (ยกเว้น card นี้ ให้เลื่อนซ้ายขวาได้) */
   .card > div[style*="overflow"]{
     -webkit-overflow-scrolling:touch !important;
