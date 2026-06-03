@@ -306,35 +306,57 @@ export function ListPage({ tab }) {
     return { buckets, max, total, expiredCount, unknownCount }
   })()
 
-  // ── Expiry Calendar: นับกรมธรรม์ที่หมดอายุแต่ละเดือนข้างหน้า (12 เดือน)
+  // ── Trend: 6 เดือนหลัง + 6 เดือนหน้า, 3 series ไขว้กัน
   const expiryCalendar = (() => {
     const MONTH_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
     const now = new Date()
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    // 6 เดือนหลัง + 6 เดือนหน้า = 12 เดือนรอบเดือนปัจจุบัน
     const months = Array.from({ length: 12 }, (_, i) => {
-      const d = new Date(thisMonth.getFullYear(), thisMonth.getMonth() + i, 1)
+      const d = new Date(thisMonth.getFullYear(), thisMonth.getMonth() - 5 + i, 1)
       return {
         date: d,
         label: `${MONTH_TH[d.getMonth()]} ${(d.getFullYear() + 543).toString().slice(-2)}`,
-        count: 0,
+        starts: 0,    // กรมธรรม์เริ่มใหม่
+        ends: 0,      // กรมธรรม์หมดอายุ
+        renews: 0,    // ต่ออายุ
         premium: 0,
-        isCurrent: i === 0,
+        count: 0,
+        isCurrent: i === 5,  // index 5 = เดือนปัจจุบัน
       }
     })
+    const findIdx = (t) => months.findIndex(m =>
+      m.date.getFullYear() === t.getFullYear() && m.date.getMonth() === t.getMonth())
+
     statsRows.forEach(r => {
-      if (!r.coverage_end) return
-      const t = new Date(r.coverage_end)
-      if (isNaN(t)) return
-      const idx = months.findIndex(m => m.date.getFullYear() === t.getFullYear() && m.date.getMonth() === t.getMonth())
-      if (idx >= 0) {
-        months[idx].count += 1
-        months[idx].premium += Number(r.total_premium) || 0
+      // coverage_start → starts (and renews if new_renew=R)
+      if (r.coverage_start) {
+        const t = new Date(r.coverage_start)
+        if (!isNaN(t)) {
+          const idx = findIdx(t)
+          if (idx >= 0) {
+            months[idx].starts += 1
+            if (r.new_renew === "R" || r.new_renew === "r") months[idx].renews += 1
+          }
+        }
+      }
+      // coverage_end → ends + premium at risk
+      if (r.coverage_end) {
+        const t = new Date(r.coverage_end)
+        if (!isNaN(t)) {
+          const idx = findIdx(t)
+          if (idx >= 0) {
+            months[idx].ends += 1
+            months[idx].premium += Number(r.total_premium) || 0
+            months[idx].count += 1
+          }
+        }
       }
     })
-    const maxCount = Math.max(1, ...months.map(m => m.count))
-    const totalCount = months.reduce((a, b) => a + b.count, 0)
+    const maxV = Math.max(1, ...months.flatMap(m => [m.starts, m.ends, m.renews]))
+    const totalCount = months.reduce((a, b) => a + b.ends, 0)
     const totalPremium = months.reduce((a, b) => a + b.premium, 0)
-    return { months, maxCount, totalCount, totalPremium }
+    return { months, maxV, totalCount, totalPremium }
   })()
 
   // ── Chart: timeline กรมธรรม์ เริ่ม/หมดอายุ/ต่ออายุ (smooth line, multi-series)
@@ -661,13 +683,13 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* LINE — เบี้ยที่ต้องตามต่ออายุ ฿ 12 เดือนข้างหน้า */}
+                    {/* LINES — เริ่ม · หมด · ต่ออายุ ไขว้กัน 12 เดือน */}
                     <div className="chart-card">
                       <div className="chart-hd">
                         <div>
-                          <div className="chart-ttl">เบี้ยที่ต้องตามต่ออายุ</div>
+                          <div className="chart-ttl">เริ่ม · หมดอายุ · ต่ออายุ</div>
                           <div className="chart-sub">
-                            12 เดือนข้างหน้า · มูลค่ารวม ฿<b style={{color:"var(--t1)"}}>{expiryCalendar.totalPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b> · <b style={{color:"var(--t1)"}}>{expiryCalendar.totalCount.toLocaleString()}</b> กรมธรรม์
+                            6 เดือนหลัง + 6 เดือนหน้า · มูลค่าหมดอายุรวม ฿<b style={{color:"var(--t1)"}}>{expiryCalendar.totalPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b>
                           </div>
                         </div>
                         <button className="chart-tag" onClick={() => navigate("/expiring")}
@@ -677,17 +699,11 @@ export function ListPage({ tab }) {
                       </div>
                       <div className="chart-bd">
                         {(() => {
-                          const W = 720, H = 240, padL = 56, padR = 20, padT = 30, padB = 50
+                          const W = 720, H = 240, padL = 36, padR = 20, padT = 30, padB = 50
                           const innerW = W - padL - padR, innerH = H - padT - padB
-                          const maxPremium = Math.max(1, ...expiryCalendar.months.map(m => m.premium))
+                          const max = expiryCalendar.maxV
                           const xAt = (i) => padL + (i * innerW) / (expiryCalendar.months.length - 1)
-                          const yAt = (v) => padT + innerH - (v / maxPremium) * innerH
-                          const pts = expiryCalendar.months.map((m, i) => ({ x: xAt(i), y: yAt(m.premium), ...m }))
-                          const fmtBaht = (n) => {
-                            if (n >= 1000000) return "฿" + (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M"
-                            if (n >= 1000) return "฿" + (n / 1000).toFixed(0) + "k"
-                            return "฿" + Math.round(n).toLocaleString()
-                          }
+                          const yAt = (v) => padT + innerH - (v / max) * innerH
                           // smooth bezier
                           const smoothPath = (ps) => {
                             if (ps.length < 2) return ""
@@ -700,26 +716,24 @@ export function ListPage({ tab }) {
                             }
                             return out.join(" ")
                           }
-                          const linePath = smoothPath(pts)
-                          const areaPath = linePath ? `${linePath} L${pts[pts.length-1].x},${padT+innerH} L${pts[0].x},${padT+innerH} Z` : ""
-                          const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: fmtBaht(maxPremium * (1 - t)) }))
-                          const colorOf = (i) => i === 0 ? "#DC2626" : i <= 2 ? "#F97316" : i <= 5 ? "#319795" : "#0EA5E9"
+                          const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: Math.round(max * (1 - t)) }))
+                          // 3 series ที่ไขว้กัน
+                          const series = [
+                            { key: "starts", name: "เริ่มคุ้มครอง", color: "#319795", values: expiryCalendar.months.map(m => m.starts) },
+                            { key: "ends",   name: "หมดอายุ",       color: "#F97316", values: expiryCalendar.months.map(m => m.ends) },
+                            { key: "renews", name: "ต่ออายุ",        color: "#9333EA", values: expiryCalendar.months.map(m => m.renews) },
+                          ].filter(s => s.values.reduce((a, b) => a + b, 0) > 0)
+                          const seriesPaths = series.map(s => ({
+                            ...s,
+                            pts: s.values.map((v, i) => ({ x: xAt(i), y: yAt(v), v, label: expiryCalendar.months[i].label, isCurrent: expiryCalendar.months[i].isCurrent })),
+                            d: smoothPath(s.values.map((v, i) => ({ x: xAt(i), y: yAt(v) }))),
+                          }))
 
                           return (
                             <>
                               <svg viewBox={`0 0 ${W} ${H}`} className="line-svg" preserveAspectRatio="none">
                                 <defs>
-                                  <linearGradient id="expCalStroke" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stopColor="#DC2626" />
-                                    <stop offset="20%" stopColor="#F97316" />
-                                    <stop offset="50%" stopColor="#319795" />
-                                    <stop offset="100%" stopColor="#0EA5E9" />
-                                  </linearGradient>
-                                  <linearGradient id="expCalFill" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#319795" stopOpacity=".26" />
-                                    <stop offset="100%" stopColor="#4FD1C5" stopOpacity="0" />
-                                  </linearGradient>
-                                  <filter id="expCalGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                  <filter id="ecGlow" x="-50%" y="-50%" width="200%" height="200%">
                                     <feGaussianBlur stdDeviation="3" />
                                   </filter>
                                 </defs>
@@ -733,45 +747,54 @@ export function ListPage({ tab }) {
                                       fontFamily="Sarabun, sans-serif">{t.v}</text>
                                   </g>
                                 ))}
-                                {/* area + line */}
-                                <path d={areaPath} fill="url(#expCalFill)" />
-                                <path d={linePath} fill="none" stroke="url(#expCalStroke)"
-                                  strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
-                                {/* dots */}
-                                {pts.map((p, i) => {
-                                  const c = colorOf(i)
-                                  return (
-                                    <g key={i}>
-                                      {p.premium > 0 && (
-                                        <circle cx={p.x} cy={p.y} r="10" fill={c} opacity=".24" filter="url(#expCalGlow)" />
-                                      )}
-                                      <circle cx={p.x} cy={p.y} r={p.isCurrent ? "6" : (p.premium > 0 ? "5" : "3.5")}
-                                        fill="#fff" stroke={c} strokeWidth={p.isCurrent ? "3" : "2.5"}
-                                        style={{ cursor: p.premium > 0 ? "pointer" : "default" }}
-                                        onClick={() => p.premium > 0 && navigate("/expiring")}>
-                                        <title>{p.label}: ฿{p.premium.toLocaleString("th-TH", { maximumFractionDigits: 0 })} · {p.count} กรมธรรม์</title>
-                                      </circle>
-                                      {p.premium > 0 && (
-                                        <text x={p.x} y={p.y - 14} textAnchor="middle"
-                                          fill={c} fontSize="12" fontWeight="700"
-                                          fontFamily="Sarabun, sans-serif">{fmtBaht(p.premium)}</text>
-                                      )}
-                                    </g>
-                                  )
+                                {/* current month vertical guide */}
+                                {(() => {
+                                  const cur = expiryCalendar.months.findIndex(m => m.isCurrent)
+                                  return cur >= 0 ? (
+                                    <line x1={xAt(cur)} x2={xAt(cur)} y1={padT} y2={padT + innerH}
+                                      stroke="#DC2626" strokeDasharray="4 4" strokeWidth="1.5" opacity=".4" />
+                                  ) : null
+                                })()}
+                                {/* 3 smooth bezier lines */}
+                                {seriesPaths.map(s => (
+                                  <path key={s.key} d={s.d} fill="none" stroke={s.color}
+                                    strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" opacity=".95" />
+                                ))}
+                                {/* dots per series — only peaks + current */}
+                                {seriesPaths.map(s => {
+                                  const maxV = Math.max(...s.values)
+                                  return s.pts.map((p, i) => {
+                                    const isPeak = p.v === maxV && maxV > 0
+                                    if (!p.isCurrent && !isPeak && p.v === 0) return null
+                                    return (
+                                      <g key={`${s.key}-${i}`}>
+                                        {(isPeak || p.isCurrent) && p.v > 0 && (
+                                          <circle cx={p.x} cy={p.y} r="9" fill={s.color} opacity=".22" filter="url(#ecGlow)" />
+                                        )}
+                                        <circle cx={p.x} cy={p.y} r={p.isCurrent ? "5" : (isPeak ? "4.5" : "3")}
+                                          fill="#fff" stroke={s.color} strokeWidth={p.isCurrent ? "2.8" : "2.2"}>
+                                          <title>{p.label} · {s.name}: {p.v}</title>
+                                        </circle>
+                                      </g>
+                                    )
+                                  })
                                 })}
                                 {/* x labels (months) */}
-                                {pts.map((p, i) => (
-                                  <text key={`m${i}`} x={p.x} y={H - 22} textAnchor="middle"
-                                    fill={p.isCurrent ? "#DC2626" : "var(--t3)"}
-                                    fontSize="11" fontWeight={p.isCurrent ? 700 : 500}
-                                    fontFamily="Sarabun, sans-serif">{p.label}</text>
+                                {expiryCalendar.months.map((m, i) => (
+                                  <text key={`m${i}`} x={xAt(i)} y={H - 22} textAnchor="middle"
+                                    fill={m.isCurrent ? "#DC2626" : "var(--t3)"}
+                                    fontSize="11" fontWeight={m.isCurrent ? 700 : 500}
+                                    fontFamily="Sarabun, sans-serif">{m.label}</text>
                                 ))}
                               </svg>
                               <div className="chart-legend">
-                                <div className="cl-item"><span className="cl-line" style={{ background: "#DC2626" }} /><span>เดือนนี้</span></div>
-                                <div className="cl-item"><span className="cl-line" style={{ background: "#F97316" }} /><span>1-2 เดือน</span></div>
-                                <div className="cl-item"><span className="cl-line" style={{ background: "#319795" }} /><span>3-5 เดือน</span></div>
-                                <div className="cl-item"><span className="cl-line" style={{ background: "#0EA5E9" }} /><span>6+ เดือน</span></div>
+                                {seriesPaths.map(s => (
+                                  <div key={s.key} className="cl-item">
+                                    <span className="cl-line" style={{ background: s.color }} />
+                                    <span className="cl-name">{s.name}</span>
+                                    <span className="cl-sum">{s.values.reduce((a, b) => a + b, 0)}</span>
+                                  </div>
+                                ))}
                               </div>
                             </>
                           )
