@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Ico } from "../icons"
 import { getStatus, fmtDate, baht, policyTypeLabel } from "../helpers"
 import api from "../api"
@@ -75,16 +75,66 @@ export function PreviewPanel({ p, onClose, onOpen }) {
   // Blob URL — iframe ส่ง auth header ไม่ได้ ต้อง fetch เองแล้วใช้ blob
   const { blobUrl: pdfBlobUrl, loading: pdfLoading } = usePdfBlob(activePdfUrl)
 
+  // swipe-down-to-close (mobile)
+  const dragRef = useRef({ startY: 0, dragging: false, moved: false })
+  const [dragY, setDragY] = useState(0)
+  const [closing, setClosing] = useState(false)
+
+  const onDragStart = (e) => {
+    const y = e.touches ? e.touches[0].clientY : e.clientY
+    dragRef.current = { startY: y, dragging: true, moved: false }
+  }
+  const onDragMove = (e) => {
+    if (!dragRef.current.dragging) return
+    const y = e.touches ? e.touches[0].clientY : e.clientY
+    const dy = y - dragRef.current.startY
+    if (dy > 4) dragRef.current.moved = true
+    setDragY(Math.max(0, dy))
+  }
+  const onDragEnd = () => {
+    if (!dragRef.current.dragging) return
+    const dy = dragY
+    const moved = dragRef.current.moved
+    dragRef.current.dragging = false
+    if (dy > 120) {
+      setClosing(true)
+      setTimeout(onClose, 180)
+    } else {
+      setDragY(0)
+      // ถ้าแตะแล้วไม่ลาก → ถือเป็น tap ปิด (เหมือนเดิม)
+      if (!moved) {
+        setClosing(true)
+        setTimeout(onClose, 180)
+      }
+    }
+  }
+
   return (
     <>
-      <div className="pvp-backdrop" onClick={onClose} />
-      <div className="pvp">
-        {/* drag handle — กดเพื่อปิด (mobile) */}
+      <div className="pvp-backdrop" onClick={onClose} style={{
+        opacity: closing ? 0 : Math.max(0, 1 - dragY / 400),
+        transition: dragRef.current.dragging ? "none" : "opacity .2s ease",
+      }} />
+      <div
+        className="pvp"
+        style={{
+          transform: dragY ? `translateY(${dragY}px)` : (closing ? "translateY(100%)" : undefined),
+          transition: dragRef.current.dragging ? "none" : "transform .2s var(--ez-out)",
+        }}
+      >
+        {/* drag handle — เลื่อนลงเพื่อปิด หรือกดเพื่อปิด */}
         <button
           className="pvp-pill"
-          onClick={onClose}
-          aria-label="ปิด"
-          title="กดเพื่อปิด"
+          aria-label="ลากลงหรือกดเพื่อปิด"
+          title="ลากลงหรือกดเพื่อปิด"
+          onTouchStart={onDragStart}
+          onTouchMove={onDragMove}
+          onTouchEnd={onDragEnd}
+          onMouseDown={onDragStart}
+          onMouseMove={(e) => dragRef.current.dragging && onDragMove(e)}
+          onMouseUp={onDragEnd}
+          onMouseLeave={onDragEnd}
+          style={{ touchAction: "none" }}
         />
 
         {/* header */}
