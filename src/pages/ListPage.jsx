@@ -337,8 +337,8 @@ export function ListPage({ tab }) {
     return { months, maxCount, totalCount, totalPremium }
   })()
 
-  // ── Chart: รายได้เบี้ยประกัน (premium revenue) by period
-  const [chartRange, setChartRange] = useState("d30") // d7 | d30 | w12 | m12
+  // ── Chart: timeline กรมธรรม์ เริ่ม/หมดอายุ/ต่ออายุ (smooth line, multi-series)
+  const [chartRange, setChartRange] = useState("y1") // y1 (12mo) | y2 (24mo) | y5 (60mo)
   const seriesData = (() => {
     const MONTH_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
     const now = new Date()
@@ -488,6 +488,38 @@ export function ListPage({ tab }) {
                   </div>
                 )
               })()}
+
+              {/* ── Quick stats strip — กันโล่ง ── */}
+              <div className="quick-stats">
+                <div className="qs-item qs-teal">
+                  <div className="qs-icon"><Ico n="doc" s={18} /></div>
+                  <div className="qs-body">
+                    <div className="qs-val">{total.toLocaleString()}</div>
+                    <div className="qs-lbl">กรมธรรม์ทั้งหมด</div>
+                  </div>
+                </div>
+                <div className="qs-item qs-green">
+                  <div className="qs-icon"><Ico n="shield" s={18} /></div>
+                  <div className="qs-body">
+                    <div className="qs-val">{active.toLocaleString()}</div>
+                    <div className="qs-lbl">คุ้มครองอยู่</div>
+                  </div>
+                </div>
+                <div className="qs-item qs-amber">
+                  <div className="qs-icon"><Ico n="bell" s={18} /></div>
+                  <div className="qs-body">
+                    <div className="qs-val">{expiring.length.toLocaleString()}</div>
+                    <div className="qs-lbl">ใกล้หมดอายุ · 30 วัน</div>
+                  </div>
+                </div>
+                <div className="qs-item qs-pink">
+                  <div className="qs-icon"><Ico n="banknote" s={18} /></div>
+                  <div className="qs-body">
+                    <div className="qs-val">฿{sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</div>
+                    <div className="qs-lbl">เบี้ยรวมในระบบ</div>
+                  </div>
+                </div>
+              </div>
 
               {/* ── 1. เมนูหลัก 4 ใบ — ขึ้นบนสุดตามที่ user ขอ ── */}
               <div className="sec-hd">

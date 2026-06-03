@@ -425,6 +425,59 @@ tr.tr-active td{background:var(--blue-bg) !important}
 }
 .chart-empty svg{opacity:.5}
 
+/* Quick stats strip — header KPI ใต้ dash-bar */
+.quick-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  margin:0 0 22px;
+}
+@media(max-width:900px){.quick-stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.quick-stats{grid-template-columns:1fr 1fr;gap:8px}}
+
+.qs-item{
+  display:flex;align-items:center;gap:11px;
+  padding:14px 16px;border-radius:14px;
+  border:1px solid var(--brd);background:var(--sur);
+  box-shadow:var(--sh0);
+  transition:transform .2s var(--ez-out),box-shadow .2s ease,border-color .2s ease;
+  animation:scIn .5s var(--ez-out) backwards;
+}
+.qs-item:nth-child(1){animation-delay:30ms}
+.qs-item:nth-child(2){animation-delay:80ms}
+.qs-item:nth-child(3){animation-delay:130ms}
+.qs-item:nth-child(4){animation-delay:180ms}
+.qs-item:hover{transform:translateY(-2px);box-shadow:var(--sh1)}
+
+.qs-icon{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  box-shadow:0 4px 10px rgba(0,0,0,.10);
+}
+.qs-teal .qs-icon{background:linear-gradient(135deg,#234E52,#319795)}
+.qs-green .qs-icon{background:linear-gradient(135deg,#047857,#10B981)}
+.qs-amber .qs-icon{background:linear-gradient(135deg,#D97706,#FBBF24)}
+.qs-pink .qs-icon{background:linear-gradient(135deg,#BE185D,#EC4899)}
+
+.qs-teal:hover{border-color:#319795}
+.qs-green:hover{border-color:#10B981}
+.qs-amber:hover{border-color:#F59E0B}
+.qs-pink:hover{border-color:#EC4899}
+
+.qs-body{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.qs-val{
+  font-size:21px;font-weight:700;color:var(--t1);letter-spacing:-.4px;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.qs-lbl{font-size:12.5px;color:var(--t3);font-weight:500;line-height:1.3}
+
+@media(max-width:480px){
+  .qs-item{padding:11px 12px;gap:9px}
+  .qs-icon{width:32px;height:32px;border-radius:9px}
+  .qs-icon svg{width:16px;height:16px}
+  .qs-val{font-size:17px;letter-spacing:-.2px}
+  .qs-lbl{font-size:11.5px}
+}
+
 /* Expiry Calendar — 12 months ahead bar chart */
 .exp-cal-wrap{
   display:flex;align-items:flex-end;justify-content:space-between;
