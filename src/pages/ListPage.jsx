@@ -683,269 +683,59 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* LINES — เริ่ม · หมด · ต่ออายุ ไขว้กัน 12 เดือน */}
+                    {/* ใกล้หมด 30 วัน — actionable call list */}
                     <div className="chart-card">
                       <div className="chart-hd">
                         <div>
-                          <div className="chart-ttl">เริ่ม · หมดอายุ · ต่ออายุ</div>
+                          <div className="chart-ttl">ใกล้หมดอายุ — ต้องตามวันนี้</div>
                           <div className="chart-sub">
-                            6 เดือนหลัง + 6 เดือนหน้า · มูลค่าหมดอายุรวม ฿<b style={{color:"var(--t1)"}}>{expiryCalendar.totalPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b>
+                            {expiring.length > 0
+                              ? <>เรียงตามวันที่ใกล้สุด · มี <b style={{color:"var(--red)"}}>{expiring.length}</b> ราย ภายใน 30 วัน</>
+                              : "ไม่มีลูกค้าที่ใกล้หมดอายุภายใน 30 วัน 🎉"}
                           </div>
                         </div>
-                        <button className="chart-tag" onClick={() => navigate("/expiring")}
-                          style={{ cursor: "pointer", fontFamily: "inherit", border: "1px solid var(--blue-mid)" }}>
-                          ดูทั้งหมด →
-                        </button>
+                        {expiring.length > 0 && (
+                          <button className="chart-tag" onClick={() => navigate("/expiring")}
+                            style={{ cursor: "pointer", fontFamily: "inherit", border: "1px solid var(--blue-mid)" }}>
+                            ดูทั้งหมด →
+                          </button>
+                        )}
                       </div>
-                      <div className="chart-bd">
-                        {(() => {
-                          const W = 720, H = 240, padL = 36, padR = 20, padT = 30, padB = 50
-                          const innerW = W - padL - padR, innerH = H - padT - padB
-                          const max = expiryCalendar.maxV
-                          const xAt = (i) => padL + (i * innerW) / (expiryCalendar.months.length - 1)
-                          const yAt = (v) => padT + innerH - (v / max) * innerH
-                          // smooth bezier
-                          const smoothPath = (ps) => {
-                            if (ps.length < 2) return ""
-                            const out = [`M${ps[0].x},${ps[0].y}`]
-                            for (let i = 0; i < ps.length - 1; i++) {
-                              const p0 = ps[i - 1] || ps[i], p1 = ps[i], p2 = ps[i + 1], p3 = ps[i + 2] || p2
-                              const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6
-                              const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6
-                              out.push(`C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`)
-                            }
-                            return out.join(" ")
-                          }
-                          const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: Math.round(max * (1 - t)) }))
-                          // 3 series ที่ไขว้กัน
-                          const series = [
-                            { key: "starts", name: "เริ่มคุ้มครอง", color: "#319795", values: expiryCalendar.months.map(m => m.starts) },
-                            { key: "ends",   name: "หมดอายุ",       color: "#F97316", values: expiryCalendar.months.map(m => m.ends) },
-                            { key: "renews", name: "ต่ออายุ",        color: "#9333EA", values: expiryCalendar.months.map(m => m.renews) },
-                          ].filter(s => s.values.reduce((a, b) => a + b, 0) > 0)
-                          const seriesPaths = series.map(s => ({
-                            ...s,
-                            pts: s.values.map((v, i) => ({ x: xAt(i), y: yAt(v), v, label: expiryCalendar.months[i].label, isCurrent: expiryCalendar.months[i].isCurrent })),
-                            d: smoothPath(s.values.map((v, i) => ({ x: xAt(i), y: yAt(v) }))),
-                          }))
-
-                          return (
-                            <>
-                              <svg viewBox={`0 0 ${W} ${H}`} className="line-svg" preserveAspectRatio="none">
-                                <defs>
-                                  <filter id="ecGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                    <feGaussianBlur stdDeviation="3" />
-                                  </filter>
-                                </defs>
-                                {/* grid + y labels */}
-                                {yTicks.map((t, i) => (
-                                  <g key={i}>
-                                    <line x1={padL} x2={W - padR} y1={t.y} y2={t.y}
-                                      stroke="var(--brd)" strokeDasharray="3 5" strokeWidth="1" />
-                                    <text x={padL - 8} y={t.y + 4} textAnchor="end"
-                                      fill="var(--t3)" fontSize="10.5" fontWeight="500"
-                                      fontFamily="Sarabun, sans-serif">{t.v}</text>
-                                  </g>
-                                ))}
-                                {/* current month vertical guide */}
-                                {(() => {
-                                  const cur = expiryCalendar.months.findIndex(m => m.isCurrent)
-                                  return cur >= 0 ? (
-                                    <line x1={xAt(cur)} x2={xAt(cur)} y1={padT} y2={padT + innerH}
-                                      stroke="#DC2626" strokeDasharray="4 4" strokeWidth="1.5" opacity=".4" />
-                                  ) : null
-                                })()}
-                                {/* 3 smooth bezier lines */}
-                                {seriesPaths.map(s => (
-                                  <path key={s.key} d={s.d} fill="none" stroke={s.color}
-                                    strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" opacity=".95" />
-                                ))}
-                                {/* dots per series — only peaks + current */}
-                                {seriesPaths.map(s => {
-                                  const maxV = Math.max(...s.values)
-                                  return s.pts.map((p, i) => {
-                                    const isPeak = p.v === maxV && maxV > 0
-                                    if (!p.isCurrent && !isPeak && p.v === 0) return null
-                                    return (
-                                      <g key={`${s.key}-${i}`}>
-                                        {(isPeak || p.isCurrent) && p.v > 0 && (
-                                          <circle cx={p.x} cy={p.y} r="9" fill={s.color} opacity=".22" filter="url(#ecGlow)" />
-                                        )}
-                                        <circle cx={p.x} cy={p.y} r={p.isCurrent ? "5" : (isPeak ? "4.5" : "3")}
-                                          fill="#fff" stroke={s.color} strokeWidth={p.isCurrent ? "2.8" : "2.2"}>
-                                          <title>{p.label} · {s.name}: {p.v}</title>
-                                        </circle>
-                                      </g>
-                                    )
-                                  })
-                                })}
-                                {/* x labels (months) */}
-                                {expiryCalendar.months.map((m, i) => (
-                                  <text key={`m${i}`} x={xAt(i)} y={H - 22} textAnchor="middle"
-                                    fill={m.isCurrent ? "#DC2626" : "var(--t3)"}
-                                    fontSize="11" fontWeight={m.isCurrent ? 700 : 500}
-                                    fontFamily="Sarabun, sans-serif">{m.label}</text>
-                                ))}
-                              </svg>
-                              <div className="chart-legend">
-                                {seriesPaths.map(s => (
-                                  <div key={s.key} className="cl-item">
-                                    <span className="cl-line" style={{ background: s.color }} />
-                                    <span className="cl-name">{s.name}</span>
-                                    <span className="cl-sum">{s.values.reduce((a, b) => a + b, 0)}</span>
+                      <div className="chart-bd" style={{ display: "flex", flexDirection: "column" }}>
+                        {expiring.length === 0 ? (
+                          <div style={{
+                            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                            padding: "40px 20px", color: "var(--t3)", gap: 8, flex: 1,
+                          }}>
+                            <Ico n="check" s={42} />
+                            <div style={{ fontSize: 14, fontWeight: 500 }}>ทุกอย่างเรียบร้อย</div>
+                          </div>
+                        ) : (
+                          <div className="call-list">
+                            {[...expiring]
+                              .sort((a, b) => new Date(a.coverage_end) - new Date(b.coverage_end))
+                              .slice(0, 8)
+                              .map((r) => {
+                                const days = Math.ceil((new Date(r.coverage_end) - new Date()) / 86400000)
+                                const tone = days <= 7 ? "red" : days <= 14 ? "amber" : "teal"
+                                return (
+                                  <div key={r.id} className={`call-row call-${tone}`} onClick={() => navigate(`/policy/${r.id}`)}>
+                                    <div className="call-main">
+                                      <div className="call-name">{r.insured_name || "—"}</div>
+                                      <div className="call-meta">
+                                        <span className="plate" style={{ fontSize: 12 }}>{r.license_plate || "—"}</span>
+                                        {r.phone && <span className="call-phone"><Ico n="phone" s={12} /> {r.phone}</span>}
+                                      </div>
+                                    </div>
+                                    <div className="call-right">
+                                      <div className="call-days">{days === 0 ? "วันนี้" : `${days} วัน`}</div>
+                                      <div className="call-date">{fmtDate(r.coverage_end)}</div>
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-                            </>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              {/* daily report below */}
-              {expiring.length > 0 && (
-                <div className="bnr am">
-                  <Ico n="bell" s={22} />
-                  <div className="bnr-body">
-                    <div className="bnr-t">มี {expiring.length} กรมธรรม์ใกล้หมดอายุภายใน 30 วัน</div>
-                    <div className="bnr-s">กรุณาติดต่อลูกค้าเพื่อต่ออายุกรมธรรม์</div>
-                  </div>
-                  <button className="btn btn-w"
-                    style={{ fontSize: 15, padding: "10px 16px", flexShrink: 0 }}
-                    onClick={() => navigate("/expiring")}>
-                    ดูรายการ <Ico n="arrowR" s={16} />
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── Dashboard: Daily activity report (back on home, polished) ── */}
-          {tab === "dashboard" && (
-            <>
-              <div className="sec-hd">
-                <Ico n="cal" s={14} />
-                <span>กิจกรรมวันนี้</span>
-                <small>ไฟล์ที่อัปโหลด · แนวโน้ม 7 วันล่าสุด</small>
-              </div>
-              {(() => {
-                const tb = dailyReport.todayBreakdown
-                const cats = dailyReport.cats
-                const cTotal = Math.max(1, dailyReport.todayCount)
-                const dr = 48, dc = 2 * Math.PI * dr
-                let acc = 0
-                const arcs = cats.map(c => {
-                  const v = tb[c.key]
-                  const dash = (v / cTotal) * dc
-                  const off = -acc
-                  if (v > 0) acc += dash
-                  return { ...c, v, dash, off }
-                }).filter(a => a.v > 0)
-                return (
-                  <div className="report-card">
-                    <div className="report-hd">
-                      <div className="report-hd-ico"><Ico n="bolt" s={22} /></div>
-                      <div className="report-hd-l">
-                        <div className="report-hd-ttl">วันนี้ทำงานไปเท่าไหร่</div>
-                        <div className="report-hd-sub">แยกตามประเภทเอกสาร · แนวโน้ม 7 วันล่าสุด</div>
-                      </div>
-                      <div className="report-hd-r">
-                        <div className="report-hd-num">{dailyReport.todayCount.toLocaleString()}</div>
-                        <div className="report-hd-lbl">ไฟล์วันนี้</div>
-                      </div>
-                    </div>
-
-                    <div className="work-body">
-                      {/* LEFT: small donut + category breakdown */}
-                      <div className="work-breakdown">
-                        <div className="work-donut-wrap">
-                          <svg viewBox="0 0 120 120" className="work-donut">
-                            <defs>
-                              {arcs.map((a, i) => (
-                                <linearGradient key={i} id={`wd-${a.key}`} x1="0" y1="0" x2="1" y2="1">
-                                  <stop offset="0%" stopColor={a.c1} />
-                                  <stop offset="100%" stopColor={a.c2} />
-                                </linearGradient>
-                              ))}
-                            </defs>
-                            <circle cx="60" cy="60" r={dr} fill="none" stroke="var(--brd)" strokeWidth="10" />
-                            {arcs.map((a, i) => (
-                              <circle key={i} cx="60" cy="60" r={dr} fill="none"
-                                stroke={`url(#wd-${a.key})`} strokeWidth="10"
-                                strokeDasharray={`${a.dash} ${dc}`}
-                                strokeDashoffset={a.off}
-                                strokeLinecap="butt"
-                                style={{ transition: "stroke-dasharray .7s var(--ez-out), stroke-dashoffset .7s var(--ez-out)" }}
-                              />
-                            ))}
-                          </svg>
-                          <div className="work-donut-center">
-                            <div className="wd-num">{dailyReport.todayCount}</div>
-                            <div className="wd-lbl">วันนี้</div>
+                                )
+                              })}
                           </div>
-                        </div>
-                        <div className="work-cat-list">
-                          {cats.map(c => {
-                            const v = tb[c.key]
-                            const pct = dailyReport.todayCount > 0 ? Math.round((v / dailyReport.todayCount) * 100) : 0
-                            return (
-                              <div key={c.key} className={`wc-row ${v === 0 ? "wc-zero" : ""}`}>
-                                <span className="wc-dot" style={{ background: `linear-gradient(135deg,${c.c1},${c.c2})` }} />
-                                <span className="wc-lbl">{c.label}</span>
-                                <span className="wc-val">{v}</span>
-                                <span className="wc-pct">{pct}%</span>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-
-                      {/* RIGHT: 7-day stacked bar chart */}
-                      <div className="work-bars-wrap">
-                        <div className="work-bars-hd">
-                          <span><Ico n="bolt" s={14} /> &nbsp;7 วันล่าสุด</span>
-                          <span>รวม <b>{dailyReport.days.reduce((a, b) => a + b.count, 0)}</b> ไฟล์</span>
-                        </div>
-                        <div className="work-bars">
-                          {dailyReport.days.map(d => {
-                            const isToday = d.key === dailyReport.todayKey
-                            const pct = (d.count / dailyReport.maxCount) * 100
-                            return (
-                              <div key={d.key} className={`wb-col ${isToday ? "wb-today" : ""} ${d.count === 0 ? "wb-zero" : ""}`}
-                                title={`${d.key}: ${d.count} ไฟล์ (กธ ${d.breakdown.policy}, พรบ ${d.breakdown.prb}, อื่นๆ ${d.breakdown.other})`}>
-                                <div className="wb-bar-wrap" style={{ height: `${Math.max(pct, d.count > 0 ? 8 : 3)}%` }}>
-                                  {d.count > 0 && cats.map(c => {
-                                    const seg = d.breakdown[c.key]
-                                    if (!seg) return null
-                                    const segPct = (seg / d.count) * 100
-                                    return (
-                                      <div key={c.key} className="wb-seg"
-                                        style={{
-                                          flex: segPct,
-                                          background: `linear-gradient(180deg,${c.c1},${c.c2})`
-                                        }}
-                                      />
-                                    )
-                                  })}
-                                  {d.count > 0 && <span className="wb-val">{d.count}</span>}
-                                </div>
-                                <div className="wb-day">{d.label}</div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                        {/* Mini legend */}
-                        <div className="work-legend">
-                          {cats.map(c => (
-                            <div key={c.key} className="wl-item">
-                              <span className="wl-dot" style={{ background: `linear-gradient(135deg,${c.c1},${c.c2})` }} />
-                              <span>{c.label}</span>
-                            </div>
-                          ))}
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>

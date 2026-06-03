@@ -379,6 +379,34 @@ tr.tr-active td{background:var(--blue-bg) !important}
   background:var(--sur2);padding:1px 8px;border-radius:99px;font-size:12px;
 }
 
+/* call-list — ใกล้หมด 30 วัน */
+.call-list{display:flex;flex-direction:column;gap:6px}
+.call-row{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;
+  border-radius:10px;background:var(--sur2);cursor:pointer;
+  border-left:3px solid transparent;transition:all .15s var(--ez-out);
+}
+.call-row:hover{background:var(--blue-bg);transform:translateX(2px)}
+.call-red{border-left-color:#DC2626;background:rgba(220,38,38,.06)}
+.call-red:hover{background:rgba(220,38,38,.12)}
+.call-amber{border-left-color:#F97316;background:rgba(249,115,22,.05)}
+.call-amber:hover{background:rgba(249,115,22,.11)}
+.call-teal{border-left-color:#319795;background:rgba(49,151,149,.05)}
+.call-teal:hover{background:rgba(49,151,149,.11)}
+.call-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.call-name{
+  font-size:14px;font-weight:600;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.call-meta{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t3)}
+.call-phone{display:inline-flex;align-items:center;gap:4px;color:var(--t2);font-weight:500}
+.call-right{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:2px}
+.call-days{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--t1)}
+.call-red .call-days{color:#DC2626}
+.call-amber .call-days{color:#F97316}
+.call-teal .call-days{color:#319795}
+.call-date{font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums}
+
 /* Donut */
 .donut-row{display:flex;align-items:center;gap:24px}
 .donut-wrap{position:relative;width:160px;height:160px;flex-shrink:0}
