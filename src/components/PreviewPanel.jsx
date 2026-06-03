@@ -75,37 +75,42 @@ export function PreviewPanel({ p, onClose, onOpen }) {
   // Blob URL — iframe ส่ง auth header ไม่ได้ ต้อง fetch เองแล้วใช้ blob
   const { blobUrl: pdfBlobUrl, loading: pdfLoading } = usePdfBlob(activePdfUrl)
 
-  // swipe-down-to-close (mobile)
-  const dragRef = useRef({ startY: 0, dragging: false, moved: false })
+  // swipe-down-to-close (mobile) — pointer events with capture for reliability
+  const dragRef = useRef({ startY: 0, dragging: false, moved: false, pointerId: null })
   const [dragY, setDragY] = useState(0)
+  const [dragging, setDragging] = useState(false)
   const [closing, setClosing] = useState(false)
 
-  const onDragStart = (e) => {
-    const y = e.touches ? e.touches[0].clientY : e.clientY
-    dragRef.current = { startY: y, dragging: true, moved: false }
+  const startClose = () => {
+    setClosing(true)
+    setTimeout(onClose, 200)
   }
-  const onDragMove = (e) => {
+
+  const onPointerDown = (e) => {
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+    dragRef.current = { startY: e.clientY, dragging: true, moved: false, pointerId: e.pointerId }
+    setDragging(true)
+  }
+  const onPointerMove = (e) => {
     if (!dragRef.current.dragging) return
-    const y = e.touches ? e.touches[0].clientY : e.clientY
-    const dy = y - dragRef.current.startY
-    if (dy > 4) dragRef.current.moved = true
+    const dy = e.clientY - dragRef.current.startY
+    if (Math.abs(dy) > 5) dragRef.current.moved = true
     setDragY(Math.max(0, dy))
   }
-  const onDragEnd = () => {
+  const onPointerUp = (e) => {
     if (!dragRef.current.dragging) return
+    try { e.currentTarget.releasePointerCapture?.(e.pointerId) } catch {}
     const dy = dragY
     const moved = dragRef.current.moved
     dragRef.current.dragging = false
-    if (dy > 120) {
-      setClosing(true)
-      setTimeout(onClose, 180)
+    setDragging(false)
+    if (dy > 110) {
+      startClose()
+    } else if (!moved) {
+      // tap → close (รักษา UX เดิม)
+      startClose()
     } else {
       setDragY(0)
-      // ถ้าแตะแล้วไม่ลาก → ถือเป็น tap ปิด (เหมือนเดิม)
-      if (!moved) {
-        setClosing(true)
-        setTimeout(onClose, 180)
-      }
     }
   }
 
@@ -113,28 +118,24 @@ export function PreviewPanel({ p, onClose, onOpen }) {
     <>
       <div className="pvp-backdrop" onClick={onClose} style={{
         opacity: closing ? 0 : Math.max(0, 1 - dragY / 400),
-        transition: dragRef.current.dragging ? "none" : "opacity .2s ease",
+        transition: dragging ? "none" : "opacity .2s ease",
       }} />
       <div
         className="pvp"
         style={{
-          transform: dragY ? `translateY(${dragY}px)` : (closing ? "translateY(100%)" : undefined),
-          transition: dragRef.current.dragging ? "none" : "transform .2s var(--ez-out)",
+          transform: closing ? "translateY(100%)" : (dragY ? `translateY(${dragY}px)` : undefined),
+          transition: dragging ? "none" : "transform .22s var(--ez-out)",
         }}
       >
-        {/* drag handle — เลื่อนลงเพื่อปิด หรือกดเพื่อปิด */}
+        {/* drag handle — เลื่อนลงเพื่อปิด */}
         <button
           className="pvp-pill"
-          aria-label="ลากลงหรือกดเพื่อปิด"
-          title="ลากลงหรือกดเพื่อปิด"
-          onTouchStart={onDragStart}
-          onTouchMove={onDragMove}
-          onTouchEnd={onDragEnd}
-          onMouseDown={onDragStart}
-          onMouseMove={(e) => dragRef.current.dragging && onDragMove(e)}
-          onMouseUp={onDragEnd}
-          onMouseLeave={onDragEnd}
-          style={{ touchAction: "none" }}
+          aria-label="ลากลงเพื่อปิด"
+          title="ลากลงเพื่อปิด"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
         />
 
         {/* header */}

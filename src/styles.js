@@ -271,13 +271,17 @@ body.dark .sb{background:rgba(23,28,50,.78);border-bottom-color:rgba(43,50,82,.8
   .pvp-backdrop{display:block;position:fixed;inset:0;z-index:149;background:rgba(0,0,0,.4)}
   /* mobile: ใหญ่ขึ้นเพื่อกดง่าย */
   .pvp-close{width:42px;height:42px}
-  /* drag handle = ปุ่มจริง คลิกแล้วปิด */
+  /* drag handle = ลากลงเพื่อปิด (หรือกดเพื่อปิด) */
   .pvp-pill{
     display:block;flex-shrink:0;
-    width:100%;padding:10px 0 6px;
-    background:transparent;border:none;cursor:pointer;
+    width:100%;padding:14px 0 10px;
+    background:transparent;border:none;cursor:grab;
     position:relative;
+    touch-action:none;      /* สำคัญ: บอก browser ว่า element นี้จัดการ touch เอง */
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
   }
+  .pvp-pill:active{cursor:grabbing}
   .pvp-pill::after{
     content:"";display:block;margin:0 auto;
     width:48px;height:5px;border-radius:99px;
