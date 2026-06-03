@@ -2425,7 +2425,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .sb-logo{padding:0 8px 0 0;margin-right:6px;gap:6px}
   .sb-logo::after{display:none}  /* hide divider on tiny */
   .sb-logo img:first-child{height:36px !important;width:36px !important}
-  .sb-logo img:nth-child(2){display:none}  /* hide avatar on tiny screens */
+  .sb-logo img:nth-child(2){height:28px !important;width:28px !important}  /* keep avatar visible (smaller) */
   .sb-brand{font-size:14px}
   /* right area: ensure visible spacing between buttons */
   .sb > div:last-child{gap:6px !important}
