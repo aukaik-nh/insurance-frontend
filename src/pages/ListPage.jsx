@@ -661,13 +661,13 @@ export function ListPage({ tab }) {
                       )
                     })()}
 
-                    {/* BAR — ปฏิทินกรมธรรม์หมดอายุ 12 เดือนข้างหน้า */}
+                    {/* LINE — เบี้ยที่ต้องตามต่ออายุ ฿ 12 เดือนข้างหน้า */}
                     <div className="chart-card">
                       <div className="chart-hd">
                         <div>
-                          <div className="chart-ttl">ปฏิทินกรมธรรม์หมดอายุ</div>
+                          <div className="chart-ttl">เบี้ยที่ต้องตามต่ออายุ</div>
                           <div className="chart-sub">
-                            12 เดือนข้างหน้า · <b style={{color:"var(--t1)"}}>{expiryCalendar.totalCount.toLocaleString()}</b> กรมธรรม์ · มูลค่า ฿<b style={{color:"var(--t1)"}}>{expiryCalendar.totalPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b>
+                            12 เดือนข้างหน้า · มูลค่ารวม ฿<b style={{color:"var(--t1)"}}>{expiryCalendar.totalPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</b> · <b style={{color:"var(--t1)"}}>{expiryCalendar.totalCount.toLocaleString()}</b> กรมธรรม์
                           </div>
                         </div>
                         <button className="chart-tag" onClick={() => navigate("/expiring")}
@@ -677,12 +677,17 @@ export function ListPage({ tab }) {
                       </div>
                       <div className="chart-bd">
                         {(() => {
-                          const W = 720, H = 240, padL = 40, padR = 20, padT = 30, padB = 50
+                          const W = 720, H = 240, padL = 56, padR = 20, padT = 30, padB = 50
                           const innerW = W - padL - padR, innerH = H - padT - padB
-                          const max = Math.max(1, expiryCalendar.maxCount)
+                          const maxPremium = Math.max(1, ...expiryCalendar.months.map(m => m.premium))
                           const xAt = (i) => padL + (i * innerW) / (expiryCalendar.months.length - 1)
-                          const yAt = (v) => padT + innerH - (v / max) * innerH
-                          const pts = expiryCalendar.months.map((m, i) => ({ x: xAt(i), y: yAt(m.count), ...m }))
+                          const yAt = (v) => padT + innerH - (v / maxPremium) * innerH
+                          const pts = expiryCalendar.months.map((m, i) => ({ x: xAt(i), y: yAt(m.premium), ...m }))
+                          const fmtBaht = (n) => {
+                            if (n >= 1000000) return "฿" + (n / 1000000).toFixed(1).replace(/\.0$/, "") + "M"
+                            if (n >= 1000) return "฿" + (n / 1000).toFixed(0) + "k"
+                            return "฿" + Math.round(n).toLocaleString()
+                          }
                           // smooth bezier
                           const smoothPath = (ps) => {
                             if (ps.length < 2) return ""
@@ -697,7 +702,7 @@ export function ListPage({ tab }) {
                           }
                           const linePath = smoothPath(pts)
                           const areaPath = linePath ? `${linePath} L${pts[pts.length-1].x},${padT+innerH} L${pts[0].x},${padT+innerH} Z` : ""
-                          const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: Math.round(max * (1 - t)) }))
+                          const yTicks = [0, .25, .5, .75, 1].map(t => ({ y: padT + innerH * t, v: fmtBaht(maxPremium * (1 - t)) }))
                           const colorOf = (i) => i === 0 ? "#DC2626" : i <= 2 ? "#F97316" : i <= 5 ? "#319795" : "#0EA5E9"
 
                           return (
@@ -737,19 +742,19 @@ export function ListPage({ tab }) {
                                   const c = colorOf(i)
                                   return (
                                     <g key={i}>
-                                      {p.count > 0 && (
+                                      {p.premium > 0 && (
                                         <circle cx={p.x} cy={p.y} r="10" fill={c} opacity=".24" filter="url(#expCalGlow)" />
                                       )}
-                                      <circle cx={p.x} cy={p.y} r={p.isCurrent ? "6" : (p.count > 0 ? "5" : "3.5")}
+                                      <circle cx={p.x} cy={p.y} r={p.isCurrent ? "6" : (p.premium > 0 ? "5" : "3.5")}
                                         fill="#fff" stroke={c} strokeWidth={p.isCurrent ? "3" : "2.5"}
-                                        style={{ cursor: p.count > 0 ? "pointer" : "default" }}
-                                        onClick={() => p.count > 0 && navigate("/expiring")}>
-                                        <title>{p.label}: {p.count} กรมธรรม์ · ฿{p.premium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</title>
+                                        style={{ cursor: p.premium > 0 ? "pointer" : "default" }}
+                                        onClick={() => p.premium > 0 && navigate("/expiring")}>
+                                        <title>{p.label}: ฿{p.premium.toLocaleString("th-TH", { maximumFractionDigits: 0 })} · {p.count} กรมธรรม์</title>
                                       </circle>
-                                      {p.count > 0 && (
+                                      {p.premium > 0 && (
                                         <text x={p.x} y={p.y - 14} textAnchor="middle"
-                                          fill={c} fontSize="13" fontWeight="700"
-                                          fontFamily="Sarabun, sans-serif">{p.count}</text>
+                                          fill={c} fontSize="12" fontWeight="700"
+                                          fontFamily="Sarabun, sans-serif">{fmtBaht(p.premium)}</text>
                                       )}
                                     </g>
                                   )
