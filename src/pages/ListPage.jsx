@@ -427,19 +427,7 @@ export function ListPage({ tab }) {
             <div className="top-title">{tabMeta[tab]?.title}</div>
             <div className="top-sub">{tabMeta[tab]?.sub}</div>
           </div>
-          <div className="top-srch">
-            <Ico n="search" s={18} />
-            <input
-              placeholder="ค้นหา เลขกรมธรรม์, ชื่อ, ทะเบียน..."
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1) }}
-            />
-            {search && (
-              <button className="top-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
-                <Ico n="x" s={13} />
-              </button>
-            )}
-          </div>
+          {/* (search ที่อยู่บน top bar ถูกเอาออก — ซ้ำกับ big-srch ด้านล่าง) */}
         </div>
       )}
 
