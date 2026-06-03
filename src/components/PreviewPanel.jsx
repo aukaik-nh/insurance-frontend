@@ -75,44 +75,70 @@ export function PreviewPanel({ p, onClose, onOpen }) {
   // Blob URL — iframe ส่ง auth header ไม่ได้ ต้อง fetch เองแล้วใช้ blob
   const { blobUrl: pdfBlobUrl, loading: pdfLoading } = usePdfBlob(activePdfUrl)
 
-  // swipe-down-to-close (mobile) — pointer events with capture for reliability
-  const dragRef = useRef({ startY: 0, dragging: false, moved: false, pointerId: null })
+  // swipe-down-to-close (mobile) — native touch listeners (iOS Safari fix)
+  const handleRef = useRef(null)
+  const stateRef  = useRef({ startY: 0, dy: 0, dragging: false, moved: false })
   const [dragY, setDragY] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [closing, setClosing] = useState(false)
+  const closingRef = useRef(false)
 
-  const startClose = () => {
-    setClosing(true)
-    setTimeout(onClose, 200)
-  }
+  useEffect(() => {
+    const el = handleRef.current
+    if (!el) return
 
-  const onPointerDown = (e) => {
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
-    dragRef.current = { startY: e.clientY, dragging: true, moved: false, pointerId: e.pointerId }
-    setDragging(true)
-  }
-  const onPointerMove = (e) => {
-    if (!dragRef.current.dragging) return
-    const dy = e.clientY - dragRef.current.startY
-    if (Math.abs(dy) > 5) dragRef.current.moved = true
-    setDragY(Math.max(0, dy))
-  }
-  const onPointerUp = (e) => {
-    if (!dragRef.current.dragging) return
-    try { e.currentTarget.releasePointerCapture?.(e.pointerId) } catch {}
-    const dy = dragY
-    const moved = dragRef.current.moved
-    dragRef.current.dragging = false
-    setDragging(false)
-    if (dy > 110) {
-      startClose()
-    } else if (!moved) {
-      // tap → close (รักษา UX เดิม)
-      startClose()
-    } else {
-      setDragY(0)
+    const startClose = () => {
+      if (closingRef.current) return
+      closingRef.current = true
+      setClosing(true)
+      setTimeout(() => onClose?.(), 200)
     }
-  }
+
+    const getY = (e) => (e.touches?.[0]?.clientY ?? e.changedTouches?.[0]?.clientY ?? e.clientY ?? 0)
+
+    const onStart = (e) => {
+      if (closingRef.current) return
+      stateRef.current = { startY: getY(e), dy: 0, dragging: true, moved: false }
+      setDragging(true)
+    }
+    const onMove = (e) => {
+      const st = stateRef.current
+      if (!st.dragging) return
+      const dy = getY(e) - st.startY
+      if (Math.abs(dy) > 5) st.moved = true
+      st.dy = Math.max(0, dy)
+      // prevent browser scroll while dragging down
+      if (dy > 0 && e.cancelable) e.preventDefault()
+      setDragY(st.dy)
+    }
+    const onEnd = () => {
+      const st = stateRef.current
+      if (!st.dragging) return
+      st.dragging = false
+      setDragging(false)
+      if (st.dy > 100) startClose()
+      else if (!st.moved) startClose()  // tap
+      else setDragY(0)
+    }
+
+    el.addEventListener("touchstart", onStart, { passive: true })
+    el.addEventListener("touchmove",  onMove,  { passive: false })
+    el.addEventListener("touchend",   onEnd)
+    el.addEventListener("touchcancel", onEnd)
+    el.addEventListener("mousedown",  onStart)
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup",   onEnd)
+
+    return () => {
+      el.removeEventListener("touchstart", onStart)
+      el.removeEventListener("touchmove",  onMove)
+      el.removeEventListener("touchend",   onEnd)
+      el.removeEventListener("touchcancel", onEnd)
+      el.removeEventListener("mousedown",  onStart)
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup",   onEnd)
+    }
+  }, [onClose])
 
   return (
     <>
@@ -128,14 +154,12 @@ export function PreviewPanel({ p, onClose, onOpen }) {
         }}
       >
         {/* drag handle — เลื่อนลงเพื่อปิด */}
-        <button
+        <div
+          ref={handleRef}
           className="pvp-pill"
+          role="button"
+          tabIndex={0}
           aria-label="ลากลงเพื่อปิด"
-          title="ลากลงเพื่อปิด"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
         />
 
         {/* header */}
