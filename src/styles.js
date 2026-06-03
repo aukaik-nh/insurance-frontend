@@ -2470,6 +2470,19 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
   .pdf-preview-wrap .pdf-iframe{height:75vh !important;min-height:500px !important}
 }
 @media(max-width:639px){
+  /* mobile: เลื่อนตารางได้ + ไม่มี blank space ขวา */
+  .body{padding:14px 10px}
+  .list-layout,.list-layout .body{width:100%;min-width:0;max-width:100vw}
+  .card{width:100%;min-width:0;border-radius:14px;overflow:hidden}
+  /* table inner scroll — touch friendly */
+  .card > div[style*="overflow-x"]{
+    -webkit-overflow-scrolling:touch !important;
+    overflow-x:auto !important;
+    scrollbar-width:thin;
+  }
+  .card > div[style*="overflow-x"]::-webkit-scrollbar{height:5px;display:block}
+  .card > div[style*="overflow-x"]::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:99px}
+  .card table{min-width:560px}  /* บังคับกว้างให้ scroll ได้ */
   /* ซ่อน live preview ฝั่งขวาบนจอเล็ก (กว้าง < 640px) — กว้างเกินจะดูไม่รู้เรื่อง */
   .detail-aside{display:none !important}
   /* PremiumGrid compact — ลด padding/font ให้พอดี viewport */
