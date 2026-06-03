@@ -489,38 +489,6 @@ export function ListPage({ tab }) {
                 )
               })()}
 
-              {/* ── Quick stats strip — กันโล่ง ── */}
-              <div className="quick-stats">
-                <div className="qs-item qs-teal">
-                  <div className="qs-icon"><Ico n="doc" s={18} /></div>
-                  <div className="qs-body">
-                    <div className="qs-val">{total.toLocaleString()}</div>
-                    <div className="qs-lbl">กรมธรรม์ทั้งหมด</div>
-                  </div>
-                </div>
-                <div className="qs-item qs-green">
-                  <div className="qs-icon"><Ico n="shield" s={18} /></div>
-                  <div className="qs-body">
-                    <div className="qs-val">{active.toLocaleString()}</div>
-                    <div className="qs-lbl">คุ้มครองอยู่</div>
-                  </div>
-                </div>
-                <div className="qs-item qs-amber">
-                  <div className="qs-icon"><Ico n="bell" s={18} /></div>
-                  <div className="qs-body">
-                    <div className="qs-val">{expiring.length.toLocaleString()}</div>
-                    <div className="qs-lbl">ใกล้หมดอายุ · 30 วัน</div>
-                  </div>
-                </div>
-                <div className="qs-item qs-pink">
-                  <div className="qs-icon"><Ico n="banknote" s={18} /></div>
-                  <div className="qs-body">
-                    <div className="qs-val">฿{sumPremium.toLocaleString("th-TH", { maximumFractionDigits: 0 })}</div>
-                    <div className="qs-lbl">เบี้ยรวมในระบบ</div>
-                  </div>
-                </div>
-              </div>
-
               {/* ── 1. เมนูหลัก 4 ใบ — ขึ้นบนสุดตามที่ user ขอ ── */}
               <div className="sec-hd">
                 <Ico n="grid" s={14} />

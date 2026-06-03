@@ -7,12 +7,12 @@ input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0
 input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 :root{
   --w:264px;
-  --bg:#F4F8F7;
-  --bg2:#E6F4F1;
+  --bg:#F5F6F8;
+  --bg2:#EEF0F4;
   --sur:#FFFFFF;
-  --sur2:#F5FAF9;
-  --brd:#DEE9E6;
-  --brd2:#BAD0CB;
+  --sur2:#F7F8FA;
+  --brd:#E3E5EA;
+  --brd2:#C5CAD3;
   /* Primary = Chakra Purity teal/cyan */
   --blue:#319795;
   --blue-h:#234E52;
