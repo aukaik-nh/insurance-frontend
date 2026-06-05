@@ -15,14 +15,38 @@ export function LoginPage({ onLogin }) {
       setErr("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน"); return
     }
     setLoading(true); setErr("")
-    try {
-      const res = await api.post("/auth/login", {
-        username: username.trim(),
-        password: password.trim(),
+
+    const body = { username: username.trim(), password: password.trim() }
+    // Render free tier อาจ cold start ~50s — retry 2 ครั้งสำหรับ network error / 5xx
+    // timeout ต่อครั้ง 30s × 3 attempts = ครอบคลุม window cold start
+    const attempt = (n) => api.post("/auth/login", body, { timeout: 30000 })
+      .catch(err => {
+        const status = err.response?.status
+        const isNetworkErr = !err.response   // no response = timeout/offline/CORS
+        const isServerDown = status >= 500 && status < 600
+        // retry เฉพาะ network error หรือ 5xx — ไม่ retry 401/422 (รหัสผิด/รูปแบบไม่ถูก)
+        if (n < 3 && (isNetworkErr || isServerDown)) {
+          return new Promise(r => setTimeout(r, 1500))
+            .then(() => attempt(n + 1))
+        }
+        throw err
       })
+
+    try {
+      const res = await attempt(1)
       onLogin(res.data.token)
     } catch (e) {
-      setErr(e.response?.data?.detail || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่")
+      const status = e.response?.status
+      if (!e.response) {
+        // network error / timeout — แยกข้อความให้ user รู้ว่าควรลองใหม่
+        setErr("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — เซิร์ฟเวอร์อาจกำลังเริ่มทำงาน กรุณาลองใหม่อีกครั้งใน 30 วินาที")
+      } else if (status === 401) {
+        setErr("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+      } else if (status >= 500) {
+        setErr("เซิร์ฟเวอร์ขัดข้อง กรุณาลองใหม่อีกครั้ง")
+      } else {
+        setErr(e.response?.data?.detail || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่")
+      }
     } finally {
       setLoading(false)
     }

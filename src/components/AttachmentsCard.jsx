@@ -282,35 +282,40 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
                   const dlUrl   = `${viewUrl}?download=1`
                   const hasPremium = att.total_premium || att.net_premium
                   return (
-                    <div key={att.id} style={{
+                    <div key={att.id} className="att-row" style={{
                       display: "flex", flexDirection: "column", gap: 8,
                       padding: "10px 14px",
                       border: "1.5px solid var(--brd)", borderRadius: 11,
                       background: "var(--sur)",
+                      minWidth: 0,
                     }}>
-                      {/* ── header row — เลียนแบบ pdf-preview-bar ── */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                      {/* ── header row — wrap บนมือถือเพื่อกัน overflow ── */}
+                      <div className="att-row-hd" style={{
+                        display: "flex", alignItems: "center", gap: 9,
+                        flexWrap: "wrap",                              /* ปุ่มหลุดบรรทัดถัดไปได้ */
+                        minWidth: 0,
+                      }}>
                         <span style={{ color: g.color, flexShrink: 0, display: "flex" }}>
                           <Ico n="doc" s={17} />
                         </span>
-                        <span style={{
-                          flex: 1, minWidth: 0,
+                        <span className="att-fname" style={{
+                          flex: "1 1 0", minWidth: 0,
                           fontSize: 15, fontWeight: 600, color: "var(--t1)",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
                           {att.label || att.pdf_filename || "ไฟล์ PDF"}
                         </span>
                         {att.pdf_filename && att.label && att.label !== att.pdf_filename && (
-                          <span style={{ fontSize: 13, color: "var(--t3)", flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, color: "var(--t3)", flexShrink: 0, whiteSpace: "nowrap" }}>
                             {att.pdf_filename}
                           </span>
                         )}
                         {att.pdf_size && (
-                          <span style={{ fontSize: 13, color: "var(--t3)", flexShrink: 0 }}>
+                          <span style={{ fontSize: 13, color: "var(--t3)", flexShrink: 0, whiteSpace: "nowrap" }}>
                             {fmtKB(att.pdf_size)}
                           </span>
                         )}
-                        <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        <div className="att-row-actions" style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: "auto" }}>
                           <button className="pdf-zoom-btn" onClick={() => openPdfTab(viewUrl)} title="เปิดในแท็บใหม่">
                             <Ico n="open" s={17} />
                           </button>

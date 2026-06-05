@@ -7,6 +7,11 @@ html,body{
   -webkit-tap-highlight-color:transparent;
   overscroll-behavior-y:none;     /* ลด pull-to-refresh ที่ขัด swipe */
 }
+/* Desktop เท่านั้น: จองพื้นที่ scrollbar ตลอด กัน layout shift เวลาเนื้อหายาวสั้นต่างกัน
+   มือถือใช้ overlay scrollbar (ไม่กินพื้นที่จริง) — ไม่ต้องจอง ไม่งั้นจะเห็นแถบว่างทางขวา */
+@media(min-width:1024px){
+  html{scrollbar-gutter:stable}
+}
 *{-webkit-tap-highlight-color:transparent}
 /* iOS: input font-size <16px จะ auto-zoom on focus — ป้องกัน */
 input,select,textarea{font-size:16px}
@@ -2729,9 +2734,11 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
 }
 @media(max-width:639px){
   /* mobile: กันทั้งหน้า horizontal scroll — เนื้อหากว้างเกิน clip ในกล่อง */
-  html,body{overflow-x:hidden;max-width:100vw}
+  /* ⚠️ ใช้ overflow-x:clip ไม่ใช่ hidden — hidden บน html/body จะทำให้ overflow-y กลายเป็น auto โดย implicit
+     แล้ว html กลายเป็น scroll container ใหม่ → ทั้งหน้าเลื่อนไม่ได้ (ยืนยันใน Chrome iOS emulator) */
+  html,body{overflow-x:clip;max-width:100vw}
   .app,.main,.list-layout,.list-layout .body{
-    width:100%;min-width:0;max-width:100vw;overflow-x:hidden
+    width:100%;min-width:0;max-width:100vw;overflow-x:clip
   }
   .body{padding:14px 10px}
   .card{width:100%;min-width:0;border-radius:14px;overflow:hidden}
@@ -2747,8 +2754,40 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
   }
   .card > div[style*="overflow"]::-webkit-scrollbar{height:5px;display:block}
   .card > div[style*="overflow"]::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:99px}
-  /* ซ่อน live preview ฝั่งขวาบนจอเล็ก (กว้าง < 640px) — กว้างเกินจะดูไม่รู้เรื่อง */
-  .detail-aside{display:none !important}
+  /* แสดง PDF preview บนมือถือเต็มความกว้าง — ย้ายมาไว้บน detail content
+     เดิมซ่อนทั้งหมด แต่ user ต้องการดู PDF ได้บนมือถือ */
+  .detail-aside{
+    display:block !important;
+    margin-bottom:18px;
+    order:-1;                                /* ดัน PDF ขึ้นบนสุดเหนือฟอร์ม */
+  }
+  /* ⚠️ ต้องบังคับ align-items:stretch — ทับ default align-items:flex-start ของ .detail-split
+     ไม่งั้น flex item (detail-aside + main) จะใช้ความกว้างเท่า content เท่านั้น
+     เกิดช่องว่างฝั่งขวา (user รายงาน "ช่องข้างขวา") */
+  .detail-split{display:flex !important;flex-direction:column;align-items:stretch !important}
+  .detail-split > *{width:100%;min-width:0}
+  /* compact toolbar — ตัวอักษร + ขนาดปุ่มเล็กลง พอดี viewport แคบ */
+  .pdf-preview-bar{flex-wrap:wrap;font-size:13.5px;gap:6px !important}
+  /* ซ่อน lead doc-icon บนมือถือ — ⚠️ ต้อง !important เพราะ <Ico> component มี inline style display:"block"
+     ถ้าไม่ override จะหลุดไปอยู่ปนกับปุ่ม action ดูเหมือนปุ่มลึกลับเกิน ทำให้ layout ขยับเมื่อย่อ/ขยาย */
+  .pdf-preview-bar > svg:first-child{display:none !important}
+  .pdf-preview-bar .pdf-fname{font-size:13px;min-width:0;flex:1 1 auto;order:-1}
+  .pdf-preview-bar .pdf-size{font-size:11.5px;order:-1;flex:0 0 auto;color:var(--t3)}
+  /* expand = ปุ่มแรกที่แสดง (pen ถูกซ่อน) → ดันชิดขวา */
+  .pdf-preview-bar > button:nth-of-type(2){margin-left:auto}
+  .pdf-zoom-btn{width:32px !important;height:32px !important}
+  .pdf-zoom-btn svg{width:15px !important;height:15px !important}
+  /* ปุ่ม edit-name / change-file / delete — ซ่อนบนจอเล็ก ใช้ผ่าน fullscreen / AttachmentsCard แทน
+     เก็บไว้แค่ expand / open-tab / download (อ่านอย่างเดียว) */
+  .pdf-preview-bar > button:nth-of-type(1),       /* pen */
+  .pdf-preview-bar > button:nth-of-type(5),       /* upload (change file) */
+  .pdf-preview-bar > button:nth-of-type(6){       /* trash */
+    display:none !important;
+  }
+  /* doc-type tab bar (กรมธรรม์/พ.ร.บ./สลักหลัง) — pill เล็กลง */
+  .detail-aside > div[style*="flex-wrap"] button{
+    font-size:13px !important;padding:7px 12px !important;
+  }
   /* PremiumGrid compact — ลด padding/font ให้พอดี viewport */
   .premium-grid-table th, .premium-grid-table td{padding:6px 4px !important;font-size:12.5px !important}
   .premium-grid-table input{padding:6px 8px !important;font-size:13px !important;min-width:60px !important}
