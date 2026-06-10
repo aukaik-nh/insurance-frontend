@@ -76,19 +76,10 @@ body.dark{
 }
 body{
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
-  font-size:16px;color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.55;
+  font-size:17px;color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.6;
   background:var(--bg);
-  background-image:
-    radial-gradient(at 8% -10%, rgba(79,209,197,.14) 0, transparent 45%),
-    radial-gradient(at 95% 0%, rgba(49,151,149,.10) 0, transparent 40%);
-  background-attachment:fixed;
   min-height:100vh;
   min-height:100dvh;
-}
-body.dark{
-  background-image:
-    radial-gradient(at 10% -10%, rgba(99,102,241,.22) 0, transparent 50%),
-    radial-gradient(at 95% 5%, rgba(34,211,238,.10) 0, transparent 45%);
 }
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--brd2),#94A3B8);border-radius:99px}
@@ -100,15 +91,13 @@ body.dark{
 
 .sb{
   width:100%;
-  background:rgba(255,255,255,.78);
-  -webkit-backdrop-filter:saturate(180%) blur(14px);
-  backdrop-filter:saturate(180%) blur(14px);
+  background:var(--sur);
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;
-  border-bottom:1px solid rgba(226,229,238,.85);
-  padding:0 24px;height:76px;gap:0;
+  border-bottom:1px solid var(--brd);
+  padding:0 24px;height:80px;gap:0;
 }
-body.dark .sb{background:rgba(23,28,50,.78);border-bottom-color:rgba(43,50,82,.85)}
+body.dark .sb{background:var(--sur);border-bottom-color:var(--brd)}
 .theme-btn{
   width:42px;height:42px;border-radius:12px;
   background:var(--sur);border:1px solid var(--brd);
@@ -184,11 +173,11 @@ body.dark .sb{background:rgba(23,28,50,.78);border-bottom-color:rgba(43,50,82,.8
   padding:0;overflow:visible;
 }
 .sb-item{
-  display:flex;align-items:center;gap:9px;
-  padding:9px 16px;border-radius:10px;
-  cursor:pointer;color:var(--t2);font-size:15.5px;
-  font-weight:500;transition:all .13s;
-  position:relative;height:42px;
+  display:flex;align-items:center;gap:10px;
+  padding:11px 18px;border-radius:10px;
+  cursor:pointer;color:var(--t2);font-size:16.5px;
+  font-weight:500;transition:background .13s,color .13s;
+  position:relative;height:46px;
 }
 .sb-item:hover{background:var(--sur2);color:var(--t1)}
 .sb-item.on{background:var(--blue-bg);color:var(--blue);font-weight:700}
@@ -946,6 +935,41 @@ tr.tr-active td{background:var(--blue-bg) !important}
 .list-layout.has-pvp .svc-grid{grid-template-columns:repeat(2,1fr)}
 @media(max-width:1024px){.svc-grid{grid-template-columns:repeat(2,1fr);gap:14px}}
 @media(max-width:420px){.svc-grid{grid-template-columns:1fr}}
+
+/* ── 4 ประเภทประกัน (Baby78 logic) — clean, flat color blocks ── */
+.type-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;
+}
+@media(max-width:1024px){.type-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.type-grid{grid-template-columns:1fr}}
+.type-card{
+  border:none;border-radius:14px;padding:20px 18px;text-align:left;
+  cursor:pointer;font-family:inherit;
+  transition:transform .15s var(--ez-out),box-shadow .15s;
+}
+.type-card:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(11,16,32,.08)}
+body.dark .type-card{filter:brightness(.92)}
+
+/* ── เมนูหลัก — flat white cards, no SVG waves ── */
+.menu-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;
+}
+@media(max-width:1024px){.menu-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.menu-grid{grid-template-columns:1fr}}
+.menu-card{
+  background:var(--sur);border:1px solid var(--brd);
+  border-radius:14px;padding:24px 20px;text-align:left;cursor:pointer;
+  font-family:inherit;color:var(--t1);
+  display:flex;flex-direction:column;gap:8px;
+  transition:transform .15s var(--ez-out),border-color .15s,box-shadow .15s;
+}
+.menu-card:hover{transform:translateY(-2px);border-color:var(--blue);box-shadow:0 8px 18px rgba(49,151,149,.12)}
+.menu-card svg{color:var(--blue)}
+.menu-card-lbl{font-size:17px;font-weight:700;color:var(--t1);margin-top:6px}
+.menu-card-sub{font-size:14px;color:var(--t3)}
+.menu-card-urgent{border-color:var(--amber-brd);background:var(--amber-bg)}
+.menu-card-urgent svg{color:var(--amber)}
+.menu-card-urgent .menu-card-sub{color:var(--amber);font-weight:600}
 
 .svc-card{
   position:relative;overflow:hidden;cursor:pointer;

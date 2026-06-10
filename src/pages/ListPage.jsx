@@ -226,6 +226,20 @@ export function ListPage({ tab }) {
   const sumPremium = statsRows.reduce((s, r) => s + (Number(r.total_premium) || 0), 0)
   const pages      = Math.ceil(total / LIMIT)
 
+  // ── 4 ประเภทประกัน (Baby78 logic): Motor / PRB / Fire / PA ──
+  const typeCounts = (() => {
+    const c = { motor: 0, prb: 0, fire: 0, pa: 0 }
+    statsRows.forEach(r => {
+      const pt = (r.policy_type || "").toUpperCase().trim()
+      if (pt === "M") c.motor += 1
+      else if (pt === "P") c.prb += 1
+      else if (["FIRE","ASSET","IAR","BURGLAR"].includes(pt)) c.fire += 1
+      else if (["PA","TA","3RD","PUBLIC","MISC","GOLF","MARINE"].includes(pt)) c.pa += 1
+      else c.pa += 1  // unknown → bucket อื่นๆ
+    })
+    return c
+  })()
+
   // ── Today's work breakdown (by policy_type) + last 7 days stacked bar
   const dailyReport = (() => {
     const now = new Date()
@@ -511,57 +525,53 @@ export function ListPage({ tab }) {
                 )
               })()}
 
-              {/* ── 1. เมนูหลัก 4 ใบ — ขึ้นบนสุดตามที่ user ขอ ── */}
+              {/* ── 1. 4 ประเภทประกัน (Baby78 logic) ── */}
               <div className="sec-hd">
-                <Ico n="grid" s={14} />
-                <span>เมนูหลัก</span>
-                <small>เข้าถึงได้รวดเร็ว</small>
+                <Ico n="folder" s={14} />
+                <span>ประเภทกรมธรรม์</span>
+                <small>แยกตาม key ที่ใช้ระบุ</small>
               </div>
-              <div className="svc-grid">
+              <div className="type-grid">
                 {[
-                  { path: "/policies", ico: "doc",      cls: "svc-green",  lbl: "กรมธรรม์ทั้งหมด", badge: total.toLocaleString(), bIco: "doc" },
-                  { path: "/upload",   ico: "upload",   cls: "svc-blue",   lbl: "เพิ่มกรมธรรม์",   badge: "ใหม่",                bIco: "plus" },
-                  { path: "/invoice",  ico: "banknote", cls: "svc-purple", lbl: "สร้างเอกสาร",     badge: "QR",                  bIco: "banknote" },
-                  { path: "/expiring", ico: "bell",     cls: "svc-amber",  lbl: "ใกล้หมดอายุ",     badge: expiring.length.toLocaleString(), bIco: "bell", urgent: expiring.length > 0 },
-                ].map((c, idx) => (
-                  <button key={c.path} className={`svc-card ${c.cls}`} onClick={() => navigate(c.path)}>
-                    <svg className="svc-wave" viewBox="0 0 240 240" preserveAspectRatio="none" aria-hidden="true">
-                      {idx === 0 && (<>
-                        <path d="M0,60 Q60,30 130,70 T240,40 L240,0 L0,0 Z" fill="rgba(255,255,255,.16)" />
-                        <path d="M0,150 Q70,180 140,150 T240,170 L240,240 L0,240 Z" fill="rgba(255,255,255,.10)" />
-                        <circle cx="210" cy="50" r="36" fill="rgba(255,255,255,.10)" />
-                      </>)}
-                      {idx === 1 && (<>
-                        <path d="M0,90 Q70,40 140,80 T240,50 L240,0 L0,0 Z" fill="rgba(255,255,255,.14)" />
-                        <path d="M240,140 Q170,160 100,130 T0,150 L0,240 L240,240 Z" fill="rgba(255,255,255,.10)" />
-                        <circle cx="40" cy="60" r="28" fill="rgba(255,255,255,.12)" />
-                      </>)}
-                      {idx === 2 && (<>
-                        <path d="M0,40 Q80,80 160,40 T240,60 L240,0 L0,0 Z" fill="rgba(255,255,255,.16)" />
-                        <path d="M0,180 Q60,150 130,170 T240,140 L240,240 L0,240 Z" fill="rgba(255,255,255,.10)" />
-                        <circle cx="200" cy="200" r="40" fill="rgba(255,255,255,.10)" />
-                      </>)}
-                      {idx === 3 && (<>
-                        <path d="M0,70 Q90,30 150,80 T240,50 L240,0 L0,0 Z" fill="rgba(255,255,255,.15)" />
-                        <path d="M0,160 Q80,200 160,160 T240,180 L240,240 L0,240 Z" fill="rgba(255,255,255,.10)" />
-                        <circle cx="30" cy="190" r="32" fill="rgba(255,255,255,.10)" />
-                      </>)}
-                    </svg>
-                    <div className="svc-icon">
-                      <Ico n={c.ico} s={36} />
+                  { key: "motor", lbl: "ประกันรถยนต์", count: typeCounts.motor, sub: "ทะเบียนรถ · กธ · ปี",     ico: "car",    bg: "#E6F1FB", dark: "#0C447C", mid: "#185FA5" },
+                  { key: "prb",   lbl: "ประกัน พ.ร.บ.", count: typeCounts.prb,   sub: "ทะเบียนรถ · พรบ · ปี",   ico: "shield", bg: "#E1F5EE", dark: "#085041", mid: "#0F6E56" },
+                  { key: "fire",  lbl: "อัคคีภัย",        count: typeCounts.fire,  sub: "ที่อยู่สถานที่",         ico: "flame",  bg: "#FAECE7", dark: "#712B13", mid: "#993C1D" },
+                  { key: "pa",    lbl: "PA / TA / อื่นๆ",  count: typeCounts.pa,    sub: "ชื่อผู้เอาประกัน",       ico: "person", bg: "#EEEDFE", dark: "#3C3489", mid: "#534AB7" },
+                ].map(t => (
+                  <button key={t.key} className="type-card"
+                    onClick={() => navigate(`/policies?type=${t.key}`)}
+                    style={{ background: t.bg, color: t.dark }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                      <Ico n={t.ico} s={26} />
+                      <span style={{ fontSize: 17, fontWeight: 600 }}>{t.lbl}</span>
                     </div>
-                    <div className="svc-foot">
-                      <div className="svc-title">{c.lbl}</div>
-                      <div className={`svc-badge ${c.urgent ? "svc-badge-pulse" : ""}`}>
-                        <b>{c.badge}</b>
-                        <Ico n={c.bIco} s={14} />
-                      </div>
-                    </div>
+                    <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.1 }}>{t.count.toLocaleString()}</div>
+                    <div style={{ fontSize: 13.5, color: t.mid, marginTop: 6 }}>{t.sub}</div>
                   </button>
                 ))}
               </div>
 
-              {/* charts section removed: donut → /expiring, daily activity → ตามคำสั่ง user */}
+              {/* ── 2. เมนูหลัก 4 ปุ่ม — flat, clean, no SVG waves ── */}
+              <div className="sec-hd" style={{ marginTop: 24 }}>
+                <Ico n="grid" s={14} />
+                <span>เมนูหลัก</span>
+                <small>เข้าถึงได้รวดเร็ว</small>
+              </div>
+              <div className="menu-grid">
+                {[
+                  { path: "/policies", ico: "list",     lbl: "รายการกรมธรรม์", sub: `${total.toLocaleString()} รายการ`,              urgent: false },
+                  { path: "/upload",   ico: "upload",   lbl: "เพิ่มกรมธรรม์",   sub: "อัปโหลด PDF · AI ช่วย",                          urgent: false },
+                  { path: "/expiring", ico: "bell",     lbl: "ใกล้หมดอายุ",     sub: `${expiring.length} รายภายใน 30 วัน`,            urgent: expiring.length > 0 },
+                  { path: "/invoice",  ico: "banknote", lbl: "ใบแจ้งหนี้",       sub: "QR PromptPay · พิมพ์",                          urgent: false },
+                ].map(m => (
+                  <button key={m.path} className={`menu-card ${m.urgent ? "menu-card-urgent" : ""}`}
+                    onClick={() => navigate(m.path)}>
+                    <Ico n={m.ico} s={30} />
+                    <div className="menu-card-lbl">{m.lbl}</div>
+                    <div className="menu-card-sub">{m.sub}</div>
+                  </button>
+                ))}
+              </div>
             </>
           )}
 
