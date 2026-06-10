@@ -86,30 +86,44 @@ export function DetailPage() {
   // reset doc tab เมื่อสลับ related policy
   useEffect(() => { setActiveDocId("main") }, [activePdfId])
 
-  // fetch ลูกค้าเดียวกัน (search ทะเบียน) — กรองเฉพาะที่มี PDF
+  // fetch ลูกค้าเดียวกัน — ทะเบียนจริงใช้ plate, FIRE/PA/ASSET ใช้ที่อยู่
   // ⚡ defer 250ms — ให้หน้าหลัก render เสร็จก่อน ค่อยโหลดข้อมูล related (ไม่ critical)
   useEffect(() => {
-    if (!p?.license_plate) { setRelatedPdfs([]); return }
-    const plate = p.license_plate.trim()
-    if (!plate || plate === "OTHER" || plate === "—") { setRelatedPdfs([]); return }
+    // placeholder plate ที่ Baby78 ใช้เก็บประเภทประกันที่ไม่มีทะเบียนจริง
+    const PLACEHOLDER_PLATES = new Set(["FIRE", "OTHER", "PA", "TA", "ASSET", "MISC", "IAR", "BURGLAR", "3RD", "PUBLIC", "MARINE", "GOLF", "PLATE", "CAR", "—", ""])
+    const plate = (p?.license_plate || "").trim()
+    const isRealPlate = plate && !PLACEHOLDER_PLATES.has(plate.toUpperCase())
+
+    // ที่อยู่ — เอา 30 chars แรก (น่าจะเป็น "เลขที่ + ชื่อสถานที่")
+    const addrKey = (p?.insured_address || "").trim().slice(0, 30)
+
+    if (!isRealPlate && !addrKey) { setRelatedPdfs([]); return }
+    const searchTerm = isRealPlate ? plate : addrKey
+    if (!searchTerm) { setRelatedPdfs([]); return }
 
     let cancelled = false
     const timer = setTimeout(() => {
       if (cancelled) return
-      api.get("/policies", { params: { search: plate, limit: 50 } })
+      api.get("/policies", { params: { search: searchTerm, limit: 50 } })
         .then(res => {
           if (cancelled) return
           const all = res.data.data || []
-          const sameCustomer = all.filter(r =>
-            r.license_plate?.trim() === plate &&
-            (r.pdf_url || r.pdf_filename || r.pdf_size)  // มี PDF เท่านั้น
-          )
+          const sameCustomer = all.filter(r => {
+            if (!(r.pdf_url || r.pdf_filename || r.pdf_size)) return false  // มี PDF เท่านั้น
+            // ใช้ key เดียวกันเทียบกลับ
+            if (isRealPlate) {
+              return r.license_plate?.trim() === plate
+            }
+            // address-based: เอา 30 chars แรกของ address1 มาเทียบ
+            const otherAddr = (r.insured_address || "").trim().slice(0, 30)
+            return otherAddr === addrKey
+          })
           setRelatedPdfs(sameCustomer)
         })
         .catch(() => { if (!cancelled) setRelatedPdfs([]) })
     }, 250)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [p?.id, p?.license_plate, p?.pdf_url, refreshKey])
+  }, [p?.id, p?.license_plate, p?.insured_address, p?.pdf_url, refreshKey])
 
   // ⚠️ usePdfBlob ต้องถูกเรียก *ก่อน* early return — Rules of Hooks
   // คำนวณ input แบบ null-safe (รองรับช่วง p ยังไม่โหลด)
