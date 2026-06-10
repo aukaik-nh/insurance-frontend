@@ -897,7 +897,7 @@ export function ListPage({ tab }) {
             page={page}
             pages={displayPages}
             setPage={setPage}
-            onRow={r => setPreviewPolicy(prev => prev?.id === r.id ? null : r)}
+            onRow={r => navigate(`/policies/${r.id}`, { state: { policy: r } })}
             onRowHover={prefetchPolicy}
             activeId={previewPolicy?.id}
             pageOffset={(page - 1) * LIMIT}
