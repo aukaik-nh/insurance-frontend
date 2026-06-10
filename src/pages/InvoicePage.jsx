@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react"
-import { useNavigate, useOutletContext } from "react-router-dom"
+import { useState, useMemo, useEffect } from "react"
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
 import { QrCode } from "../components/QrCode"
@@ -344,9 +344,20 @@ function InvoicePreview({ form, calc }) {
   )
 }
 
-export function InvoicePage() {
+// แปลง YYYY-MM-DD → DD/MM/YYYY (พ.ศ.)
+const toThaiDate = (iso) => {
+  if (!iso) return ""
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return ""
+  const y = parseInt(m[1]) + 543
+  return `${m[3]}/${m[2]}/${y}`
+}
+
+export function InvoicePage({ policyIdProp = null, onClose = null, embedded = false }) {
   const navigate = useNavigate()
   const { notify } = useOutletContext()
+  const [searchParams] = useSearchParams()
+  const policyId = policyIdProp || searchParams.get("policy_id")
 
   const [form, setForm] = useState({
     template:     "tm1",          // "default" | "tm1" | "tm2"
@@ -396,6 +407,60 @@ export function InvoicePage() {
   })
   const [generating, setGenerating] = useState(false)
   const [err, setErr] = useState("")
+  const [loadingPolicy, setLoadingPolicy] = useState(!!policyId)
+
+  // ── Pre-fill จาก policy_id (เปิดจากหน้า DetailPage) ─────────
+  useEffect(() => {
+    if (!policyId) return
+    setLoadingPolicy(true)
+    api.get(`/policies/${policyId}`).then(res => {
+      const p = res.data?.policy || res.data || {}
+      // ตัดสินใจ subtype ตาม policy_type
+      const pt = (p.policy_type || "").toUpperCase()
+      const subtype = pt === "P" ? "prb" : pt === "M" ? "comp" : "other"
+      setForm(f => ({
+        ...f,
+        // policy info
+        policy_no:         p.policy_number || "",
+        original_policy_no: p.policy_number || "",
+        // buyer
+        buyer: {
+          ...f.buyer,
+          name:          p.insured_name || "",
+          address:       p.insured_address || "",
+          phone:         p.phone || "",
+          license_plate: p.license_plate || "",
+        },
+        // dates
+        coverage_start: toThaiDate(p.coverage_start),
+        coverage_end:   toThaiDate(p.coverage_end),
+        effective_date: toThaiDate(p.coverage_start),
+        expiry_date:    toThaiDate(p.coverage_end),
+        // car
+        registration_no: p.license_plate || "",
+        car_make:        p.car_make || "",
+        car_model:       p.car_model || "",
+        chassis_no:      p.chassis_no || "",
+        // money
+        net_premium:        Number(p.net_premium) || 0,
+        sum_insured:        Number(p.sum_insured) || 0,
+        third_party_person:   Number(p.third_party_per_person) || 0,
+        third_party_accident: Number(p.third_party_per_accident) || 0,
+        own_damage:           Number(p.own_damage) || 0,
+        // broker
+        broker_name: p.broker_name || "",
+        broker_code: p.agent_code || "",
+        // type
+        insurance_subtype: subtype,
+        description: pt === "P" ? "เบี้ยประกันภัย พ.ร.บ." : "เบี้ยประกันภัยรถยนต์",
+      }))
+      setLoadingPolicy(false)
+    }).catch(e => {
+      console.error("[invoice] โหลด policy ไม่ได้:", e)
+      setLoadingPolicy(false)
+      setErr("โหลดข้อมูลกรมธรรม์ไม่ได้ — แก้ไขค่าเอง")
+    })
+  }, [policyId])
 
   // ── คำนวณ real-time ──
   const calc = useMemo(() => {

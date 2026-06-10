@@ -412,6 +412,11 @@ export function DetailPage() {
                   style={{ color: "var(--blue)", borderColor: "var(--blue-mid)", background: "var(--blue-bg)" }}>
                   <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
                 </button>
+                <button className="btn btn-w"
+                  onClick={() => navigate(`/invoice?policy_id=${id}`)}
+                  style={{ color: "var(--purple)", borderColor: "var(--purple-mid, #c4b5fd)", background: "var(--purple-bg, #f5f3ff)" }}>
+                  <Ico n="banknote" s={18} /> <span className="btn-label">ใบแจ้งหนี้</span>
+                </button>
                 <button className="btn btn-w" onClick={deletePolicy}
                   style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
                   <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
