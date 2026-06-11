@@ -698,89 +698,85 @@ export function ListPage({ tab }) {
               if (val === 90) return counts.m3
               return 0
             }
-            // ── Donut chart "การหมดอายุล่วงหน้า" — ย้ายจาก dashboard ──
-            const r = 70, c = 2 * Math.PI * r
-            const fcTotal = Math.max(1, expiryForecast.total)
-            let acc = 0
-            const arcs = expiryForecast.buckets.filter(b => b.count > 0).map(b => {
-              const dash = (b.count / fcTotal) * c
-              const offset = -acc
-              acc += dash
-              return { ...b, dash, offset }
+            // ── Line chart: 12 เดือนข้างหน้า — จำนวนกรมธรรม์ที่จะหมดอายุ ──
+            const MONTH_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
+            const futureMonths = Array.from({ length: 12 }, (_, i) => {
+              const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
+              return {
+                date: d,
+                key: `${d.getFullYear()}-${d.getMonth()}`,
+                label: `${MONTH_TH[d.getMonth()]} ${(d.getFullYear() + 543).toString().slice(-2)}`,
+                count: 0,
+                isCurrent: i === 0,
+              }
             })
+            const futureMap = new Map(futureMonths.map((m, i) => [m.key, i]))
+            statsRows.forEach(r => {
+              if (!r.coverage_end) return
+              const t = new Date(r.coverage_end)
+              if (isNaN(t) || t < today0) return
+              const idx = futureMap.get(`${t.getFullYear()}-${t.getMonth()}`)
+              if (idx != null) futureMonths[idx].count += 1
+            })
+            const lineMax = Math.max(1, ...futureMonths.map(m => m.count))
+            const lineTotal = futureMonths.reduce((a, b) => a + b.count, 0)
+            // SVG geometry
+            const lW = 880, lH = 260, lPL = 44, lPR = 24, lPT = 24, lPB = 48
+            const iW = lW - lPL - lPR, iH = lH - lPT - lPB
+            const xAt = (i) => lPL + (i * iW) / (futureMonths.length - 1)
+            const yAt = (v) => lPT + iH - (v / lineMax) * iH
+            const pts = futureMonths.map((m, i) => ({ x: xAt(i), y: yAt(m.count), ...m }))
+            // smooth cubic bezier path
+            const smooth = (pts) => {
+              if (pts.length < 2) return ""
+              const out = [`M${pts[0].x},${pts[0].y}`]
+              for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2
+                const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6
+                const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6
+                out.push(`C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`)
+              }
+              return out.join(" ")
+            }
+            const linePath = smooth(pts)
+            const areaPath = `${linePath} L${pts[pts.length-1].x},${lH-lPB} L${pts[0].x},${lH-lPB} Z`
+            const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({ y: lPT + iH * t, v: Math.round(lineMax * (1 - t)) }))
             return (
               <>
                 <div className="chart-card" style={{ marginBottom: 16 }}>
                   <div className="chart-hd">
                     <div>
-                      <div className="chart-ttl">การหมดอายุล่วงหน้า</div>
-                      <div className="chart-sub">เฉพาะที่ยังไม่หมดอายุ — วางแผนติดต่อต่ออายุ</div>
+                      <div className="chart-ttl">การหมดอายุล่วงหน้า 12 เดือน</div>
+                      <div className="chart-sub">รวม <b style={{ color: "var(--t1)" }}>{lineTotal.toLocaleString()}</b> กรมธรรม์จะหมดอายุใน 12 เดือนข้างหน้า</div>
                     </div>
                   </div>
-                  {(expiryForecast.expiredCount > 0 || expiryForecast.unknownCount > 0) && (
-                    <div className="fc-meta">
-                      {expiryForecast.expiredCount > 0 && (
-                        <div className="fc-meta-pill fc-meta-expired">
-                          <span className="lg-dot" style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)" }} />
-                          <span>หมดอายุแล้ว</span>
-                          <b>{expiryForecast.expiredCount.toLocaleString()}</b>
-                        </div>
-                      )}
-                      {expiryForecast.unknownCount > 0 && (
-                        <div className="fc-meta-pill">
-                          <span className="lg-dot" style={{ background: "var(--brd2)" }} />
-                          <span>ไม่ระบุวันหมด</span>
-                          <b>{expiryForecast.unknownCount.toLocaleString()}</b>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="chart-bd donut-row">
-                    <div className="donut-wrap fc-donut-wrap">
-                      <svg viewBox="0 0 180 180" width="180" height="180" className="donut-svg">
-                        <defs>
-                          {arcs.map((a, i) => (
-                            <linearGradient key={i} id={`fc-grad-exp-${a.key}`} x1="0" y1="0" x2="1" y2="1">
-                              <stop offset="0%" stopColor={a.c1} />
-                              <stop offset="100%" stopColor={a.c2} />
-                            </linearGradient>
-                          ))}
-                        </defs>
-                        <circle cx="90" cy="90" r={r} fill="none" stroke="var(--brd)" strokeWidth="14" />
-                        {arcs.map((a, i) => (
-                          <circle key={i} cx="90" cy="90" r={r} fill="none" stroke={`url(#fc-grad-exp-${a.key})`} strokeWidth="14"
-                            strokeDasharray={`${a.dash} ${c}`}
-                            strokeDashoffset={a.offset}
-                            strokeLinecap="butt"
-                            style={{ transition: "stroke-dasharray .8s var(--ez-out), stroke-dashoffset .8s var(--ez-out)" }}
-                          />
-                        ))}
-                      </svg>
-                      <div className="donut-center">
-                        <div className="donut-num">{expiryForecast.total.toLocaleString()}</div>
-                        <div className="donut-lbl">ยังคุ้มครองอยู่</div>
-                      </div>
-                    </div>
-                    <div className="donut-legend fc-legend">
-                      {expiryForecast.buckets.map(b => {
-                        const pct = expiryForecast.total > 0 ? Math.round((b.count / expiryForecast.total) * 100) : 0
-                        const clickable = (b.key === "30" || b.key === "60" || b.key === "90") && b.count > 0
-                        return (
-                          <div key={b.key}
-                            className={`fc-lg-row ${b.urgent ? "fc-urgent" : ""} ${clickable ? "fc-clickable" : ""}`}
-                            onClick={() => {
-                              if (!clickable) return
-                              const target = b.key === "30" ? 30 : b.key === "60" ? 60 : 90
-                              setExpiryRange(target)
-                            }}>
-                            <span className="lg-dot" style={{ background: `linear-gradient(135deg, ${b.c1}, ${b.c2})` }} />
-                            <span className="lg-lbl">{b.label}</span>
-                            <span className="lg-val">{b.count.toLocaleString()}</span>
-                            <span className="lg-pct">{pct}%</span>
-                          </div>
-                        )
-                      })}
-                    </div>
+                  <div className="chart-bd" style={{ padding: "8px 4px 12px" }}>
+                    <svg viewBox={`0 0 ${lW} ${lH}`} width="100%" height={lH} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
+                      <defs>
+                        <linearGradient id="exp-line-area" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"   stopColor="var(--blue)" stopOpacity="0.32" />
+                          <stop offset="100%" stopColor="var(--blue)" stopOpacity="0.02" />
+                        </linearGradient>
+                      </defs>
+                      {/* y grid */}
+                      {yTicks.map((t, i) => (
+                        <g key={i}>
+                          <line x1={lPL} x2={lW - lPR} y1={t.y} y2={t.y} stroke="var(--brd)" strokeWidth="1" strokeDasharray={i === yTicks.length - 1 ? "0" : "3 4"} opacity={i === yTicks.length - 1 ? 0.9 : 0.5} />
+                          <text x={lPL - 8} y={t.y + 4} textAnchor="end" fontSize="12" fill="var(--t3)" fontFamily="inherit">{t.v}</text>
+                        </g>
+                      ))}
+                      {/* area + line */}
+                      <path d={areaPath} fill="url(#exp-line-area)" />
+                      <path d={linePath} fill="none" stroke="var(--blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      {/* points */}
+                      {pts.map((p, i) => (
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r={p.isCurrent ? 6 : 4} fill="#fff" stroke="var(--blue)" strokeWidth="2.5" />
+                          <text x={p.x} y={p.y - 12} textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--t1)" fontFamily="inherit">{p.count > 0 ? p.count : ""}</text>
+                          <text x={p.x} y={lH - lPB + 20} textAnchor="middle" fontSize="12" fill={p.isCurrent ? "var(--blue)" : "var(--t3)"} fontWeight={p.isCurrent ? 700 : 500} fontFamily="inherit">{p.label}</text>
+                        </g>
+                      ))}
+                    </svg>
                   </div>
                 </div>
 
