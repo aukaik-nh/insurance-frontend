@@ -1819,26 +1819,22 @@ body.dark .type-card{filter:brightness(.92)}
 .big-srch-wrap{margin-bottom:20px;position:relative}
 .big-srch{
   display:flex;align-items:center;gap:14px;
-  background:var(--sur);border:1.5px solid var(--brd);
-  border-radius:var(--rL);padding:14px 18px 14px 22px;
-  box-shadow:var(--sh1);
-  transition:border-color .25s var(--ez-out),box-shadow .25s var(--ez-out),transform .2s ease;
-  position:relative;
+  background:var(--sur);border:2px solid var(--brd);
+  border-radius:14px;padding:16px 18px 16px 22px;
+  transition:border-color .15s ease,background .15s ease;
+  position:relative;min-height:62px;
 }
-.big-srch:hover{border-color:var(--brd2);box-shadow:var(--sh2)}
+.big-srch:hover{border-color:var(--brd2)}
 .big-srch:focus-within{
-  border-color:var(--blue);
-  box-shadow:0 0 0 4px rgba(99,102,241,.16),0 8px 22px rgba(99,102,241,.12);
-  transform:translateY(-1px);
+  border-color:var(--blue);background:var(--sur);
 }
-.big-srch > svg:first-child{color:var(--t3);flex-shrink:0;transition:color .2s,transform .25s var(--ez-out)}
-.big-srch:focus-within > svg:first-child{color:var(--blue);transform:scale(1.1)}
+.big-srch > svg:first-child{color:var(--blue);flex-shrink:0}
 .big-srch input{
-  flex:1;border:none;outline:none;font-size:16.5px;
+  flex:1;border:none;outline:none;font-size:18px;font-weight:500;
   font-family:inherit;
   color:var(--t1);background:transparent;
 }
-.big-srch input::placeholder{color:var(--t3)}
+.big-srch input::placeholder{color:var(--t3);font-weight:400}
 .big-srch-clr{
   background:var(--sur2);border:1px solid var(--brd);
   border-radius:8px;padding:4px 8px;cursor:pointer;
@@ -2394,12 +2390,12 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .toast.er svg{color:var(--red)}
 @keyframes tIn{from{transform:translateY(16px) scale(.96);opacity:0}to{transform:none;opacity:1}}
 
-.pdf-preview-wrap{display:flex;flex-direction:column;border:1.5px solid var(--brd);border-radius:12px;overflow:hidden;background:var(--sur2);}
-.pdf-preview-bar{padding:13px 18px;background:var(--sur);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--t2);flex-shrink:0;}
+.pdf-preview-wrap{display:flex;flex-direction:column;border:2px solid var(--blue-mid);border-radius:14px;overflow:hidden;background:var(--sur2);box-shadow:0 4px 12px rgba(49,151,149,.08);}
+.pdf-preview-bar{padding:16px 20px;background:var(--blue-bg);border-bottom:1px solid var(--blue-mid);display:flex;align-items:center;gap:12px;font-size:17px;font-weight:700;color:var(--t1);flex-shrink:0;}
 .pdf-preview-bar > svg:first-child{color:var(--blue)}
-.pdf-preview-bar .pdf-fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.pdf-preview-bar .pdf-size{font-size:13.5px;font-weight:400;color:var(--t3);flex-shrink:0;}
-.pdf-zoom-btn{width:38px;height:38px;border-radius:9px;background:var(--sur2);border:1.5px solid var(--brd);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
+.pdf-preview-bar .pdf-fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:17px;color:var(--t1);}
+.pdf-preview-bar .pdf-size{font-size:14.5px;font-weight:500;color:var(--blue-h);flex-shrink:0;background:var(--sur);padding:3px 10px;border-radius:8px;}
+.pdf-zoom-btn{width:42px;height:42px;border-radius:10px;background:var(--sur);border:1.5px solid var(--brd);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s,border-color .12s,color .12s;}
 .pdf-zoom-btn:hover{background:var(--blue-bg);border-color:var(--blue-mid);color:var(--blue)}
 .pdf-zoom-btn:disabled{opacity:.35;cursor:not-allowed}
 
@@ -2416,7 +2412,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .pdf-lb-body{flex:1;overflow:auto;padding:18px;display:flex;align-items:flex-start;justify-content:center;background:transparent;}
 .pdf-lb-frame-wrap{background:#fff;border-radius:8px;box-shadow:0 30px 60px rgba(0,0,0,.5);transition:width .15s ease;}
 .pdf-lb-frame{display:block;border:none;width:100%;height:100%}
-.pdf-iframe{width:100%;border:none;display:block}
+.pdf-iframe{width:100%;border:none;display:block;min-height:720px;background:var(--sur);}
 .pdf-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:56px 24px;color:var(--t3);text-align:center;}
 .pdf-placeholder .ph-title{font-size:17px;font-weight:600;color:var(--t2)}
 .pdf-placeholder .ph-hint{font-size:15px}

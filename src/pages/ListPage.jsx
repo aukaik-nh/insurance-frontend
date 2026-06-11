@@ -616,7 +616,7 @@ export function ListPage({ tab }) {
             <div className="big-srch" style={{ flex: 1 }}>
               <Ico n="search" s={20} />
               <input
-                placeholder="ค้นหา เลขกรมธรรม์, ชื่อผู้เอาประกัน, ทะเบียนรถ..."
+                placeholder="พิมพ์ค้นหา — ทะเบียนรถ, ชื่อ-นามสกุล, เลขกรมธรรม์, ที่อยู่"
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
               />
