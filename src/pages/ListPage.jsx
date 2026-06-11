@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
-import { useNavigate, useOutletContext } from "react-router-dom"
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom"
+import { policyTypeCategory } from "../helpers"
 import api from "../api"
 import { Ico } from "../icons"
 import { getStatus } from "../helpers"
@@ -18,6 +19,8 @@ const STATUS_OPTS = [
 
 export function ListPage({ tab }) {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const typeFilter = searchParams.get("type")  // motor | prb | fire | pa | null
   const { search, setSearch, page, setPage, notify, setExpiringCount } = useOutletContext()
 
   const [rows, setRows]               = useState([])
@@ -468,12 +471,20 @@ export function ListPage({ tab }) {
   }
 
   const baseRows     = tab === "expiring" ? expiring : rows
-  // Client-side pagination สำหรับ expiring (500 รายการ → 10 ต่อหน้า)
-  const displayRows  = tab === "expiring"
-    ? baseRows.slice((page - 1) * LIMIT, page * LIMIT)
+  // ── type filter (?type=motor|prb|fire|pa) ───────────────
+  const typeFilteredRows = typeFilter
+    ? baseRows.filter(r => policyTypeCategory(r.policy_type) === typeFilter)
     : baseRows
-  const displayTotal = tab === "expiring" ? expiring.length : total
-  const displayPages = tab === "expiring" ? Math.max(1, Math.ceil(expiring.length / LIMIT)) : pages
+  // Client-side pagination สำหรับ expiring (500 รายการ → 10 ต่อหน้า)
+  const displayRows  = tab === "expiring" || typeFilter
+    ? typeFilteredRows.slice((page - 1) * LIMIT, page * LIMIT)
+    : typeFilteredRows
+  const displayTotal = tab === "expiring" ? expiring.length
+                       : typeFilter ? typeFilteredRows.length
+                       : total
+  const displayPages = tab === "expiring" || typeFilter
+    ? Math.max(1, Math.ceil(displayTotal / LIMIT))
+    : pages
 
   return (
     <>
@@ -574,6 +585,31 @@ export function ListPage({ tab }) {
               </div>
             </>
           )}
+
+          {/* ── Active type filter chip ── */}
+          {typeFilter && (() => {
+            const LABEL = { motor: "ประกันรถยนต์", prb: "ประกัน พ.ร.บ.", fire: "อัคคีภัย", pa: "PA / TA / อื่นๆ" }
+            const STYLE = { motor: { bg: "#E6F1FB", fg: "#0C447C" }, prb: { bg: "#E1F5EE", fg: "#085041" }, fire: { bg: "#FAECE7", fg: "#712B13" }, pa: { bg: "#EEEDFE", fg: "#3C3489" } }
+            const s = STYLE[typeFilter] || { bg: "var(--sur2)", fg: "var(--t1)" }
+            return (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 15, color: "var(--t3)" }}>กรองตามประเภท:</span>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "8px 14px", borderRadius: 999,
+                  background: s.bg, color: s.fg, fontSize: 15, fontWeight: 600,
+                }}>
+                  {LABEL[typeFilter] || typeFilter}
+                  <button
+                    onClick={() => { setSearchParams({}); setPage(1) }}
+                    style={{ background: "transparent", border: "none", color: s.fg, cursor: "pointer", padding: 0, display: "inline-flex", alignItems: "center" }}
+                    title="ล้างกรอง">
+                    <Ico n="x" s={16} />
+                  </button>
+                </span>
+              </div>
+            )
+          })()}
 
           {/* ── Search + Excel export ── */}
           <div className="filter-wrap" style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>

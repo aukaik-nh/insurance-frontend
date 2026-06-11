@@ -76,7 +76,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
               <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>PDF</th>
               <SortHeader label="เลขกรมธรรม์"  col="policy_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortHeader label="ผู้เอาประกัน" col="insured_name"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="ประเภทกรมธรรม์" col="policy_type" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="ตัวระบุ" col="license_plate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortHeader label="วันหมดอายุ"   col="coverage_end"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <th>สถานะ</th>
             </tr>
@@ -119,14 +119,31 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                     {(() => {
                       const cat = policyTypeCategory(r.policy_type)
                       const style = TYPE_CAT_STYLE[cat]
-                      const label = policyTypeLabel(r.policy_type) || "—"
+                      const typeLbl = policyTypeLabel(r.policy_type) || "—"
+                      // Baby78 logic: ตัวระบุต่างกันตามประเภท
+                      let primary = "—"
+                      if (cat === "motor" || cat === "prb") {
+                        primary = r.license_plate || "—"
+                      } else if (cat === "fire") {
+                        primary = (r.insured_address || "").slice(0, 40) || "—"
+                      } else if (cat === "pa") {
+                        primary = r.insured_name || (r.insured_address || "").slice(0, 40) || "—"
+                      } else {
+                        primary = r.license_plate || r.insured_name || "—"
+                      }
                       return (
-                        <span style={{
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                          padding: "5px 12px", borderRadius: 999,
-                          background: style.bg, color: style.fg,
-                          fontSize: 14, fontWeight: 600, whiteSpace: "nowrap",
-                        }}>{label}</span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          {(cat === "motor" || cat === "prb") && r.license_plate
+                            ? <span className="plate">{primary}</span>
+                            : <span style={{ fontSize: 14.5, color: "var(--t1)", lineHeight: 1.3, maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{primary}</span>
+                          }
+                          <span style={{
+                            display: "inline-block", width: "fit-content",
+                            padding: "2px 9px", borderRadius: 999,
+                            background: style.bg, color: style.fg,
+                            fontSize: 12, fontWeight: 600,
+                          }}>{typeLbl}</span>
+                        </div>
                       )
                     })()}
                   </td>
