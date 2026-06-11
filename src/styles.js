@@ -1818,23 +1818,25 @@ body.dark .type-card{filter:brightness(.92)}
 .fchip button:hover{opacity:1}
 .big-srch-wrap{margin-bottom:20px;position:relative}
 .big-srch{
-  display:flex;align-items:center;gap:14px;
-  background:var(--sur);border:2px solid var(--brd);
-  border-radius:14px;padding:16px 18px 16px 22px;
-  transition:border-color .15s ease,background .15s ease;
-  position:relative;min-height:62px;
+  display:flex;align-items:center;gap:16px;
+  background:var(--sur);border:2px solid var(--brd2);
+  border-radius:14px;padding:18px 20px 18px 24px;
+  transition:border-color .15s ease,background .15s ease,box-shadow .15s ease;
+  position:relative;min-height:68px;
+  box-shadow:0 1px 3px rgba(11,16,32,.04);
 }
-.big-srch:hover{border-color:var(--brd2)}
+.big-srch:hover{border-color:var(--blue-mid)}
 .big-srch:focus-within{
   border-color:var(--blue);background:var(--sur);
+  box-shadow:0 0 0 4px rgba(49,151,149,.12);
 }
-.big-srch > svg:first-child{color:var(--blue);flex-shrink:0}
+.big-srch > svg:first-child{color:var(--blue);flex-shrink:0;width:26px !important;height:26px !important}
 .big-srch input{
-  flex:1;border:none;outline:none;font-size:18px;font-weight:500;
+  flex:1;border:none;outline:none;font-size:19px;font-weight:500;
   font-family:inherit;
   color:var(--t1);background:transparent;
 }
-.big-srch input::placeholder{color:var(--t3);font-weight:400}
+.big-srch input::placeholder{color:var(--t3);font-weight:400;font-size:17px}
 .big-srch-clr{
   background:var(--sur2);border:1px solid var(--brd);
   border-radius:8px;padding:4px 8px;cursor:pointer;
@@ -2523,8 +2525,8 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .page-hd-right{display:flex;gap:8px;align-items:center;flex-shrink:0}
 .page-body{padding:18px 28px 22px;flex:1}      /* header เป็น static แล้ว ไม่ต้องชดเชยความสูง */
 
-.detail-split{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:flex-start}
-.detail-aside{position:sticky;top:80px}
+.detail-split{display:grid;grid-template-columns:1fr 1.15fr;gap:24px;align-items:flex-start}
+.detail-aside{position:sticky;top:84px}
 .info-card{background:var(--sur);border:1px solid var(--brd);border-radius:14px;margin-bottom:18px;overflow:hidden}
 .info-card:hover{}
 .info-card-hd{
