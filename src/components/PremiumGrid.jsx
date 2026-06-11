@@ -42,8 +42,8 @@ function Cell({ value, onChange, readOnly, color, bold, highlight, displayFormat
       style={{
         width: "100%", textAlign: "right",
         border: "1.5px solid var(--brd)", borderRadius: 8,
-        padding: "9px 11px",
-        fontSize: 15, fontFamily: "'SF Mono','Fira Code',Consolas,monospace",
+        padding: "12px 13px",
+        fontSize: 17, fontFamily: "'SF Mono','Fira Code',Consolas,monospace",
         fontVariantNumeric: "tabular-nums",
         background: readOnly ? (highlight ? "var(--blue-bg)" : "var(--sur2)") : "var(--sur)",
         color: color || (bold ? "var(--t1)" : "var(--t2)"),
@@ -71,9 +71,9 @@ const ROWS = [
 ]
 
 const thStyle = (w) => ({
-  padding: "12px 14px",
+  padding: "14px 16px",
   textAlign: "right",
-  fontSize: 14,
+  fontSize: 16,
   fontWeight: 700,
   color: "var(--t2)",
   borderBottom: "2px solid var(--brd)",
@@ -82,8 +82,8 @@ const thStyle = (w) => ({
 })
 
 const tdLabel = (bold, highlight) => ({
-  padding: "8px 14px",
-  fontSize: 15,
+  padding: "10px 16px",
+  fontSize: 17,
   fontWeight: bold ? 700 : 500,
   color: bold ? "var(--t1)" : "var(--t2)",
   background: highlight ? "var(--blue-bg)" : "transparent",

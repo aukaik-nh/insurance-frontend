@@ -27,12 +27,39 @@ export const fmtDate = iso => {
 export const POLICY_TYPE_LABEL = {
   M:       "ประกันรถยนต์",
   P:       "พ.ร.บ.",
+  FIRE:    "อัคคีภัย",
   ASSET:   "ทรัพย์สิน",
+  IAR:     "ทรัพย์สิน (IAR)",
+  BURGLAR: "โจรกรรม",
+  PA:      "PA",
   TA:      "ประกันเดินทาง",
+  GOLF:    "กอล์ฟ",
+  MARINE:  "ขนส่ง",
+  "3RD":   "บุคคลที่ 3",
+  PUBLIC:  "PUBLIC",
+  MISC:    "อื่นๆ",
   STY:     "ประกันรถยนต์",
   โจรกรรม: "โจรกรรม",
 }
 export const policyTypeLabel = t => t ? (POLICY_TYPE_LABEL[t] || t) : null
+
+// แบ่ง 4 กลุ่ม Baby78: motor / prb / fire / pa — ใช้กับ badge สีในตาราง
+export const policyTypeCategory = (t) => {
+  const pt = (t || "").toUpperCase().trim()
+  if (pt === "M") return "motor"
+  if (pt === "P") return "prb"
+  if (["FIRE","ASSET","IAR","BURGLAR"].includes(pt)) return "fire"
+  if (["PA","TA","3RD","PUBLIC","MISC","GOLF","MARINE"].includes(pt)) return "pa"
+  return "other"
+}
+// สี badge ของแต่ละ category (ตรงกับ dashboard type-grid)
+export const TYPE_CAT_STYLE = {
+  motor: { bg: "#E6F1FB", fg: "#0C447C" },
+  prb:   { bg: "#E1F5EE", fg: "#085041" },
+  fire:  { bg: "#FAECE7", fg: "#712B13" },
+  pa:    { bg: "#EEEDFE", fg: "#3C3489" },
+  other: { bg: "#F1EFE8", fg: "#444441" },
+}
 
 export const F_SECS = [
   {
