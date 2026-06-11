@@ -195,10 +195,10 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
       <div
         className="info-card-hd"
         onClick={() => setOpen(o => !o)}
-        style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center" }}
+        style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", padding: items.length === 0 ? "10px 14px" : undefined }}
       >
-        <Ico n="doc" s={20} />
-        <span className="info-card-title">เอกสารแนบ</span>
+        <Ico n="doc" s={items.length === 0 ? 17 : 20} />
+        <span className="info-card-title" style={{ fontSize: items.length === 0 ? 15 : undefined }}>เอกสารแนบ</span>
         {items.length > 0 && (
           <span style={{
             marginLeft: 8, padding: "2px 10px", borderRadius: 99,
@@ -235,7 +235,11 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
       </div>
 
       {open && (
-      <div className="info-card-bd" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div className="info-card-bd" style={{
+        display: "flex", flexDirection: "column",
+        gap: items.length === 0 ? 0 : 18,
+        padding: items.length === 0 ? "10px 14px 14px" : undefined,
+      }}>
 
         {loading ? (
           <div style={{ textAlign: "center", padding: 20, color: "var(--t3)" }}>
@@ -244,16 +248,19 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
           </div>
         ) : items.length === 0 ? (
           <div style={{
-            textAlign: "center", padding: "26px 16px",
-            border: "1.5px dashed var(--brd)", borderRadius: 12,
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 14px",
+            border: "1px dashed var(--brd)", borderRadius: 10,
             background: "var(--sur2)", color: "var(--t3)",
           }}>
-            <Ico n="doc" s={32} sw={1} />
-            <div style={{ fontSize: 15, marginTop: 8, fontWeight: 600, color: "var(--t2)" }}>
-              ยังไม่มีเอกสารแนบ
-            </div>
-            <div style={{ fontSize: 13, marginTop: 4 }}>
-              กดปุ่ม "เพิ่มเอกสาร" เพื่อเพิ่ม พ.ร.บ., สลักหลัง หรือเปลี่ยนกรมธรรม์หลัก
+            <Ico n="doc" s={18} sw={1} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--t2)" }}>
+                ยังไม่มีเอกสารแนบ
+              </div>
+              <div style={{ fontSize: 12, marginTop: 1 }}>
+                กดปุ่ม "เพิ่มเอกสาร" เพื่อเพิ่ม พ.ร.บ., สลักหลัง
+              </div>
             </div>
           </div>
         ) : (

@@ -626,31 +626,31 @@ export function DetailPage() {
 
               {/* ── PDF tabs (เอกสารหลายปีของลูกค้าคนเดียวกัน) — collapsible ── */}
               {relatedPdfs.length > 1 && (
-                <div className="info-card" style={{ marginBottom: 18 }}>
+                <div className="info-card" style={{ marginBottom: 12 }}>
                   <div
                     className="info-card-hd"
                     onClick={() => setPdfListOpen(o => !o)}
-                    style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                    style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Ico n="doc" s={20} />
-                      <span className="info-card-title">
+                      <Ico n="doc" s={17} />
+                      <span className="info-card-title" style={{ fontSize: 15 }}>
                         เอกสาร PDF ทั้งหมด ({relatedPdfs.length} ฉบับ)
                       </span>
                     </div>
                     <div style={{
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      width: 30, height: 30, borderRadius: 7,
+                      width: 24, height: 24, borderRadius: 6,
                       background: "var(--sur2)",
                       transition: "transform 0.2s",
                       transform: pdfListOpen ? "rotate(180deg)" : "rotate(0deg)"
                     }}>
-                      <Ico n="chevD" s={18} />
+                      <Ico n="chevD" s={15} />
                     </div>
                   </div>
                   {pdfListOpen && (
-                    <div className="info-card-bd" style={{ paddingTop: 8 }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <div className="info-card-bd" style={{ padding: "8px 12px 12px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {relatedPdfs.map(r => {
                           const isActive = r.id === activePdfId
                           const yearTH = r.coverage_start ? (parseInt(r.coverage_start.slice(0, 4)) + 543) : "?"
@@ -659,26 +659,26 @@ export function DetailPage() {
                               key={r.id}
                               onClick={() => setActivePdfId(r.id)}
                               style={{
-                                display: "flex", alignItems: "center", gap: 12,
-                                padding: "12px 14px",
-                                border: `1.5px solid ${isActive ? "var(--blue)" : "var(--brd)"}`,
-                                borderRadius: 10,
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "7px 11px",
+                                border: `1px solid ${isActive ? "var(--blue)" : "var(--brd)"}`,
+                                borderRadius: 8,
                                 background: isActive ? "var(--blue-bg)" : "var(--sur)",
                                 cursor: "pointer", textAlign: "left",
                                 transition: "all 0.15s"
                               }}
                             >
-                              <Ico n="doc" s={18} />
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 16, fontWeight: isActive ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              <Ico n="doc" s={15} />
+                              <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                   {r.pdf_filename || "PDF"}
-                                </div>
-                                <div style={{ fontSize: 14, color: "var(--t2)", marginTop: 4 }}>
-                                  {r.policy_number || "—"} · ปี {yearTH}
-                                </div>
+                                </span>
+                                <span style={{ fontSize: 12.5, color: "var(--t3)" }}>
+                                  ปี {yearTH}
+                                </span>
                               </div>
                               {isActive && (
-                                <span style={{ fontSize: 13, color: "var(--blue)", fontWeight: 700 }}>กำลังดู</span>
+                                <span style={{ fontSize: 11.5, color: "var(--blue)", fontWeight: 700, whiteSpace: "nowrap" }}>กำลังดู</span>
                               )}
                             </button>
                           )
