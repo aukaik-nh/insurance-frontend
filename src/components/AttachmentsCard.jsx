@@ -65,7 +65,7 @@ const calcTotal = (net, stamp, vat) => {
   return t > 0 ? Math.round(t * 100) / 100 : ""
 }
 
-export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpdated, onItemsChange, hideHeaderButton = false }, ref) {
+export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, hasMainPdf, mainFilename, onMainUpdated, onItemsChange, hideHeaderButton = false, headless = false }, ref) {
   const [items, setItems]       = useState([])
   const [loading, setLoading]   = useState(true)
   const [uploading, setUpload]  = useState(false)
@@ -189,6 +189,68 @@ export const AttachmentsCard = forwardRef(function AttachmentsCard({ policyId, h
     ...t,
     items: items.filter(i => i.doc_type === t.val)
   }))
+
+  // headless mode — ไม่ render การ์ด UI ทั้งใบ แต่ยังคง modal เลือกประเภท + file input ไว้
+  // (ใช้เมื่อ parent ต้องการแสดงรายการ attachments รวมกับเอกสารอื่น)
+  if (headless) {
+    return (
+      <>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf"
+          style={{ display: "none" }}
+          onChange={e => onFilePicked(e.target.files?.[0])}
+        />
+        {typePicker && createPortal(
+          <div className="ov" onClick={e => e.target === e.currentTarget && setTypePicker(false)}>
+            <div className="modal" style={{ maxWidth: 480 }}>
+              <div className="modal-hd">
+                <div>
+                  <div className="modal-title">เลือกประเภทเอกสาร</div>
+                  <div className="modal-sub">เลือกประเภทก่อนเลือกไฟล์ PDF</div>
+                </div>
+                <button className="xbtn" onClick={() => setTypePicker(false)}><Ico n="x" s={18} /></button>
+              </div>
+              <div className="modal-bd" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {DOC_TYPES.map(t => (
+                  <button key={t.val} onClick={() => pickType(t.val)}
+                    style={{
+                      display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 16px",
+                      border: `1.5px solid ${t.brd}`, borderRadius: 12, background: t.bg,
+                      cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "all .15s",
+                    }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 11, background: "var(--sur)", color: t.color,
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      border: `1.5px solid ${t.brd}`,
+                    }}>
+                      <Ico n={t.ico} s={22} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: t.color, marginBottom: 3 }}>
+                        {t.label}
+                        {t.val === "main" && hasMainPdf && (
+                          <span style={{
+                            marginLeft: 8, fontSize: 11, fontWeight: 600,
+                            background: "var(--sur)", color: "var(--t3)",
+                            padding: "2px 8px", borderRadius: 99, border: "1px solid var(--brd)",
+                          }}>มีอยู่แล้ว · จะแทนที่</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 13.5, color: "var(--t2)", lineHeight: 1.4 }}>{t.desc}</div>
+                    </div>
+                    <Ico n="chevR" s={18} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      </>
+    )
+  }
 
   return (
     <div className="info-card">

@@ -610,22 +610,23 @@ export function DetailPage() {
 
             {/* right: PDF + Attachments */}
             <div className="detail-aside">
-              {/* เอกสารแนบ — บนสุดของฝั่งขวา (ฝั่งเดียวกับ PDF)
-                  ปุ่ม "เพิ่มเอกสาร" ย้ายไปอยู่ที่ page header แล้ว — hide ในการ์ดนี้ */}
-              <div style={{ marginBottom: 18 }}>
-                <AttachmentsCard
-                  ref={attachRef}
-                  policyId={p.id}
-                  hasMainPdf={hasPdfInDb}
-                  mainFilename={p.pdf_filename}
-                  onMainUpdated={() => setRefreshKey(k => k + 1)}
-                  onItemsChange={setAttachItems}
-                  hideHeaderButton
-                />
-              </div>
+              {/* AttachmentsCard ทำงานในโหมด headless — แค่จัดการ modal เลือกประเภท + file upload
+                  ไม่ render การ์ด UI (ย้ายเอกสารแนบไปรวมในรายการ "เอกสาร PDF ทั้งหมด") */}
+              <AttachmentsCard
+                ref={attachRef}
+                policyId={p.id}
+                hasMainPdf={hasPdfInDb}
+                mainFilename={p.pdf_filename}
+                onMainUpdated={() => setRefreshKey(k => k + 1)}
+                onItemsChange={setAttachItems}
+                headless
+              />
 
-              {/* ── PDF tabs (เอกสารหลายปีของลูกค้าคนเดียวกัน) — collapsible ── */}
-              {relatedPdfs.length > 1 && (
+              {/* ── เอกสาร PDF ทั้งหมด — รวม related policies + attachments ── */}
+              {(() => {
+                const totalDocs = relatedPdfs.length + attachItems.length
+                if (totalDocs === 0 && !p.pdf_filename) return null
+                return (
                 <div className="info-card" style={{ marginBottom: 12 }}>
                   <div
                     className="info-card-hd"
@@ -635,29 +636,38 @@ export function DetailPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <Ico n="doc" s={17} />
                       <span className="info-card-title" style={{ fontSize: 15 }}>
-                        เอกสาร PDF ทั้งหมด ({relatedPdfs.length} ฉบับ)
+                        เอกสาร PDF ทั้งหมด ({totalDocs} ฉบับ)
                       </span>
                     </div>
-                    <div style={{
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      width: 24, height: 24, borderRadius: 6,
-                      background: "var(--sur2)",
-                      transition: "transform 0.2s",
-                      transform: pdfListOpen ? "rotate(180deg)" : "rotate(0deg)"
-                    }}>
-                      <Ico n="chevD" s={15} />
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        className="btn btn-b"
+                        onClick={(e) => { e.stopPropagation(); attachRef.current?.openAddDialog() }}
+                        style={{ padding: "6px 12px", fontSize: 13 }}
+                      >
+                        <Ico n="upload" s={14} /> เพิ่มเอกสาร
+                      </button>
+                      <div style={{
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        width: 24, height: 24, borderRadius: 6,
+                        background: "var(--sur2)",
+                        transition: "transform 0.2s",
+                        transform: pdfListOpen ? "rotate(180deg)" : "rotate(0deg)"
+                      }}>
+                        <Ico n="chevD" s={15} />
+                      </div>
                     </div>
                   </div>
                   {pdfListOpen && (
                     <div className="info-card-bd" style={{ padding: "8px 12px 12px" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                         {relatedPdfs.map(r => {
-                          const isActive = r.id === activePdfId
+                          const isActive = r.id === activePdfId && activeDocId === "main"
                           const yearTH = r.coverage_start ? (parseInt(r.coverage_start.slice(0, 4)) + 543) : "?"
                           return (
                             <button
                               key={r.id}
-                              onClick={() => setActivePdfId(r.id)}
+                              onClick={() => { setActivePdfId(r.id); setActiveDocId("main") }}
                               style={{
                                 display: "flex", alignItems: "center", gap: 10,
                                 padding: "7px 11px",
@@ -683,11 +693,49 @@ export function DetailPage() {
                             </button>
                           )
                         })}
+                        {attachItems.map(att => {
+                          const isActive = activeDocId === att.id
+                          const typeLabel = att.doc_type === "prb" ? "พ.ร.บ."
+                                          : att.doc_type === "endorsement" ? "สลักหลัง"
+                                          : "อื่นๆ"
+                          const typeColor = att.doc_type === "prb" ? "var(--green)"
+                                          : att.doc_type === "endorsement" ? "#D97706"
+                                          : "var(--t3)"
+                          return (
+                            <button
+                              key={att.id}
+                              onClick={() => setActiveDocId(att.id)}
+                              style={{
+                                display: "flex", alignItems: "center", gap: 10,
+                                padding: "7px 11px",
+                                border: `1px solid ${isActive ? typeColor : "var(--brd)"}`,
+                                borderRadius: 8,
+                                background: isActive ? "var(--green-bg)" : "var(--sur)",
+                                cursor: "pointer", textAlign: "left",
+                                transition: "all 0.15s"
+                              }}
+                            >
+                              <Ico n={att.doc_type === "endorsement" ? "pen" : "shield"} s={15} />
+                              <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                                <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {att.label || att.pdf_filename || "PDF"}
+                                </span>
+                                <span style={{ fontSize: 11.5, color: typeColor, fontWeight: 700 }}>
+                                  {typeLabel}
+                                </span>
+                              </div>
+                              {isActive && (
+                                <span style={{ fontSize: 11.5, color: typeColor, fontWeight: 700, whiteSpace: "nowrap" }}>กำลังดู</span>
+                              )}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
                 </div>
-              )}
+                )
+              })()}
 
               {/* ── doc-type tab bar (กรมธรรม์ / พ.ร.บ. / สลักหลัง) ── */}
               {showDocTabs && (

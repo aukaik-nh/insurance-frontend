@@ -29,7 +29,8 @@ export function ListPage({ tab }) {
   const [total, setTotal]             = useState(0)
   const [loading, setLoading]         = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
-  const [sortKey, setSortKey]         = useState("created_at")
+  // default: "เพิ่มล่าสุด" = coverage_start desc (กรมธรรม์ที่เริ่มล่าสุด)
+  const [sortKey, setSortKey]         = useState("coverage_start")
   const [sortDir, setSortDir]         = useState("desc")
 
   // filter state
@@ -215,13 +216,29 @@ export function ListPage({ tab }) {
     return () => { cancelled = true }
   }, [tab])
 
-  // expiring: tab=expiring ใช้ rows (backend filter), dashboard ใช้ allRows คำนวณเอง
-  const _expiringSource = tab === "dashboard" && allRows.length ? allRows : rows
-  const expiring = tab === "expiring" ? rows : _expiringSource.filter(r => {
-    if (!r.coverage_end) return false
-    const d = (new Date(r.coverage_end) - new Date()) / 86400000
-    return d >= 0 && d < 30
-  })
+  // expiring: ใช้ allRows เป็นแหล่งข้อมูลเดียว — กัน chip count กับ table mismatch
+  // (เดิมใช้ rows จาก backend filter ทำให้ตัวเลขในชิปกับตารางไม่ตรงกัน)
+  const _expiringSource = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
+  const expiring = tab === "expiring"
+    ? (() => {
+        // filter ตาม expiryRange เดียวกับชิปด้านบน
+        const today0 = new Date(new Date().setHours(0, 0, 0, 0))
+        return _expiringSource
+          .filter(r => {
+            if (!r.coverage_end) return false
+            const t = new Date(r.coverage_end)
+            if (isNaN(t)) return false
+            const dl = Math.floor((t - today0) / 86400000)
+            if (expiryRange === -1) return dl < 0
+            return dl >= 0 && dl <= expiryRange
+          })
+          .sort((a, b) => new Date(a.coverage_end) - new Date(b.coverage_end))
+      })()
+    : _expiringSource.filter(r => {
+        if (!r.coverage_end) return false
+        const d = (new Date(r.coverage_end) - new Date()) / 86400000
+        return d >= 0 && d < 30
+      })
   // ⚡ Dashboard/Expiring ใช้ allRows (ทั้งหมดในระบบ) — tab อื่นใช้ rows (หน้านี้)
   const statsRows  = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
   const active     = statsRows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
@@ -536,53 +553,38 @@ export function ListPage({ tab }) {
                 )
               })()}
 
-              {/* ── 1. 4 ประเภทประกัน (Baby78 logic) ── */}
+              {/* ── 1. เมนูหลัก 4 ปุ่ม (ดีไซน์การ์ดสีพาสเทลแบบประเภทกรมธรรม์) ── */}
               <div className="sec-hd">
-                <Ico n="folder" s={14} />
-                <span>ประเภทกรมธรรม์</span>
-                <small>แยกตาม key ที่ใช้ระบุ</small>
-              </div>
-              <div className="type-grid">
-                {[
-                  { key: "motor", lbl: "ประกันรถยนต์", count: typeCounts.motor, sub: "ทะเบียนรถ · กธ · ปี",     ico: "car",    bg: "#E6F1FB", dark: "#0C447C", mid: "#185FA5" },
-                  { key: "prb",   lbl: "ประกัน พ.ร.บ.", count: typeCounts.prb,   sub: "ทะเบียนรถ · พรบ · ปี",   ico: "shield", bg: "#E1F5EE", dark: "#085041", mid: "#0F6E56" },
-                  { key: "fire",  lbl: "อัคคีภัย",        count: typeCounts.fire,  sub: "ที่อยู่สถานที่",         ico: "flame",  bg: "#FAECE7", dark: "#712B13", mid: "#993C1D" },
-                  { key: "pa",    lbl: "PA / TA / อื่นๆ",  count: typeCounts.pa,    sub: "ชื่อผู้เอาประกัน",       ico: "person", bg: "#EEEDFE", dark: "#3C3489", mid: "#534AB7" },
-                ].map(t => (
-                  <button key={t.key} className="type-card"
-                    onClick={() => navigate(`/policies?type=${t.key}`)}
-                    style={{ background: t.bg, color: t.dark }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                      <Ico n={t.ico} s={26} />
-                      <span style={{ fontSize: 17, fontWeight: 600 }}>{t.lbl}</span>
-                    </div>
-                    <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.1 }}>{t.count.toLocaleString()}</div>
-                    <div style={{ fontSize: 13.5, color: t.mid, marginTop: 6 }}>{t.sub}</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* ── 2. เมนูหลัก 4 ปุ่ม — flat, clean, no SVG waves ── */}
-              <div className="sec-hd" style={{ marginTop: 24 }}>
                 <Ico n="grid" s={14} />
                 <span>เมนูหลัก</span>
                 <small>เข้าถึงได้รวดเร็ว</small>
               </div>
-              <div className="menu-grid">
+              <div className="type-grid">
                 {[
-                  { path: "/policies", ico: "list",     lbl: "รายการกรมธรรม์", sub: `${total.toLocaleString()} รายการ`,              urgent: false },
-                  { path: "/upload",   ico: "upload",   lbl: "เพิ่มกรมธรรม์",   sub: "อัปโหลด PDF · AI ช่วย",                          urgent: false },
-                  { path: "/expiring", ico: "bell",     lbl: "ใกล้หมดอายุ",     sub: `${expiring.length} รายภายใน 30 วัน`,            urgent: expiring.length > 0 },
-                  { path: "/invoice",  ico: "banknote", lbl: "ใบแจ้งหนี้",       sub: "QR PromptPay · พิมพ์",                          urgent: false },
+                  { path: "/policies", lbl: "รายการกรมธรรม์", big: total.toLocaleString(),        sub: "รายการทั้งหมดในระบบ",       ico: "list",     bg: "#E6F1FB", dark: "#0C447C", mid: "#185FA5" },
+                  { path: "/upload",   lbl: "เพิ่มกรมธรรม์",   big: "+",                          sub: "อัปโหลด PDF · AI ช่วย",       ico: "upload",   bg: "#E1F5EE", dark: "#085041", mid: "#0F6E56" },
+                  { path: "/expiring", lbl: "ใกล้หมดอายุ",     big: expiring.length.toLocaleString(), sub: "ภายใน 30 วัน",            ico: "bell",     bg: "#FAECE7", dark: "#712B13", mid: "#993C1D", urgent: expiring.length > 0 },
+                  { path: "/invoice",  lbl: "ใบแจ้งหนี้",       big: "฿",                          sub: "QR PromptPay · พิมพ์",        ico: "banknote", bg: "#EEEDFE", dark: "#3C3489", mid: "#534AB7" },
                 ].map(m => (
-                  <button key={m.path} className={`menu-card ${m.urgent ? "menu-card-urgent" : ""}`}
-                    onClick={() => navigate(m.path)}>
-                    <Ico n={m.ico} s={30} />
-                    <div className="menu-card-lbl">{m.lbl}</div>
-                    <div className="menu-card-sub">{m.sub}</div>
+                  <button key={m.path} className="type-card"
+                    onClick={() => navigate(m.path)}
+                    style={{ background: m.bg, color: m.dark, position: "relative" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                      <Ico n={m.ico} s={26} />
+                      <span style={{ fontSize: 17, fontWeight: 600 }}>{m.lbl}</span>
+                      {m.urgent && (
+                        <span style={{
+                          marginLeft: "auto", padding: "2px 8px", borderRadius: 99,
+                          background: m.dark, color: m.bg, fontSize: 11, fontWeight: 700,
+                        }}>เร่งด่วน</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.1 }}>{m.big}</div>
+                    <div style={{ fontSize: 13.5, color: m.mid, marginTop: 6 }}>{m.sub}</div>
                   </button>
                 ))}
               </div>
+
             </>
           )}
 
@@ -698,7 +700,7 @@ export function ListPage({ tab }) {
               if (val === 90) return counts.m3
               return 0
             }
-            // ── Line chart: 12 เดือนข้างหน้า — จำนวนกรมธรรม์ที่จะหมดอายุ ──
+            // ── 12-month forecast: นับจำนวนกรมธรรม์ที่จะหมดอายุแต่ละเดือน ──
             const MONTH_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
             const futureMonths = Array.from({ length: 12 }, (_, i) => {
               const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
@@ -707,6 +709,7 @@ export function ListPage({ tab }) {
                 key: `${d.getFullYear()}-${d.getMonth()}`,
                 label: `${MONTH_TH[d.getMonth()]} ${(d.getFullYear() + 543).toString().slice(-2)}`,
                 count: 0,
+                premium: 0,
                 isCurrent: i === 0,
               }
             })
@@ -716,17 +719,19 @@ export function ListPage({ tab }) {
               const t = new Date(r.coverage_end)
               if (isNaN(t) || t < today0) return
               const idx = futureMap.get(`${t.getFullYear()}-${t.getMonth()}`)
-              if (idx != null) futureMonths[idx].count += 1
+              if (idx != null) {
+                futureMonths[idx].count += 1
+                futureMonths[idx].premium += Number(r.total_premium) || 0
+              }
             })
-            const lineMax = Math.max(1, ...futureMonths.map(m => m.count))
-            const lineTotal = futureMonths.reduce((a, b) => a + b.count, 0)
-            // SVG geometry
-            const lW = 880, lH = 260, lPL = 44, lPR = 24, lPT = 24, lPB = 48
+            const lineMax    = Math.max(1, ...futureMonths.map(m => m.count))
+            const lineTotal  = futureMonths.reduce((a, b) => a + b.count, 0)
+            const linePremium = futureMonths.reduce((a, b) => a + b.premium, 0)
+            const lW = 1100, lH = 280, lPL = 50, lPR = 20, lPT = 28, lPB = 52
             const iW = lW - lPL - lPR, iH = lH - lPT - lPB
             const xAt = (i) => lPL + (i * iW) / (futureMonths.length - 1)
             const yAt = (v) => lPT + iH - (v / lineMax) * iH
             const pts = futureMonths.map((m, i) => ({ x: xAt(i), y: yAt(m.count), ...m }))
-            // smooth cubic bezier path
             const smooth = (pts) => {
               if (pts.length < 2) return ""
               const out = [`M${pts[0].x},${pts[0].y}`]
@@ -740,46 +745,10 @@ export function ListPage({ tab }) {
             }
             const linePath = smooth(pts)
             const areaPath = `${linePath} L${pts[pts.length-1].x},${lH-lPB} L${pts[0].x},${lH-lPB} Z`
-            const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({ y: lPT + iH * t, v: Math.round(lineMax * (1 - t)) }))
+            const yTicks   = [0, 0.25, 0.5, 0.75, 1].map(t => ({ y: lPT + iH * t, v: Math.round(lineMax * (1 - t)) }))
+            const baht = (n) => "฿" + Math.round(n).toLocaleString()
             return (
               <>
-                <div className="chart-card" style={{ marginBottom: 16 }}>
-                  <div className="chart-hd">
-                    <div>
-                      <div className="chart-ttl">การหมดอายุล่วงหน้า 12 เดือน</div>
-                      <div className="chart-sub">รวม <b style={{ color: "var(--t1)" }}>{lineTotal.toLocaleString()}</b> กรมธรรม์จะหมดอายุใน 12 เดือนข้างหน้า</div>
-                    </div>
-                  </div>
-                  <div className="chart-bd" style={{ padding: "8px 4px 12px" }}>
-                    <svg viewBox={`0 0 ${lW} ${lH}`} width="100%" height={lH} preserveAspectRatio="xMidYMid meet" style={{ display: "block" }}>
-                      <defs>
-                        <linearGradient id="exp-line-area" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%"   stopColor="var(--blue)" stopOpacity="0.32" />
-                          <stop offset="100%" stopColor="var(--blue)" stopOpacity="0.02" />
-                        </linearGradient>
-                      </defs>
-                      {/* y grid */}
-                      {yTicks.map((t, i) => (
-                        <g key={i}>
-                          <line x1={lPL} x2={lW - lPR} y1={t.y} y2={t.y} stroke="var(--brd)" strokeWidth="1" strokeDasharray={i === yTicks.length - 1 ? "0" : "3 4"} opacity={i === yTicks.length - 1 ? 0.9 : 0.5} />
-                          <text x={lPL - 8} y={t.y + 4} textAnchor="end" fontSize="12" fill="var(--t3)" fontFamily="inherit">{t.v}</text>
-                        </g>
-                      ))}
-                      {/* area + line */}
-                      <path d={areaPath} fill="url(#exp-line-area)" />
-                      <path d={linePath} fill="none" stroke="var(--blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      {/* points */}
-                      {pts.map((p, i) => (
-                        <g key={i}>
-                          <circle cx={p.x} cy={p.y} r={p.isCurrent ? 6 : 4} fill="#fff" stroke="var(--blue)" strokeWidth="2.5" />
-                          <text x={p.x} y={p.y - 12} textAnchor="middle" fontSize="12" fontWeight="700" fill="var(--t1)" fontFamily="inherit">{p.count > 0 ? p.count : ""}</text>
-                          <text x={p.x} y={lH - lPB + 20} textAnchor="middle" fontSize="12" fill={p.isCurrent ? "var(--blue)" : "var(--t3)"} fontWeight={p.isCurrent ? 700 : 500} fontFamily="inherit">{p.label}</text>
-                        </g>
-                      ))}
-                    </svg>
-                  </div>
-                </div>
-
                 <div className="exp-stats">
                   {EXPIRY_RANGES.map(opt => {
                     const active = expiryRange === opt.val
@@ -796,6 +765,61 @@ export function ListPage({ tab }) {
                       </button>
                     )
                   })}
+                </div>
+
+                {/* ── 12-month forecast chart ── */}
+                <div className="card" style={{ marginBottom: 16, padding: "18px 20px 14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--t1)" }}>
+                        <Ico n="bell" s={16} /> การหมดอายุล่วงหน้า 12 เดือน
+                      </div>
+                      <div style={{ fontSize: 13.5, color: "var(--t3)", marginTop: 4 }}>
+                        รวม <b style={{ color: "var(--t1)" }}>{lineTotal.toLocaleString()}</b> กรมธรรม์
+                        {linePremium > 0 && <> · เบี้ยรวม <b style={{ color: "var(--t1)" }}>{baht(linePremium)}</b></>}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <svg viewBox={`0 0 ${lW} ${lH}`} width="100%" height={lH} preserveAspectRatio="xMidYMid meet" style={{ display: "block", minWidth: 600 }}>
+                      <defs>
+                        <linearGradient id="exp-line-area-2" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"   stopColor="var(--blue)" stopOpacity="0.32" />
+                          <stop offset="100%" stopColor="var(--blue)" stopOpacity="0.02" />
+                        </linearGradient>
+                      </defs>
+                      {yTicks.map((t, i) => (
+                        <g key={i}>
+                          <line x1={lPL} x2={lW - lPR} y1={t.y} y2={t.y}
+                                stroke="var(--brd)" strokeWidth="1"
+                                strokeDasharray={i === yTicks.length - 1 ? "0" : "3 4"}
+                                opacity={i === yTicks.length - 1 ? 0.9 : 0.5} />
+                          <text x={lPL - 8} y={t.y + 4} textAnchor="end"
+                                fontSize="12" fill="var(--t3)" fontFamily="inherit">{t.v}</text>
+                        </g>
+                      ))}
+                      <path d={areaPath} fill="url(#exp-line-area-2)" />
+                      <path d={linePath} fill="none" stroke="var(--blue)"
+                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      {pts.map((p, i) => (
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r={p.isCurrent ? 6 : 4}
+                                  fill="#fff" stroke="var(--blue)" strokeWidth="2.5" />
+                          {p.count > 0 && (
+                            <text x={p.x} y={p.y - 12} textAnchor="middle"
+                                  fontSize="12" fontWeight="700" fill="var(--t1)" fontFamily="inherit">
+                              {p.count}
+                            </text>
+                          )}
+                          <text x={p.x} y={lH - lPB + 22} textAnchor="middle"
+                                fontSize="12" fill={p.isCurrent ? "var(--blue)" : "var(--t3)"}
+                                fontWeight={p.isCurrent ? 700 : 500} fontFamily="inherit">
+                            {p.label}
+                          </text>
+                        </g>
+                      ))}
+                    </svg>
+                  </div>
                 </div>
               </>
             )

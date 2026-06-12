@@ -76,7 +76,6 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
               <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>PDF</th>
               <SortHeader label="เลขกรมธรรม์"  col="policy_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortHeader label="ผู้เอาประกัน" col="insured_name"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="ทะเบียน" col="license_plate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortHeader label="วันหมดอายุ"   col="coverage_end"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <th>สถานะ</th>
             </tr>
@@ -115,7 +114,6 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   </td>
                   <td className="tm">{r.policy_number || "—"}</td>
                   <td className="tw">{r.insured_name || "—"}</td>
-                  <td><span className="plate">{r.license_plate || "—"}</span></td>
                   <td style={{ whiteSpace: "nowrap" }}>
                     <div style={{ color: "var(--t1)", fontSize: 16, fontWeight: 500, lineHeight: 1.2 }}>
                       {fmtDate(r.coverage_end) || "—"}
