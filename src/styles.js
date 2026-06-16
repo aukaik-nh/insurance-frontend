@@ -2152,6 +2152,8 @@ td.tr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:v
 .b-off{background:var(--red-bg);color:var(--red);border:1px solid var(--red-brd)}
 .b-off .bdot{background:var(--red)}
 .b-off .bdot::after{animation:none}
+.b-pending{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-mid)}
+.b-pending .bdot{background:var(--blue)}
 .plate{
   display:inline-block;background:linear-gradient(180deg,var(--sur),var(--sur2));
   border:1.5px solid var(--brd2);border-radius:8px;

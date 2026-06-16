@@ -27,7 +27,7 @@ function PvpField({ label, value, multiline, mono, hi }) {
 }
 
 export function PreviewPanel({ p, onClose, onOpen }) {
-  const st           = getStatus(p.coverage_end)
+  const st           = getStatus(p.coverage_end, p.coverage_start)
 
   const [relatedPdfs, setRelatedPdfs] = useState([])
   const [activePdfId, setActivePdfId] = useState(p.id)

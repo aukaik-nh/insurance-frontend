@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom"
-import { policyTypeCategory } from "../helpers"
+import { policyTypeCategory, dedupLatestByCustomer } from "../helpers"
 import api from "../api"
 import { Ico } from "../icons"
 import { getStatus } from "../helpers"
@@ -113,15 +113,26 @@ export function ListPage({ tab }) {
 
   // race-safe fetch + stale-while-revalidate cache
   // โชว์ผลลัพธ์ล่าสุดจาก localStorage ทันที (กัน user รอ cold start backend) แล้วค่อย swap ของใหม่เมื่อ API ตอบ
+  //
+  // ⚡ ป้องกัน refetch สิ้นเปลือง: ถ้าเป็น tab ที่ paginate ฝั่ง client (policies/dashboard)
+  //    page จะถูกล็อกเป็น 1 → useEffect ไม่ควร refire เมื่อ user แค่กด next page
+  //    → ใช้ pageForFetch เป็น dep แทน page ดิบ
+  const pageForFetch = (tab === "policies" || tab === "dashboard") ? 1 : page
   useEffect(() => {
     let cancelled = false
-    const params = { page, limit: LIMIT, sort: sortKey, order: sortDir }
+    const params = { page: pageForFetch, limit: LIMIT, sort: sortKey, order: sortDir }
     if (debouncedSearch) params.search = debouncedSearch
     if (status)   params.status    = status
     if (dateFrom) params.date_from = dateFrom
     if (dateTo)   params.date_to   = dateTo
     if (hasPdf)   params.has_pdf   = hasPdf
 
+    // ── /policies + /dashboard: ดึงมาทั้งหมดเพื่อจัดกลุ่มลูกค้า แล้ว paginate client-side ──
+    // ⚠️ ล็อก page=1 — ถ้าปล่อยให้ส่ง page>1 พร้อม limit=20000 server จะ return [] (เกิน range)
+    if (tab === "policies" || tab === "dashboard") {
+      params.limit = 20000
+      params.page  = 1
+    }
     // ── /expiring tab: ส่ง filter ไป backend (ไม่ใช่ filter client-side ของ page เดียว) ──
     if (tab === "expiring") {
       params.limit = 500    // ดึงมาเยอะหน่อยให้ครอบคลุม
@@ -185,8 +196,8 @@ export function ListPage({ tab }) {
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [page, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange])
-  useEffect(() => { setPreviewPolicy(null) }, [tab])
+  }, [pageForFetch, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange])
+  useEffect(() => { setPreviewPolicy(null); setPage(1) }, [tab])  // reset preview + page เมื่อสลับ tab
   useEffect(() => { setPage(1) }, [expiryRange])
 
   // ⚡ Analytics fetch ทั้งหมด (limit=20000) แล้ว cache 30 นาที
@@ -483,23 +494,51 @@ export function ListPage({ tab }) {
     : `${expiring.length} รายการ · ภายใน ${rangeMeta.label}`
   const tabMeta = {
     dashboard: { title: "ภาพรวมระบบ",          sub: "สรุปสถานะกรมธรรม์ประกันภัยรถยนต์" },
-    policies:  { title: "กรมธรรม์ทั้งหมด",     sub: `${total.toLocaleString()} รายการในระบบ` },
+    policies:  { title: "กรมธรรม์ทั้งหมด",     sub: `${total.toLocaleString()} ฉบับในระบบ · 1 รายชื่อ = 1 แถว (ฉบับล่าสุด)` },
     expiring:  { title: "กรมธรรม์ใกล้หมดอายุ", sub: expiringSubText },
   }
 
-  const baseRows     = tab === "expiring" ? expiring : rows
-  // ── type filter (?type=motor|prb|fire|pa) ───────────────
-  const typeFilteredRows = typeFilter
+  // ── /policies + /dashboard: dedup ตามลูกค้า + sort + paginate client-side ──
+  // ⚠️ ต้องทำตามลำดับ: type filter (ตัดประเภทบนข้อมูลดิบ) → dedup → sort → paginate
+  //    ถ้า dedup ก่อนแล้วค่อย type filter คนที่ ฉบับล่าสุด ไม่ตรงประเภท จะหายไปทั้งที่มีกรมธรรม์ประเภทนั้น
+  const isPoliciesTab = tab === "policies" || tab === "dashboard"
+  const policiesDeduped = isPoliciesTab ? (() => {
+    // 1) type filter บน raw rows ก่อน
+    const typeFiltered = typeFilter
+      ? rows.filter(r => policyTypeCategory(r.policy_type) === typeFilter)
+      : rows
+    // 2) dedup ตามชื่อ (เก็บฉบับล่าสุดในขอบเขตประเภทที่กรอง)
+    const grouped = dedupLatestByCustomer(typeFiltered)
+    // 3) sort client-side
+    const dir = sortDir === "asc" ? 1 : -1
+    return [...grouped].sort((a, b) => {
+      const av = a[sortKey], bv = b[sortKey]
+      if (av == null && bv == null) return 0
+      if (av == null) return 1
+      if (bv == null) return -1
+      if (av < bv) return -1 * dir
+      if (av > bv) return  1 * dir
+      return 0
+    })
+  })() : null
+
+  const baseRows = tab === "expiring" ? expiring
+                  : isPoliciesTab ? policiesDeduped
+                  : rows
+  // ── type filter (?type=motor|prb|fire|pa) — เฉพาะ tab ที่ยังไม่ filter ภายใน ──
+  const typeFilteredRows = (typeFilter && !isPoliciesTab)
     ? baseRows.filter(r => policyTypeCategory(r.policy_type) === typeFilter)
     : baseRows
-  // Client-side pagination สำหรับ expiring (500 รายการ → 10 ต่อหน้า)
-  const displayRows  = tab === "expiring" || typeFilter
+  // Client-side pagination
+  const needsClientPage = tab === "expiring" || isPoliciesTab || typeFilter
+  const displayRows  = needsClientPage
     ? typeFilteredRows.slice((page - 1) * LIMIT, page * LIMIT)
     : typeFilteredRows
   const displayTotal = tab === "expiring" ? expiring.length
+                       : isPoliciesTab ? typeFilteredRows.length
                        : typeFilter ? typeFilteredRows.length
                        : total
-  const displayPages = tab === "expiring" || typeFilter
+  const displayPages = needsClientPage
     ? Math.max(1, Math.ceil(displayTotal / LIMIT))
     : pages
 

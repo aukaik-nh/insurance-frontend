@@ -52,6 +52,13 @@ export function DetailPage() {
   const [deleteModal, setDeleteModal] = useState(false)  // confirm ลบ record
   const [deleting, setDeleting]       = useState(false)
 
+  // 🔎 Quick-search modal — ค้นหาข้ามทั้งระบบจากหน้า detail (กัน user ต้องกลับไปหน้า list)
+  const [searchOpen, setSearchOpen]       = useState(false)
+  const [searchQuery, setSearchQuery]     = useState("")
+  const [searchResults, setSearchResults] = useState([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const searchInputRef = useRef(null)
+
   // เอกสารแนบ (พ.ร.บ. / สลักหลัง) + tab ที่กำลังดู
   const [attachItems, setAttachItems] = useState([])
   const [activeDocId, setActiveDocId] = useState("main")
@@ -86,44 +93,72 @@ export function DetailPage() {
   // reset doc tab เมื่อสลับ related policy
   useEffect(() => { setActiveDocId("main") }, [activePdfId])
 
-  // fetch ลูกค้าเดียวกัน — ทะเบียนจริงใช้ plate, FIRE/PA/ASSET ใช้ที่อยู่
+  // fetch กรมธรรม์ทั้งหมดของลูกค้าคนเดียวกัน — ใช้ "ชื่อ" เป็น key (สอดคล้องกับ list dedup)
+  // ครอบคลุมทั้งปีเก่า / หลายคันรถ / ทุก policy ของคนคนนี้
   // ⚡ defer 250ms — ให้หน้าหลัก render เสร็จก่อน ค่อยโหลดข้อมูล related (ไม่ critical)
   useEffect(() => {
-    // placeholder plate ที่ Baby78 ใช้เก็บประเภทประกันที่ไม่มีทะเบียนจริง
-    const PLACEHOLDER_PLATES = new Set(["FIRE", "OTHER", "PA", "TA", "ASSET", "MISC", "IAR", "BURGLAR", "3RD", "PUBLIC", "MARINE", "GOLF", "PLATE", "CAR", "—", ""])
-    const plate = (p?.license_plate || "").trim()
-    const isRealPlate = plate && !PLACEHOLDER_PLATES.has(plate.toUpperCase())
-
-    // ที่อยู่ — เอา 30 chars แรก (น่าจะเป็น "เลขที่ + ชื่อสถานที่")
-    const addrKey = (p?.insured_address || "").trim().slice(0, 30)
-
-    if (!isRealPlate && !addrKey) { setRelatedPdfs([]); return }
-    const searchTerm = isRealPlate ? plate : addrKey
-    if (!searchTerm) { setRelatedPdfs([]); return }
+    const name = (p?.insured_name || "").trim()
+    if (!name) { setRelatedPdfs([]); return }
 
     let cancelled = false
     const timer = setTimeout(() => {
       if (cancelled) return
-      api.get("/policies", { params: { search: searchTerm, limit: 50 } })
+      // limit 500 เผื่อลูกค้านิติบุคคลที่มีหลายสิบฉบับ
+      api.get("/policies", { params: { search: name, limit: 500 } })
         .then(res => {
           if (cancelled) return
           const all = res.data.data || []
+          const nameLower = name.toLowerCase()
           const sameCustomer = all.filter(r => {
             if (!(r.pdf_url || r.pdf_filename || r.pdf_size)) return false  // มี PDF เท่านั้น
-            // ใช้ key เดียวกันเทียบกลับ
-            if (isRealPlate) {
-              return r.license_plate?.trim() === plate
-            }
-            // address-based: เอา 30 chars แรกของ address1 มาเทียบ
-            const otherAddr = (r.insured_address || "").trim().slice(0, 30)
-            return otherAddr === addrKey
+            return (r.insured_name || "").trim().toLowerCase() === nameLower
           })
           setRelatedPdfs(sameCustomer)
         })
         .catch(() => { if (!cancelled) setRelatedPdfs([]) })
     }, 250)
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [p?.id, p?.license_plate, p?.insured_address, p?.pdf_url, refreshKey])
+  }, [p?.id, p?.insured_name, p?.pdf_url, refreshKey])
+
+  // ── Ctrl+K / Cmd+K → เปิด quick-search · Esc → ปิด ──
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        setSearchOpen(true)
+      } else if (e.key === "Escape" && searchOpen) {
+        setSearchOpen(false)
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [searchOpen])
+
+  // เปิด modal → focus input
+  useEffect(() => {
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 50)
+    else { setSearchQuery(""); setSearchResults([]) }  // เคลียร์ตอนปิด
+  }, [searchOpen])
+
+  // debounced search — ยิง API หลังหยุดพิมพ์ 150ms (snappy แต่ไม่ flood)
+  // เริ่มกรองตั้งแต่ตัวแรก (length >= 1)
+  useEffect(() => {
+    if (!searchOpen) return
+    const q = searchQuery.trim()
+    if (q.length < 1) { setSearchResults([]); return }
+    let cancelled = false
+    setSearchLoading(true)
+    const t = setTimeout(() => {
+      api.get("/policies", { params: { search: q, limit: 30, sort: "coverage_end", order: "desc" } })
+        .then(res => {
+          if (cancelled) return
+          setSearchResults(res.data?.data || [])
+        })
+        .catch(() => { if (!cancelled) setSearchResults([]) })
+        .finally(() => { if (!cancelled) setSearchLoading(false) })
+    }, 150)
+    return () => { cancelled = true; clearTimeout(t) }
+  }, [searchQuery, searchOpen])
 
   // ⚠️ usePdfBlob ต้องถูกเรียก *ก่อน* early return — Rules of Hooks
   // คำนวณ input แบบ null-safe (รองรับช่วง p ยังไม่โหลด)
@@ -171,7 +206,7 @@ export function DetailPage() {
     </div>
   )
 
-  const st = getStatus(p.coverage_end)
+  const st = getStatus(p.coverage_end, p.coverage_start)
 
   const saveName = async () => {
     setSavingName(true)
@@ -331,6 +366,189 @@ export function DetailPage() {
           onClose={() => setPdfFull(false)} />
       )}
 
+      {/* ── 🔎 Quick-search modal ──
+          ค้นหากรมธรรม์ทั่วทั้งระบบโดยไม่ต้องกลับหน้า list
+          คลิกแถว → เปลี่ยนหน้า · คลิกปุ่มฟ้า "เปิดใหม่" → เปิดอีกแท็บ (เปรียบเทียบหลายคนพร้อมกัน) */}
+      {searchOpen && (
+        <div className="ov" onClick={e => e.target === e.currentTarget && setSearchOpen(false)}>
+          <div className="modal" style={{ maxWidth: 680, padding: 0, overflow: "hidden" }}>
+            {/* search bar — ใหญ่ ชัด ดู intuitive */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "20px 22px", borderBottom: "1px solid var(--brd)",
+              background: "var(--sur2)",
+            }}>
+              <Ico n="search" s={24} />
+              <input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="ค้นหาลูกค้า, ทะเบียน, เลขกรมธรรม์…"
+                style={{
+                  flex: 1, border: "none", outline: "none",
+                  fontSize: 19, fontFamily: "inherit",
+                  background: "transparent", color: "var(--t1)",
+                }}
+              />
+              {searchLoading && <div className="spin" style={{ width: 20, height: 20, borderWidth: 2 }} />}
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(""); searchInputRef.current?.focus() }}
+                  title="ล้าง"
+                  style={{
+                    background: "var(--sur)", border: "1px solid var(--brd)",
+                    cursor: "pointer", color: "var(--t2)",
+                    width: 30, height: 30, borderRadius: 8,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <Ico n="x" s={16} />
+                </button>
+              )}
+            </div>
+
+            {/* results area */}
+            <div style={{ maxHeight: 480, overflowY: "auto" }}>
+              {searchQuery.trim().length < 2 ? (
+                /* friendly empty state */
+                <div style={{ padding: "40px 28px", textAlign: "center" }}>
+                  <div style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 70, height: 70, borderRadius: "50%",
+                    background: "var(--blue-bg)", color: "var(--blue)",
+                    marginBottom: 16,
+                  }}>
+                    <Ico n="search" s={32} />
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: "var(--t1)", marginBottom: 6 }}>
+                    เริ่มพิมพ์เพื่อค้นหา
+                  </div>
+                  <div style={{ fontSize: 14, color: "var(--t3)", marginBottom: 18 }}>
+                    พิมพ์อย่างน้อย 2 ตัวอักษร · เปลี่ยนหน้าได้ทันที
+                  </div>
+                  {/* example chips — คลิกแล้วเริ่มค้นหา */}
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, color: "var(--t3)" }}>ลองพิมพ์:</span>
+                    {[
+                      p.insured_name?.split(" ")[0],
+                      p.license_plate,
+                      p.policy_number?.split("/")[0],
+                    ].filter(Boolean).slice(0, 3).map((eg, i) => (
+                      <button key={i}
+                        onClick={() => { setSearchQuery(eg); searchInputRef.current?.focus() }}
+                        style={{
+                          padding: "5px 12px", borderRadius: 999,
+                          border: "1px solid var(--brd)", background: "var(--sur)",
+                          color: "var(--t2)", fontSize: 13, cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {eg}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : searchResults.length === 0 && !searchLoading ? (
+                <div style={{ padding: "40px 28px", textAlign: "center" }}>
+                  <div style={{ fontSize: 16, color: "var(--t2)", marginBottom: 4 }}>
+                    ไม่พบกรมธรรม์
+                  </div>
+                  <div style={{ fontSize: 13.5, color: "var(--t3)" }}>
+                    ลองค้นหาด้วยคำอื่น หรือตรวจการสะกด
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: "10px 10px 14px" }}>
+                  <div style={{ fontSize: 12, color: "var(--t3)", padding: "4px 12px 8px" }}>
+                    พบ {searchResults.length} รายการ · คลิกเพื่อเปลี่ยนหน้า · กดปุ่มฟ้าเพื่อเปิดในแท็บใหม่
+                  </div>
+                  {searchResults.map(r => {
+                    const yearBE = r.coverage_end
+                      ? parseInt(r.coverage_end.slice(0, 4)) + 543 : null
+                    const isPRB = (r.policy_type || "").toUpperCase() === "P"
+                    const typeChip = isPRB ? "พ.ร.บ." : "กธ."
+                    const typeColor = isPRB ? "var(--green)" : "var(--blue)"
+                    const typeBg    = isPRB ? "var(--green-bg)" : "var(--blue-bg)"
+                    const isCurrent = r.id === p.id
+                    return (
+                      <div key={r.id} style={{
+                        display: "flex", alignItems: "center", gap: 12,
+                        padding: "12px 14px", borderRadius: 10,
+                        background: isCurrent ? "var(--blue-bg)" : "transparent",
+                        border: `1px solid ${isCurrent ? "var(--blue-mid)" : "transparent"}`,
+                        cursor: "pointer",
+                        marginBottom: 4,
+                        transition: "background 0.12s",
+                      }}
+                        onClick={() => {
+                          setSearchOpen(false)
+                          navigate(`/policies/${r.id}`, { state: { policy: r } })
+                        }}
+                        onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = "var(--sur2)" }}
+                        onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = "transparent" }}
+                      >
+                        <span style={{
+                          padding: "5px 11px", borderRadius: 999,
+                          background: typeBg, color: typeColor,
+                          fontSize: 12, fontWeight: 700, flexShrink: 0,
+                          minWidth: 52, textAlign: "center",
+                        }}>{typeChip}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontSize: 16, fontWeight: 600, color: "var(--t1)",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                            marginBottom: 3,
+                          }}>
+                            {r.insured_name || "—"}
+                            {isCurrent && (
+                              <span style={{
+                                marginLeft: 10, fontSize: 11.5, color: "var(--blue)",
+                                fontWeight: 700, padding: "1px 8px", borderRadius: 6,
+                                background: "#fff", border: "1px solid var(--blue-mid)",
+                              }}>
+                                หน้านี้
+                              </span>
+                            )}
+                          </div>
+                          <div style={{
+                            fontSize: 13, color: "var(--t3)",
+                            display: "flex", gap: 12, flexWrap: "wrap",
+                          }}>
+                            <span style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace", color: "var(--t2)" }}>
+                              {r.policy_number || "—"}
+                            </span>
+                            {r.license_plate && <span>{r.license_plate}</span>}
+                            {yearBE && <span>ปี {yearBE}</span>}
+                          </div>
+                        </div>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation()
+                            window.open(`/policies/${r.id}`, "_blank", "noopener,noreferrer")
+                          }}
+                          title="เปิดในแท็บใหม่"
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 6,
+                            padding: "8px 14px", borderRadius: 8,
+                            background: "var(--blue)", border: "none",
+                            color: "#fff", cursor: "pointer",
+                            fontSize: 13, fontWeight: 600,
+                            fontFamily: "inherit", flexShrink: 0,
+                          }}
+                        >
+                          <Ico n="open" s={14} />
+                          เปิดใหม่
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Modal ยืนยันลบกรมธรรม์ ── */}
       {deleteModal && (
         <div className="ov" onClick={e => !deleting && e.target === e.currentTarget && setDeleteModal(false)}>
@@ -422,6 +640,12 @@ export function DetailPage() {
             ) : (
               <>
                 <button className="btn btn-w"
+                  onClick={() => setSearchOpen(true)}
+                  title="ค้นหากรมธรรม์ (Ctrl+K)"
+                  style={{ color: "var(--t1)", borderColor: "var(--brd)" }}>
+                  <Ico n="search" s={18} /> <span className="btn-label">ค้นหา</span>
+                </button>
+                <button className="btn btn-w"
                   onClick={() => attachRef.current?.openAddDialog()}
                   style={{ color: "var(--blue)", borderColor: "var(--blue-mid)", background: "var(--blue-bg)" }}>
                   <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
@@ -476,6 +700,30 @@ export function DetailPage() {
                 </>
               ) : (
                 <>
+                  {/* 🔎 banner — บอกชัดว่ากำลังดูฉบับอื่นของลูกค้ารายเดียวกัน */}
+                  {viewingRelated && (
+                    <div className="info-card" style={{
+                      marginBottom: 12, padding: "12px 16px",
+                      background: "var(--blue-bg)", border: "1px solid var(--blue-mid)",
+                      display: "flex", alignItems: "center", gap: 12,
+                    }}>
+                      <Ico n="bell" s={20} />
+                      <div style={{ flex: 1, fontSize: 14, color: "var(--blue)", lineHeight: 1.5 }}>
+                        <b>กำลังดูข้อมูลของกรมธรรม์อีกฉบับ</b> ของลูกค้ารายนี้
+                        {activePolicy.coverage_start && (
+                          <span> · ปี {parseInt(activePolicy.coverage_start.slice(0, 4)) + 543}</span>
+                        )}
+                      </div>
+                      <button
+                        className="btn btn-b"
+                        style={{ padding: "7px 13px", fontSize: 13, flexShrink: 0 }}
+                        onClick={() => navigate(`/policies/${activePolicy.id}`, { state: { policy: activePolicy } })}
+                      >
+                        <Ico n="open" s={15} /> เปิดเพื่อแก้ไข
+                      </button>
+                    </div>
+                  )}
+
                   {/* ข้อมูลกรมธรรม์ */}
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
@@ -484,20 +732,20 @@ export function DetailPage() {
                       <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 12, padding: "18px 22px", marginBottom: 20 }}>
                         <div className="info-label">เลขกรมธรรม์</div>
                         <div className="info-val hi" style={{ fontSize: 26, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", letterSpacing: 0.5 }}>
-                          {p.policy_number || "—"}
+                          {activePolicy.policy_number || "—"}
                         </div>
                       </div>
                       <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="รหัสบริษัท"     value={p.company_code} />
-                        <F label="เลขใบคำขอ"      value={p.app_number} />
+                        <F label="รหัสบริษัท"     value={activePolicy.company_code} />
+                        <F label="เลขใบคำขอ"      value={activePolicy.app_number} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="ประเภทกรมธรรม์" value={policyTypeLabel(p.policy_type)} />
-                        <F label="ใหม่/ต่ออายุ"   value={p.new_renew === "N" ? "ใหม่" : p.new_renew === "R" ? "ต่ออายุ" : p.new_renew} />
+                        <F label="ประเภทกรมธรรม์" value={policyTypeLabel(activePolicy.policy_type)} />
+                        <F label="ใหม่/ต่ออายุ"   value={activePolicy.new_renew === "N" ? "ใหม่" : activePolicy.new_renew === "R" ? "ต่ออายุ" : activePolicy.new_renew} />
                       </div>
                       <div className="info-row">
-                        <F label="รหัสตัวแทน"           value={p.agent_code} />
-                        <F label="ชื่อตัวแทน / นายหน้า" value={p.broker_name !== p.agent_code ? p.broker_name : null} />
+                        <F label="รหัสตัวแทน"           value={activePolicy.agent_code} />
+                        <F label="ชื่อตัวแทน / นายหน้า" value={activePolicy.broker_name !== activePolicy.agent_code ? activePolicy.broker_name : null} />
                       </div>
                     </div>
                   </div>
@@ -507,11 +755,11 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="person" s={20} /><span className="info-card-title">ผู้เอาประกัน</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="ชื่อ-นามสกุล"  value={p.insured_name} />
-                        <F label="เบอร์โทรศัพท์" value={p.phone} />
+                        <F label="ชื่อ-นามสกุล"  value={activePolicy.insured_name} />
+                        <F label="เบอร์โทรศัพท์" value={activePolicy.phone} />
                       </div>
                       <div className="info-row fw">
-                        <F label="ที่อยู่" value={p.insured_address} />
+                        <F label="ที่อยู่" value={activePolicy.insured_address} />
                       </div>
                     </div>
                   </div>
@@ -521,21 +769,21 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="car" s={20} /><span className="info-card-title">ข้อมูลรถยนต์</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="ยี่ห้อ / รุ่น" value={[p.car_make, p.car_model].filter(Boolean).join("  ")} />
-                        <F label="ปีรถ"           value={p.car_year} />
+                        <F label="ยี่ห้อ / รุ่น" value={[activePolicy.car_make, activePolicy.car_model].filter(Boolean).join("  ")} />
+                        <F label="ปีรถ"           value={activePolicy.car_year} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 18 }}>
                         <div className="info-field">
                           <div className="info-label">ทะเบียนรถ</div>
                           <div className="info-val">
-                            {p.license_plate ? <span className="plate">{p.license_plate}</span> : "—"}
+                            {activePolicy.license_plate ? <span className="plate">{activePolicy.license_plate}</span> : "—"}
                           </div>
                         </div>
-                        <F label="จังหวัดทะเบียน" value={p.license_province} />
+                        <F label="จังหวัดทะเบียน" value={activePolicy.license_province} />
                       </div>
                       <div className="info-row">
-                        <F label="เลขตัวถัง"        value={p.chassis_no} mono />
-                        <F label="ทุนเอาประกัน (฿)" value={p.sum_insured ? `${baht(p.sum_insured)} ฿` : null} />
+                        <F label="เลขตัวถัง"        value={activePolicy.chassis_no} mono />
+                        <F label="ทุนเอาประกัน (฿)" value={activePolicy.sum_insured ? `${baht(activePolicy.sum_insured)} ฿` : null} />
                       </div>
                     </div>
                   </div>
@@ -545,40 +793,71 @@ export function DetailPage() {
                     <div className="info-card-hd"><Ico n="cal" s={20} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
                     <div className="info-card-bd">
                       <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="วันเริ่มต้น" value={fmtDate(p.coverage_start)} />
-                        <F label="วันสิ้นสุด"  value={fmtDate(p.coverage_end)} />
+                        <F label="วันเริ่มต้น" value={fmtDate(activePolicy.coverage_start)} />
+                        <F label="วันสิ้นสุด"  value={fmtDate(activePolicy.coverage_end)} />
                       </div>
                       <div className="info-row">
-                        <F label="วันแจ้งงาน"     value={fmtDate(p.date_notify)} />
-                        <F label="วันรับกรมธรรม์" value={fmtDate(p.date_policy_receive)} />
+                        <F label="วันแจ้งงาน"     value={fmtDate(activePolicy.date_notify)} />
+                        <F label="วันรับกรมธรรม์" value={fmtDate(activePolicy.date_policy_receive)} />
                       </div>
-                      {p.date_cancel && (
+                      {activePolicy.date_cancel && (
                         <div className="info-row" style={{ marginTop: 12 }}>
-                          <F label="วันยกเลิก" value={fmtDate(p.date_cancel)} />
+                          <F label="วันยกเลิก" value={fmtDate(activePolicy.date_cancel)} />
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* เบี้ยประกัน — ตารางคำนวณ (read-only) แสดง main + พ.ร.บ. คู่กัน */}
-                  <PremiumGrid
-                    readOnly
-                    title="เบี้ยประกัน"
-                    main={p}
-                    prb={(() => {
-                      const prbAtt = attachItems.find(a => a.doc_type === "prb")
-                      if (!prbAtt) return null
-                      return {
-                        net_premium:   prbAtt.net_premium,
-                        stamp_duty:    prbAtt.stamp_duty,
-                        vat:           prbAtt.vat,
-                        total_premium: prbAtt.total_premium,
-                      }
-                    })()}
-                  />
+                  {/* เบี้ยประกัน — จับคู่ กธ.มอเตอร์ + พ.ร.บ. ของปีเดียวกัน
+                      ค้นจาก: (1) PRB attachment ของ p, (2) sibling policy ที่ type ตรงข้ามและปีเดียวกัน */}
+                  {(() => {
+                    const yearFromFn = (fn) => {
+                      if (!fn) return null
+                      const m = String(fn).match(/\.(\d{2})\.pdf$/i)
+                      return m ? 2500 + parseInt(m[1], 10) : null
+                    }
+                    const yearOfRec = (rec) => yearFromFn(rec?.pdf_filename)
+                      ?? (rec?.coverage_end   ? parseInt(rec.coverage_end.slice(0, 4))   + 543 : null)
+                      ?? (rec?.coverage_start ? parseInt(rec.coverage_start.slice(0, 4)) + 543 : null)
+                    const isPRB = (t) => (t || "").toUpperCase().trim() === "P"
+                    const activeIsPRB = isPRB(activePolicy.policy_type)
+                    const activeYear  = yearOfRec(activePolicy)
+                    // หา sibling ปีเดียวกัน (ไม่ใช่ฉบับเดียวกัน)
+                    const sibling = relatedPdfs.find(r =>
+                      r.id !== activePolicy.id && yearOfRec(r) === activeYear
+                    )
+                    const siblingIsPRB = sibling && isPRB(sibling.policy_type)
+                    // PRB attachment ของ p (เฉพาะเมื่อดูตัว p เอง ไม่ใช่ sibling)
+                    const attachPrb = !viewingRelated
+                      ? attachItems.find(a => a.doc_type === "prb")
+                      : null
+                    // เลือกข้อมูลเข้าคอลัมน์ main vs prb
+                    let mainCol, prbCol
+                    if (activeIsPRB) {
+                      prbCol  = activePolicy
+                      mainCol = sibling && !siblingIsPRB ? sibling : null
+                    } else {
+                      mainCol = activePolicy
+                      prbCol  = attachPrb || (sibling && siblingIsPRB ? sibling : null)
+                    }
+                    const prbForGrid = prbCol ? {
+                      net_premium:   prbCol.net_premium,
+                      stamp_duty:    prbCol.stamp_duty,
+                      vat:           prbCol.vat,
+                      total_premium: prbCol.total_premium,
+                    } : null
+                    return (
+                      <PremiumGrid
+                        readOnly
+                        title="เบี้ยประกัน"
+                        main={mainCol || {}}
+                        prb={prbForGrid}
+                      />
+                    )
+                  })()}
 
                   {/* ความคุ้มครองเพิ่มเติม (ทุนเอาประกัน — เฉพาะกรมธรรม์รถยนต์) */}
-                  {(p.third_party_per_person || p.third_party_per_accident || p.own_damage) && (
+                  {(activePolicy.third_party_per_person || activePolicy.third_party_per_accident || activePolicy.own_damage) && (
                     <div className="info-card">
                       <div className="info-card-hd">
                         <Ico n="shield" s={20} />
@@ -586,9 +865,9 @@ export function DetailPage() {
                       </div>
                       <div className="info-card-bd">
                         <div className="info-row">
-                          <F label="บุคคลภายนอก/คน"   value={p.third_party_per_person  ? `${baht(p.third_party_per_person)} ฿`  : null} />
-                          <F label="บุคคลภายนอก/ครั้ง" value={p.third_party_per_accident ? `${baht(p.third_party_per_accident)} ฿` : null} />
-                          <F label="ความเสียหายต่อรถ"  value={p.own_damage               ? `${baht(p.own_damage)} ฿`               : null} />
+                          <F label="บุคคลภายนอก/คน"   value={activePolicy.third_party_per_person  ? `${baht(activePolicy.third_party_per_person)} ฿`  : null} />
+                          <F label="บุคคลภายนอก/ครั้ง" value={activePolicy.third_party_per_accident ? `${baht(activePolicy.third_party_per_accident)} ฿` : null} />
+                          <F label="ความเสียหายต่อรถ"  value={activePolicy.own_damage               ? `${baht(activePolicy.own_damage)} ฿`               : null} />
                         </div>
                       </div>
                     </div>
@@ -598,8 +877,8 @@ export function DetailPage() {
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">หมายเหตุ</span></div>
                     <div className="info-card-bd">
-                      {p.notes
-                        ? <div className="info-val" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{p.notes}</div>
+                      {activePolicy.notes
+                        ? <div className="info-val" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{activePolicy.notes}</div>
                         : <div className="info-val" style={{ color: "var(--t3)", fontStyle: "italic" }}>ไม่มีหมายเหตุ</div>
                       }
                     </div>
@@ -658,81 +937,139 @@ export function DetailPage() {
                       </div>
                     </div>
                   </div>
-                  {pdfListOpen && (
-                    <div className="info-card-bd" style={{ padding: "8px 12px 12px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        {relatedPdfs.map(r => {
-                          const isActive = r.id === activePdfId && activeDocId === "main"
-                          const yearTH = r.coverage_start ? (parseInt(r.coverage_start.slice(0, 4)) + 543) : "?"
-                          return (
-                            <button
-                              key={r.id}
-                              onClick={() => { setActivePdfId(r.id); setActiveDocId("main") }}
-                              style={{
-                                display: "flex", alignItems: "center", gap: 10,
-                                padding: "7px 11px",
-                                border: `1px solid ${isActive ? "var(--blue)" : "var(--brd)"}`,
-                                borderRadius: 8,
-                                background: isActive ? "var(--blue-bg)" : "var(--sur)",
-                                cursor: "pointer", textAlign: "left",
-                                transition: "all 0.15s"
-                              }}
-                            >
-                              <Ico n="doc" s={15} />
-                              <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                                <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {r.pdf_filename || "PDF"}
-                                </span>
-                                <span style={{ fontSize: 12.5, color: "var(--t3)" }}>
-                                  ปี {yearTH}
-                                </span>
+                  {pdfListOpen && (() => {
+                    // ── จัดกลุ่มเอกสารตามปี (BE) — จับคู่ กธ + พรบ + สลักหลัง ของปีเดียวกัน ──
+                    // ⚠️ ลำดับ priority:
+                    //   1) parse เลข YY จาก filename ("กธ.69.pdf" / "พรบ.69.pdf") → BE 2569
+                    //      เพราะนี่คือสิ่งที่ user มองเห็น และเป็นมาตรฐานการเรียกปีกรมธรรม์ในไทย
+                    //   2) fallback ไป coverage_end (ปีที่หมดอายุ) ถ้า filename ไม่มี pattern
+                    //   3) fallback ไป coverage_start สุดท้าย
+                    const yearFromFilename = (fn) => {
+                      if (!fn) return null
+                      // จับ ".XX." ก่อน .pdf (XX = 2 หลัก BE สั้น เช่น 69, 70)
+                      const m = String(fn).match(/\.(\d{2})\.pdf$/i)
+                      if (!m) return null
+                      const yy = parseInt(m[1], 10)
+                      return 2500 + yy  // 69 → 2569, 70 → 2570
+                    }
+                    const yearOf = (rec) => {
+                      return yearFromFilename(rec.pdf_filename)
+                        ?? (rec.coverage_end   ? parseInt(rec.coverage_end.slice(0, 4))   + 543 : null)
+                        ?? (rec.coverage_start ? parseInt(rec.coverage_start.slice(0, 4)) + 543 : null)
+                    }
+                    const docs = [
+                      ...relatedPdfs.map(r => ({
+                        kind: "policy",
+                        id: r.id,
+                        record: r,
+                        // policy_type "P" = พ.ร.บ., อื่นๆ = กธ
+                        docType: (r.policy_type || "").toUpperCase().trim() === "P" ? "prb" : "main",
+                        year: yearOf(r),
+                        filename: r.pdf_filename || "PDF",
+                      })),
+                      ...attachItems.map(a => ({
+                        kind: "attachment",
+                        id: a.id,
+                        record: a,
+                        docType: a.doc_type || "other",
+                        // attachment ใช้ปีของตัวเอง — fallback ปีของ parent ถ้าไม่มี
+                        year: yearOf(a) || yearOf(p),
+                        filename: a.label || a.pdf_filename || "PDF",
+                      })),
+                    ]
+                    // group by year
+                    const groups = new Map()
+                    for (const d of docs) {
+                      const key = d.year ?? "ไม่ทราบปี"
+                      if (!groups.has(key)) groups.set(key, [])
+                      groups.get(key).push(d)
+                    }
+                    // sort years desc — "ไม่ทราบปี" ไว้ท้าย
+                    const years = [...groups.keys()].sort((a, b) => {
+                      if (a === "ไม่ทราบปี") return 1
+                      if (b === "ไม่ทราบปี") return -1
+                      return b - a
+                    })
+                    // sort docs within year: main → prb → endorsement → other
+                    const ORDER = { main: 0, prb: 1, endorsement: 2, other: 3 }
+                    for (const list of groups.values()) {
+                      list.sort((a, b) => (ORDER[a.docType] ?? 9) - (ORDER[b.docType] ?? 9))
+                    }
+                    const DOC_META = {
+                      main:        { label: "กธ.",        color: "var(--blue)",  bg: "var(--blue-bg)",   ico: "doc" },
+                      prb:         { label: "พ.ร.บ.",     color: "var(--green)", bg: "var(--green-bg)",  ico: "shield" },
+                      endorsement: { label: "สลักหลัง",   color: "#D97706",      bg: "var(--amber-bg)",  ico: "pen" },
+                      other:       { label: "อื่นๆ",       color: "var(--t3)",    bg: "var(--sur2)",      ico: "doc" },
+                    }
+                    return (
+                      <div className="info-card-bd" style={{ padding: "8px 12px 12px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                          {years.map(year => (
+                            <div key={year}>
+                              {/* year header */}
+                              <div style={{
+                                fontSize: 12, fontWeight: 700, color: "var(--t3)",
+                                marginBottom: 6, paddingLeft: 4, letterSpacing: 0.3,
+                                display: "flex", alignItems: "center", gap: 6,
+                              }}>
+                                <Ico n="cal" s={13} />
+                                ปี {year}
                               </div>
-                              {isActive && (
-                                <span style={{ fontSize: 11.5, color: "var(--blue)", fontWeight: 700, whiteSpace: "nowrap" }}>กำลังดู</span>
-                              )}
-                            </button>
-                          )
-                        })}
-                        {attachItems.map(att => {
-                          const isActive = activeDocId === att.id
-                          const typeLabel = att.doc_type === "prb" ? "พ.ร.บ."
-                                          : att.doc_type === "endorsement" ? "สลักหลัง"
-                                          : "อื่นๆ"
-                          const typeColor = att.doc_type === "prb" ? "var(--green)"
-                                          : att.doc_type === "endorsement" ? "#D97706"
-                                          : "var(--t3)"
-                          return (
-                            <button
-                              key={att.id}
-                              onClick={() => setActiveDocId(att.id)}
-                              style={{
-                                display: "flex", alignItems: "center", gap: 10,
-                                padding: "7px 11px",
-                                border: `1px solid ${isActive ? typeColor : "var(--brd)"}`,
-                                borderRadius: 8,
-                                background: isActive ? "var(--green-bg)" : "var(--sur)",
-                                cursor: "pointer", textAlign: "left",
-                                transition: "all 0.15s"
-                              }}
-                            >
-                              <Ico n={att.doc_type === "endorsement" ? "pen" : "shield"} s={15} />
-                              <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                                <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 500, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                  {att.label || att.pdf_filename || "PDF"}
-                                </span>
-                                <span style={{ fontSize: 11.5, color: typeColor, fontWeight: 700 }}>
-                                  {typeLabel}
-                                </span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                {groups.get(year).map(d => {
+                                  const isActive = d.kind === "policy"
+                                    ? (d.id === activePdfId && activeDocId === "main")
+                                    : (activeDocId === d.id)
+                                  const meta = DOC_META[d.docType] || DOC_META.other
+                                  const onClick = d.kind === "policy"
+                                    ? () => { setActivePdfId(d.id); setActiveDocId("main") }
+                                    : () => setActiveDocId(d.id)
+                                  return (
+                                    <button
+                                      key={d.id}
+                                      onClick={onClick}
+                                      style={{
+                                        display: "flex", alignItems: "center", gap: 10,
+                                        padding: "7px 11px",
+                                        border: `1px solid ${isActive ? meta.color : "var(--brd)"}`,
+                                        borderRadius: 8,
+                                        background: isActive ? meta.bg : "var(--sur)",
+                                        cursor: "pointer", textAlign: "left",
+                                        transition: "all 0.15s"
+                                      }}
+                                    >
+                                      <Ico n={meta.ico} s={15} />
+                                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                                        <span style={{
+                                          fontSize: 11.5, fontWeight: 700,
+                                          padding: "2px 7px", borderRadius: 999,
+                                          background: meta.bg, color: meta.color,
+                                          flexShrink: 0,
+                                        }}>
+                                          {meta.label}
+                                        </span>
+                                        <span style={{
+                                          fontSize: 14, fontWeight: isActive ? 600 : 500, color: "var(--t1)",
+                                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                                        }}>
+                                          {d.filename}
+                                        </span>
+                                      </div>
+                                      {isActive && (
+                                        <span style={{ fontSize: 11.5, color: meta.color, fontWeight: 700, whiteSpace: "nowrap" }}>
+                                          กำลังดู
+                                        </span>
+                                      )}
+                                    </button>
+                                  )
+                                })}
                               </div>
-                              {isActive && (
-                                <span style={{ fontSize: 11.5, color: typeColor, fontWeight: 700, whiteSpace: "nowrap" }}>กำลังดู</span>
-                              )}
-                            </button>
-                          )
-                        })}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )
+                  })()}
                 </div>
                 )
               })()}

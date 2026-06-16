@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
+import { computeDisplayFilename } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
 import { PdfPreview } from "../components/PdfPreview"
 import { FormPanel } from "../components/FormPanel"
@@ -14,6 +15,8 @@ export function UploadPage() {
   const [file, setFile]         = useState(null)
   const [fileUrl, setFileUrl]   = useState(null)
   const [filename, setFilename] = useState("")
+  // true = ใช้ชื่ออัตโนมัติจาก form (sync เมื่อ field เปลี่ยน), false = user แก้ชื่อเอง (ค้างไว้)
+  const [filenameAuto, setFilenameAuto] = useState(true)
   const [drag, setDrag]         = useState(false)
   const [loading, setLoading]   = useState(false)
   const [parsed, setParsed]     = useState({})
@@ -23,7 +26,7 @@ export function UploadPage() {
   const [aiWarn, setAiWarn]     = useState(null)
   const [pdfFull, setPdfFull]   = useState(false)
   const [formOpen, setFormOpen]       = useState(true)
-  const [premiumOpen, setPremiumOpen] = useState(false)
+  const [premiumOpen, setPremiumOpen] = useState(true)
 
   // PRB state — null = ไม่เพิ่ม, object = เพิ่มแล้ว
   const [prb, setPrb]             = useState(null)
@@ -48,6 +51,25 @@ export function UploadPage() {
     return () => URL.revokeObjectURL(url)
   }, [prbFile])
 
+  // ⚡ auto-fill ชื่อไฟล์ตามฟอร์ม — sync กับ logic ฝั่ง backend (_make_display_filename)
+  //   user แก้ชื่อเอง → filenameAuto = false → effect นี้หยุด sync (เคารพชื่อ user)
+  //   ยังไม่มีข้อมูลพอ (compute ได้ "ไม่ทราบ ...") → เก็บชื่อ fallback ของไฟล์เดิมไว้ก่อน
+  useEffect(() => {
+    if (!file || !filenameAuto) return
+    const computed = computeDisplayFilename({
+      plate:           parsed.license_plate,
+      policy_type:     parsed.policy_type,
+      insured_address: parsed.insured_address,
+      insured_name:    parsed.insured_name,
+      coverage_end:    parsed.coverage_end,
+      doc_type:        "main",
+    })
+    if (computed && !computed.startsWith("ไม่ทราบ")) {
+      setFilename(computed)
+    }
+  }, [file, filenameAuto, parsed.license_plate, parsed.policy_type,
+      parsed.insured_address, parsed.insured_name, parsed.coverage_end])
+
   const pick = async f => {
     if (!f) return
     if (!(f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))) {
@@ -55,7 +77,8 @@ export function UploadPage() {
     }
     // เก็บไฟล์ไว้ใน browser — ยังไม่อัปขึ้น R2 (จะอัปตอนกด "บันทึก")
     setFile(f); setErr(""); setHasData(false)
-    setFilename(f.name)
+    setFilename(f.name)       // fallback name — useEffect จะ replace ทันทีที่ AI ดึงข้อมูลได้
+    setFilenameAuto(true)     // เลือกไฟล์ใหม่ → เปิดโหมด auto-fill
     setLoading(true)
     const form = new FormData()
     form.append("file", f)
@@ -261,10 +284,21 @@ export function UploadPage() {
               {file && (
                 <div className="fname-row">
                   <Ico n="pen" s={17} />
-                  <label>ชื่อไฟล์ <span style={{ color: "var(--blue)", fontWeight: 400, fontSize: 13 }}>(แก้ไขได้)</span></label>
-                  <input value={filename} onChange={e => setFilename(e.target.value)} placeholder={file.name} />
-                  {filename !== file.name && (
-                    <button onClick={() => setFilename(file.name)}>รีเซ็ต</button>
+                  <label>
+                    ชื่อไฟล์{" "}
+                    <span style={{ color: "var(--blue)", fontWeight: 400, fontSize: 13 }}>
+                      {filenameAuto ? "(ตั้งอัตโนมัติจากข้อมูล — แก้ไขได้)" : "(แก้ไขเอง)"}
+                    </span>
+                  </label>
+                  <input
+                    value={filename}
+                    onChange={e => { setFilenameAuto(false); setFilename(e.target.value) }}
+                    placeholder={file.name}
+                  />
+                  {!filenameAuto && (
+                    <button onClick={() => setFilenameAuto(true)} title="กลับไปใช้ชื่ออัตโนมัติ">
+                      ใช้ชื่ออัตโนมัติ
+                    </button>
                   )}
                 </div>
               )}

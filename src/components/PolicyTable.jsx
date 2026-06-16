@@ -74,21 +74,30 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
             <tr>
               <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>#</th>
               <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>PDF</th>
-              <SortHeader label="เลขกรมธรรม์"  col="policy_number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="ผู้เอาประกัน" col="insured_name"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="วันหมดอายุ"   col="coverage_end"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="เลขกรมธรรม์"  col="policy_number"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="ผู้เอาประกัน" col="insured_name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <th>สถานะ</th>
+              <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, idx) => {
-              const st     = getStatus(r.coverage_end)
+              const st     = getStatus(r.coverage_end, r.coverage_start)
               const hasPdf = !!(r.pdf_url || r.pdf_filename || r.pdf_size)
-              // เหลือกี่วัน (เปรียบเทียบกับวันนี้)
+              const now = new Date()
+              // ถ้า coverage_start ยังเป็นอนาคต → label แสดง "เริ่มอีก N วัน" แทน "เหลือ N วัน"
+              const startD = r.coverage_start ? new Date(r.coverage_start) : null
+              const isPending = !!(startD && !isNaN(startD) && startD > now)
+              const daysToStart = isPending ? Math.ceil((startD - now) / 86400000) : null
+              // เหลือกี่วันจนหมดอายุ
               const daysLeft = r.coverage_end
-                ? Math.ceil((new Date(r.coverage_end) - new Date()) / 86400000)
+                ? Math.ceil((new Date(r.coverage_end) - now) / 86400000)
                 : null
-              const daysLabel = daysLeft == null ? null
+              const daysLabel = isPending
+                ? { txt: `เริ่มอีก ${daysToStart} วัน`, color: "var(--blue)" }
+                : daysLeft == null ? null
                 : daysLeft < 0   ? { txt: `หมดแล้ว ${-daysLeft} วัน`, color: "var(--red)" }
                 : daysLeft === 0 ? { txt: "หมดวันนี้",                color: "var(--red)" }
                 : daysLeft <= 30 ? { txt: `เหลือ ${daysLeft} วัน`,    color: "var(--amber)" }
@@ -113,9 +122,32 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                     )}
                   </td>
                   <td className="tm">{r.policy_number || "—"}</td>
-                  <td className="tw">{r.insured_name || "—"}</td>
+                  <td className="tw">
+                    <span>{r.insured_name || "—"}</span>
+                    {r._historyCount > 0 && (
+                      <span
+                        title={`มีกรมธรรม์อื่นของลูกค้ารายนี้อีก ${r._historyCount} ฉบับ — คลิกดูในหน้ารายละเอียด`}
+                        style={{
+                          marginLeft: 8,
+                          display: "inline-flex", alignItems: "center", gap: 4,
+                          padding: "2px 8px", borderRadius: 999,
+                          background: "var(--blue-bg)", color: "var(--blue)",
+                          fontSize: 11.5, fontWeight: 700, lineHeight: 1.4,
+                          verticalAlign: "middle",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        +{r._historyCount} ฉบับ
+                      </span>
+                    )}
+                  </td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    <div style={{ color: "var(--t1)", fontSize: 16, fontWeight: 500, lineHeight: 1.2 }}>
+                    <div style={{ color: "var(--t1)", fontSize: 15, fontWeight: 500, lineHeight: 1.2 }}>
+                      {fmtDate(r.coverage_start) || "—"}
+                    </div>
+                  </td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <div style={{ color: "var(--t1)", fontSize: 15, fontWeight: 500, lineHeight: 1.2 }}>
                       {fmtDate(r.coverage_end) || "—"}
                     </div>
                     {daysLabel && (
@@ -125,6 +157,25 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                     )}
                   </td>
                   <td><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
+                  <td style={{ textAlign: "center" }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()  // อย่าให้ trigger onRow (จะเปิดหน้ารายละเอียด แทน new tab)
+                        window.open(`/policies/${r.id}`, "_blank", "noopener,noreferrer")
+                      }}
+                      title="เปิดหน้ารายละเอียดในแท็บใหม่"
+                      style={{
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        width: 32, height: 32, borderRadius: 8,
+                        border: "1px solid var(--brd)",
+                        background: "var(--sur)", color: "var(--blue)",
+                        cursor: "pointer", padding: 0,
+                      }}
+                    >
+                      <Ico n="open" s={16} />
+                    </button>
+                  </td>
                 </tr>
               )
             })}
