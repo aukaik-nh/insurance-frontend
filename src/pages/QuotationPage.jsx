@@ -31,7 +31,7 @@ const genQuoteNo = () => {
   return `D0-${d.getFullYear()}${m}${dd}-${rand}`
 }
 
-const DRAFT_KEY = "quotation-draft:v1"
+const DRAFT_KEY = "quotation-draft:v2"   // v2: เปลี่ยนรูปแบบวันที่/เลขที่เป็น ค.ศ. — ทิ้ง draft เก่า
 
 const ACCESSORIES_DEFAULT =
   "แคมเปญนี้ไม่สามารถใช้กับรถที่ดัดแปลง ตกแต่ง เข้าข่ายติดตั้งเพื่อความเร็ว การแข่งขัน รถโหลดเตี้ย และยกสูง\n" +
@@ -244,6 +244,18 @@ export function QuotationPage() {
   }
 
   const handlePrint = () => window.print()
+
+  // ชื่อไฟล์ตอน Save as PDF = "ใบเสนอราคา D0-..." (browser ใช้ document.title เป็นชื่อไฟล์)
+  useEffect(() => {
+    const before = () => { document.title = `ใบเสนอราคา ${q.quote_no || ""}`.trim() }
+    const after  = () => { document.title = "ประกันคุ้มภัย" }
+    window.addEventListener("beforeprint", before)
+    window.addEventListener("afterprint", after)
+    return () => {
+      window.removeEventListener("beforeprint", before)
+      window.removeEventListener("afterprint", after)
+    }
+  }, [q.quote_no])
 
   return (
     <div className="page-wrap">
@@ -479,13 +491,15 @@ export function QuotationPage() {
               <tr>
                 <td className="lbl">อุปกรณ์เสริม</td>
                 <td>
+                  {/* จอ: textarea แก้ได้ · พิมพ์: div ข้อความจริง (textarea ไม่ยืดตามเนื้อหาตอน print) */}
                   <textarea
                     ref={areaRef}
-                    className="q-pink q-area"
+                    className="q-pink q-area no-print"
                     rows={3}
                     value={q.accessories_note}
                     onChange={e => set("accessories_note", e.target.value)}
                   />
+                  <div className="q-area-print print-only">{q.accessories_note}</div>
                   <div style={{ marginTop: 2 }}>
                     - อุปกรณ์เสริมอื่นๆไม่เกิน <NumInp value={q.accessories_max} onChange={v => set("accessories_max", v)} minCh={6} /> บาท
                   </div>
@@ -706,9 +720,15 @@ body.dark .q-sheet { color: #000; }
 .q-pick-name { font-size: 15px; font-weight: 700; color: var(--t1); }
 .q-pick-sub { font-size: 12.5px; color: var(--t3); margin-top: 2px; }
 
-/* ── Print — ใช้ได้ทั้งปุ่มพิมพ์และ Ctrl+P (style นี้ mount เฉพาะหน้านี้) ── */
+/* ── องค์ประกอบที่แสดงเฉพาะตอนพิมพ์ ── */
+.print-only { display: none; }
+.q-area-print { white-space: pre-wrap; line-height: 1.5; }
+
+/* ── Print — ใช้ได้ทั้งปุ่มพิมพ์และ Ctrl+P (style นี้ mount เฉพาะหน้านี้)
+   @page margin 0 = ตัด header/footer ของเบราว์เซอร์ (URL/วันที่) ออก
+   แล้วใส่ขอบกระดาษเป็น padding ในเอกสารแทน ── */
 @media print {
-  @page { size: A4; margin: 9mm 11mm; }
+  @page { size: A4; margin: 0; }
   body * { visibility: hidden !important; }
   #quotation-print-root, #quotation-print-root * { visibility: visible !important; }
   #quotation-print-root {
@@ -717,24 +737,51 @@ body.dark .q-sheet { color: #000; }
     width: 100% !important; max-width: 100% !important;
     box-shadow: none !important; border: none !important;
     border-radius: 0 !important;
-    padding: 0 !important; margin: 0 !important;
+    margin: 0 !important;
+    padding: 8mm 10mm 6mm !important;
+    /* บีบให้ลง A4 หน้าเดียวแบบเอกสารจริง (วัดจริง: เนื้อหาเต็ม ~1194px, งบที่ zoom นี้ ~1215px) */
+    zoom: 0.88;
+    font-size: 10px !important; line-height: 1.42 !important;
   }
   /* ตอนพิมพ์: ฟิลด์กลายเป็นตัวหนังสือสีดำเรียบๆ = เอกสารฉบับสมบูรณ์
      (สีชมพูมีไว้บอกตำแหน่งแก้ไขบนจอเท่านั้น) */
   #quotation-print-root .q-pink,
-  #quotation-print-root .q-area {
+  #quotation-print-root .q-area-print {
     border: none !important; background: transparent !important;
     padding: 0 !important;
     color: #000 !important;
     -webkit-text-fill-color: #000 !important;
     font-weight: 600 !important;
   }
+  .print-only { display: block !important; }
+  /* ── compact ทุกส่วนให้หน้าเดียว ── */
+  #quotation-print-root .q-header { gap: 8px; padding-bottom: 6px; margin-bottom: 6px; }
+  #quotation-print-root .q-tm-logo { width: 42px; height: 42px; font-size: 8px; }
+  #quotation-print-root .q-brand-logo { width: 42px; height: 42px; }
+  #quotation-print-root .q-comp-en, #quotation-print-root .q-comp-th { font-size: 10px; }
+  #quotation-print-root .q-addr { font-size: 8.5px; }
+  #quotation-print-root .q-subj { font-size: 10px; margin-top: 4px; row-gap: 2px; }
+  #quotation-print-root .q-intro { font-size: 10px; margin: 6px 0 4px; line-height: 1.5; }
+  #quotation-print-root .q-sec-title { font-size: 10.5px; margin-top: 4px; }
+  #quotation-print-root .q-tbl { font-size: 9.5px; margin-top: 3px; }
+  #quotation-print-root .q-tbl th { padding: 3px 4px; font-size: 9px; }
+  #quotation-print-root .q-tbl td { padding: 2.5px 4px; }
+  #quotation-print-root .q-hi { margin: 7px 0 4px; line-height: 1.45; }
+  #quotation-print-root .q-hi-1 { font-size: 12.5px; }
+  #quotation-print-root .q-hi-2 { font-size: 11px; }
+  #quotation-print-root .q-cov { font-size: 9.5px; margin-top: 3px; }
+  #quotation-print-root .q-cov td { padding: 1.5px 6px; }
+  #quotation-print-root .q-acc { margin-top: 6px; font-size: 9px; }
+  #quotation-print-root .q-acc td { padding: 4px 6px; }
+  #quotation-print-root .q-notes { font-size: 9px; margin-top: 6px; line-height: 1.45; padding-left: 18px; }
+  #quotation-print-root .q-outro { font-size: 9px; margin-top: 5px; }
+  #quotation-print-root .q-sign { font-size: 9.5px; margin-top: 10px; }
   #quotation-print-root .q-reset,
   .no-print { display: none !important; }
 }
 
-/* Mobile */
-@media (max-width: 900px) {
+/* Mobile — เฉพาะจอเท่านั้น (ห้ามโดนตอนพิมพ์: กระดาษ A4 กว้าง ~794px < 900px) */
+@media screen and (max-width: 900px) {
   .q-sheet { padding: 16px 12px; font-size: 11px; }
   .q-header { grid-template-columns: 1fr; gap: 6px; }
   .q-header > div:nth-child(3) { text-align: left; }
