@@ -10,6 +10,7 @@ const UploadPage  = lazy(() => import("./pages/UploadPage").then(m  => ({ defaul
 const ManualPage  = lazy(() => import("./pages/ManualPage").then(m  => ({ default: m.ManualPage })))
 const DetailPage  = lazy(() => import("./pages/DetailPage").then(m  => ({ default: m.DetailPage })))
 const InvoicePage = lazy(() => import("./pages/InvoicePage").then(m => ({ default: m.InvoicePage })))
+const QuotationPage = lazy(() => import("./pages/QuotationPage").then(m => ({ default: m.QuotationPage })))
 
 const _Loading = () => (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
@@ -104,6 +105,7 @@ function Layout({ onLogout }) {
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "อัปโหลด PDF",   desc: "เพิ่มกรมธรรม์ใหม่" },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
+    { path: "/quotation", ico: "doc",      label: "ใบเสนอราคา",    desc: "รูปแบบคุ้มภัย" },
   ]
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
   const isActive = navPath => navPath === "/" ? path === "/" : path.startsWith(navPath)
@@ -116,6 +118,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
     switch (p) {
       case "/upload":   import("./pages/UploadPage"); break
       case "/invoice":  import("./pages/InvoicePage"); break
+      case "/quotation": import("./pages/QuotationPage"); break
       case "/manual":   import("./pages/ManualPage"); break
       // DetailPage prefetch — เผื่อ user คลิก row
       default: if (p.startsWith("/policies/")) import("./pages/DetailPage")
@@ -470,6 +473,7 @@ export default function App() {
           <Route path="upload"      element={<Suspense fallback={<_Loading />}><UploadPage /></Suspense>} />
           <Route path="manual"      element={<Suspense fallback={<_Loading />}><ManualPage /></Suspense>} />
           <Route path="invoice"     element={<Suspense fallback={<_Loading />}><InvoicePage /></Suspense>} />
+          <Route path="quotation"   element={<Suspense fallback={<_Loading />}><QuotationPage /></Suspense>} />
           <Route path="policies/:id" element={<Suspense fallback={<_Loading />}><DetailPage /></Suspense>} />
         </Route>
       </Routes>
