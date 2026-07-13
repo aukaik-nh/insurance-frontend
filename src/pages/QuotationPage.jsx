@@ -11,23 +11,24 @@ const fmt2 = n =>
 const fmt0 = n =>
   (Number(n) || 0).toLocaleString("th-TH", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
+// รูปแบบตามเอกสารจริง Tokio Marine: ค.ศ. เช่น "08/07/2026 13:50:27"
 const nowStr = () => {
   const d = new Date()
   const dd = String(d.getDate()).padStart(2, "0")
   const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const yyyy = d.getFullYear() + 543
   const hh = String(d.getHours()).padStart(2, "0")
   const mi = String(d.getMinutes()).padStart(2, "0")
-  return `${dd}/${mm}/${yyyy} ${hh}:${mi}`
+  const ss = String(d.getSeconds()).padStart(2, "0")
+  return `${dd}/${mm}/${d.getFullYear()} ${hh}:${mi}:${ss}`
 }
 
+// เลขที่ใบเสนอราคาตามเอกสารจริง: "D0-20260708-00737" (ค.ศ. + running 5 หลัก)
 const genQuoteNo = () => {
   const d = new Date()
-  const y = d.getFullYear() + 543
   const m = String(d.getMonth() + 1).padStart(2, "0")
   const dd = String(d.getDate()).padStart(2, "0")
-  const rand = Math.floor(Math.random() * 90000 + 10000)
-  return `D0-${y}${m}${dd}-${rand}`
+  const rand = String(Math.floor(Math.random() * 99999) + 1).padStart(5, "0")
+  return `D0-${d.getFullYear()}${m}${dd}-${rand}`
 }
 
 const DRAFT_KEY = "quotation-draft:v1"
@@ -82,7 +83,7 @@ function PinkInp({ value, onChange, minCh = 4, align = "center", ph = "", block 
 
 /* ── NumInp — ตัวเลข: จัดขวา + format comma ตอน blur ───────
    dec: ทศนิยม (0|2) · zeroDash: ค่า 0/ว่าง แสดง "-" ตามเอกสาร */
-function NumInp({ value, onChange, minCh = 9, dec = 0, zeroDash = false, block = false }) {
+function NumInp({ value, onChange, minCh = 9, dec = 0, zeroDash = false, block = false, align = "right" }) {
   const len = String(value ?? "").length
   const width = block ? "100%" : `${Math.min(40, Math.max(minCh, len + 2))}ch`
   const blur = () => {
@@ -99,7 +100,7 @@ function NumInp({ value, onChange, minCh = 9, dec = 0, zeroDash = false, block =
       value={value ?? ""}
       onChange={e => onChange(e.target.value)}
       onBlur={blur}
-      style={{ width, textAlign: "right" }}
+      style={{ width, textAlign: align }}
     />
   )
 }
@@ -255,7 +256,7 @@ export function QuotationPage() {
         <div className="page-hd-div" />
         <div className="page-hd-info">
           <div className="page-title">ใบเสนอราคาประกันภัยรถยนต์</div>
-          <div className="page-sub">คลิกแก้ที่ตัวอักษรสีชมพู · กรอกเบี้ยสุทธิแล้ว อากร/VAT/รวม คำนวณให้เอง · บันทึกร่างอัตโนมัติ</div>
+          <div className="page-sub">คลิกแก้ที่ตัวอักษรสีชมพู · อากร/VAT/รวม คำนวณให้เอง · พิมพ์ออกมาเป็นตัวดำเหมือนเอกสารจริง</div>
         </div>
         <div className="page-hd-right">
           <button className="btn btn-w" onClick={() => setPickOpen(true)} title="ค้นหากรมธรรม์ในระบบ แล้วดึงข้อมูลมาใส่ใบเสนอราคา">
@@ -556,8 +557,9 @@ function CovRow({ label, unit, value, onChange, extra, indent }) {
     <tr>
       <td style={{ padding: `3px 0 3px ${indent ? 34 : 22}px` }}>{label}</td>
       <td style={{ padding: "3px 8px", color: "#555", whiteSpace: "nowrap", width: 82 }}>{unit}</td>
-      <td style={{ padding: "3px 10px 3px 0", textAlign: "right", whiteSpace: "nowrap" }}>
-        <NumInp value={value} onChange={onChange} minCh={8} zeroDash />
+      {/* ตัวเลขจัดกึ่งกลางคอลัมน์ ตามเอกสารจริง */}
+      <td style={{ padding: "3px 8px", textAlign: "center", whiteSpace: "nowrap", width: 170 }}>
+        <NumInp value={value} onChange={onChange} minCh={8} zeroDash align="center" />
         {extra && <div style={{ fontWeight: 400, fontSize: 10, color: "#555" }}>{extra}</div>}
       </td>
     </tr>
@@ -717,11 +719,15 @@ body.dark .q-sheet { color: #000; }
     border-radius: 0 !important;
     padding: 0 !important; margin: 0 !important;
   }
-  /* ฟิลด์กลายเป็นตัวหนังสือชมพูเรียบๆ เหมือนเอกสารจริง */
+  /* ตอนพิมพ์: ฟิลด์กลายเป็นตัวหนังสือสีดำเรียบๆ = เอกสารฉบับสมบูรณ์
+     (สีชมพูมีไว้บอกตำแหน่งแก้ไขบนจอเท่านั้น) */
   #quotation-print-root .q-pink,
   #quotation-print-root .q-area {
     border: none !important; background: transparent !important;
     padding: 0 !important;
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+    font-weight: 600 !important;
   }
   #quotation-print-root .q-reset,
   .no-print { display: none !important; }
