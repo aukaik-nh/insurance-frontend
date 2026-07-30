@@ -31,6 +31,7 @@ export function BatchUploadPage() {
   const [done, setDone]         = useState(null)     // ผลจาก /commit
   const [err, setErr]           = useState("")
   const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่าง AI อ่าน
+  const [progress, setProgress] = useState(null)     // {done, total, current} ระหว่างอ่าน
 
   // จับเวลาระหว่าง extracting — ให้ผู้ใช้เห็นว่ากำลังทำงาน ไม่ได้ค้าง
   useEffect(() => {
@@ -71,22 +72,33 @@ export function BatchUploadPage() {
 
   const doExtract = async () => {
     if (!files.length) return
-    setExtracting(true); setErr("")
+    setExtracting(true); setErr(""); setProgress({ done: 0, total: files.length, current: null })
     try {
       const fd = new FormData()
       files.forEach(f => fd.append("files", f))
+      // 1) อัปไฟล์ + สั่งอ่านเบื้องหลัง → ได้ batch_id ทันที
       const res = await api.post("/batch/extract", fd, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 600000,   // AI อ่านหลายไฟล์อาจนาน
+        timeout: 600000,
       })
-      const d = res.data
-      setData(d)
-      // default: ติ๊กทุกรายการที่บันทึกได้
-      setChecked(new Set(buildItems(d).map(it => it.key)))
+      const bid = res.data.batch_id
+      // 2) poll ความคืบหน้าทีละไฟล์ จน status = done
+      let result = null
+      for (let i = 0; i < 800; i++) {          // กันลูปค้าง (~20 นาที)
+        await new Promise(r => setTimeout(r, 1500))
+        let pr
+        try { pr = (await api.get(`/batch/${bid}/progress`)).data } catch { continue }
+        setProgress({ done: pr.done || 0, total: pr.total || files.length, current: pr.current })
+        if (pr.status === "done")  { result = (await api.get(`/batch/${bid}`)).data; break }
+        if (pr.status === "error") throw new Error(pr.error || "ประมวลผลไม่สำเร็จ")
+      }
+      if (!result) throw new Error("หมดเวลารอ — ลองไฟล์น้อยลง")
+      setData(result)
+      setChecked(new Set(buildItems(result).map(it => it.key)))
     } catch (e) {
       setErr("อ่านไฟล์ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally {
-      setExtracting(false)
+      setExtracting(false); setProgress(null)
     }
   }
 
@@ -230,17 +242,34 @@ export function BatchUploadPage() {
                     </div>
                   ))}
                 </div>
-                <div style={{ padding: 16, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
-                  {extracting && (
-                    <div style={{ fontSize: 13.5, color: "var(--t3)", textAlign: "right", lineHeight: 1.5 }}>
-                      AI อ่านทีละไฟล์ · ครั้งแรกเซิร์ฟเวอร์อาจตื่นช้า — โปรดรอ อย่าปิดหน้านี้
+                <div style={{ padding: 16 }}>
+                  {extracting ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14.5, fontWeight: 600, color: "var(--t1)" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                          <span className="spin" style={{ width: 16, height: 16, borderWidth: 2 }} />
+                          AI กำลังอ่าน {progress?.done ?? 0} / {progress?.total ?? files.length} ไฟล์
+                        </span>
+                        <span style={{ color: "var(--t3)", fontWeight: 500 }}>{elapsed}s</span>
+                      </div>
+                      <div style={{ height: 8, background: "var(--sur)", borderRadius: 99, overflow: "hidden", border: "1px solid var(--brd)" }}>
+                        <div style={{
+                          height: "100%",
+                          width: `${Math.round(((progress?.done ?? 0) / (progress?.total || files.length)) * 100)}%`,
+                          background: "var(--blue)", transition: "width .3s ease",
+                        }} />
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "var(--t3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {progress?.current ? `กำลังอ่าน: ${progress.current}` : "อัปโหลด/เตรียมไฟล์… อย่าปิดหน้านี้"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <button className="btn btn-b" onClick={doExtract} disabled={extracting}>
+                        <Ico n="upload" s={18} /><span>อ่านด้วย AI ({files.length} ไฟล์)</span>
+                      </button>
                     </div>
                   )}
-                  <button className="btn btn-b" onClick={doExtract} disabled={extracting}>
-                    {extracting
-                      ? <><span className="spin" style={{ width: 18, height: 18, borderWidth: 2 }} /><span>AI กำลังอ่าน {files.length} ไฟล์… ({elapsed}s)</span></>
-                      : <><Ico n="upload" s={18} /><span>อ่านด้วย AI ({files.length} ไฟล์)</span></>}
-                  </button>
                 </div>
               </div>
             )}
