@@ -137,11 +137,11 @@ export const policyTypeCategory = (t) => {
 }
 // สี badge ของแต่ละ category (ตรงกับ dashboard type-grid)
 export const TYPE_CAT_STYLE = {
-  motor: { bg: "#E6F1FB", fg: "#0C447C" },
-  prb:   { bg: "#E1F5EE", fg: "#085041" },
-  fire:  { bg: "#FAECE7", fg: "#712B13" },
-  pa:    { bg: "#EEEDFE", fg: "#3C3489" },
-  other: { bg: "#F1EFE8", fg: "#444441" },
+  motor: { bg: "#E5EEF0", fg: "#245863" },
+  prb:   { bg: "#E6EDE9", fg: "#2E5044" },
+  fire:  { bg: "#F0EAE4", fg: "#6A3A24" },
+  pa:    { bg: "#E7E9EF", fg: "#3A3E62" },
+  other: { bg: "#EDEEEF", fg: "#464B4E" },
 }
 
 export const F_SECS = [

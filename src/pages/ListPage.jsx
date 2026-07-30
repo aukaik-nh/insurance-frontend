@@ -600,14 +600,14 @@ export function ListPage({ tab }) {
               </div>
               <div className="type-grid">
                 {[
-                  { path: "/policies", lbl: "รายการกรมธรรม์", big: total.toLocaleString(),        sub: "รายการทั้งหมดในระบบ",       ico: "list",     bg: "#E6F1FB", dark: "#0C447C", mid: "#185FA5" },
-                  { path: "/upload",   lbl: "เพิ่มกรมธรรม์",   big: "+",                          sub: "อัปโหลด PDF · AI ช่วย",       ico: "upload",   bg: "#E1F5EE", dark: "#085041", mid: "#0F6E56" },
-                  { path: "/expiring", lbl: "ใกล้หมดอายุ",     big: expiring.length.toLocaleString(), sub: "ภายใน 30 วัน",            ico: "bell",     bg: "#FAECE7", dark: "#712B13", mid: "#993C1D", urgent: expiring.length > 0 },
-                  { path: "/invoice",  lbl: "ใบแจ้งหนี้",       big: "฿",                          sub: "QR PromptPay · พิมพ์",        ico: "banknote", bg: "#EEEDFE", dark: "#3C3489", mid: "#534AB7" },
+                  { path: "/policies", lbl: "รายการกรมธรรม์", big: total.toLocaleString(),        sub: "รายการทั้งหมดในระบบ",       ico: "list",     bg: "#E5EEF0", dark: "#245863", mid: "#3E7581" },
+                  { path: "/upload",   lbl: "เพิ่มกรมธรรม์",   big: "+",                          sub: "อัปโหลด PDF · AI ช่วย",       ico: "upload",   bg: "#E6EDE9", dark: "#2E5044", mid: "#4A6E5D" },
+                  { path: "/expiring", lbl: "ใกล้หมดอายุ",     big: expiring.length.toLocaleString(), sub: "ภายใน 30 วัน",            ico: "bell",     bg: "#F0EAE4", dark: "#6A3A24", mid: "#8A5238", urgent: expiring.length > 0 },
+                  { path: "/invoice",  lbl: "ใบแจ้งหนี้",       big: "฿",                          sub: "QR PromptPay · พิมพ์",        ico: "banknote", bg: "#E7E9EF", dark: "#3A3E62", mid: "#545A7C" },
                 ].map(m => (
                   <button key={m.path} className="type-card"
                     onClick={() => navigate(m.path)}
-                    style={{ background: m.bg, color: m.dark, position: "relative" }}>
+                    style={{ background: m.bg, color: m.dark, border: `1.6px solid ${m.mid}`, position: "relative" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                       <Ico n={m.ico} s={26} />
                       <span style={{ fontSize: 17, fontWeight: 600 }}>{m.lbl}</span>
@@ -630,7 +630,7 @@ export function ListPage({ tab }) {
           {/* ── Active type filter chip ── */}
           {typeFilter && (() => {
             const LABEL = { motor: "ประกันรถยนต์", prb: "ประกัน พ.ร.บ.", fire: "อัคคีภัย", pa: "PA / TA / อื่นๆ" }
-            const STYLE = { motor: { bg: "#E6F1FB", fg: "#0C447C" }, prb: { bg: "#E1F5EE", fg: "#085041" }, fire: { bg: "#FAECE7", fg: "#712B13" }, pa: { bg: "#EEEDFE", fg: "#3C3489" } }
+            const STYLE = { motor: { bg: "#E5EEF0", fg: "#245863" }, prb: { bg: "#E6EDE9", fg: "#2E5044" }, fire: { bg: "#F0EAE4", fg: "#6A3A24" }, pa: { bg: "#E7E9EF", fg: "#3A3E62" } }
             const s = STYLE[typeFilter] || { bg: "var(--sur2)", fg: "var(--t1)" }
             return (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>

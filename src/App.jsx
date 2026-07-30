@@ -7,6 +7,7 @@ import { ListPage } from "./pages/ListPage"        // หน้าแรก → 
 import { LoginPage } from "./pages/LoginPage"      // login → eager
 // ── lazy load หน้าอื่น เพื่อให้ initial bundle เล็ก โหลดหน้าแรกเร็ว ──
 const UploadPage  = lazy(() => import("./pages/UploadPage").then(m  => ({ default: m.UploadPage })))
+const BatchUploadPage = lazy(() => import("./pages/BatchUploadPage").then(m => ({ default: m.BatchUploadPage })))
 const ManualPage  = lazy(() => import("./pages/ManualPage").then(m  => ({ default: m.ManualPage })))
 const DetailPage  = lazy(() => import("./pages/DetailPage").then(m  => ({ default: m.DetailPage })))
 const InvoicePage = lazy(() => import("./pages/InvoicePage").then(m => ({ default: m.InvoicePage })))
@@ -104,6 +105,7 @@ function Layout({ onLogout }) {
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "อัปโหลด PDF",   desc: "เพิ่มกรมธรรม์ใหม่" },
+    { path: "/batch",     ico: "inbox",    label: "อัปโหลดหลายไฟล์", desc: "โยนหลายไฟล์ทีเดียว · AI จับคู่ให้" },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
     { path: "/quotation", ico: "doc",      label: "ใบเสนอราคา",    desc: "รูปแบบคุ้มภัย" },
   ]
@@ -117,6 +119,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
     prefetched.add(p)
     switch (p) {
       case "/upload":   import("./pages/UploadPage"); break
+      case "/batch":    import("./pages/BatchUploadPage"); break
       case "/invoice":  import("./pages/InvoicePage"); break
       case "/quotation": import("./pages/QuotationPage"); break
       case "/manual":   import("./pages/ManualPage"); break
@@ -142,47 +145,53 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
             </div>
           </div>
 
-          {/* เมนูหลัก (desktop) */}
-          <nav className="sb-nav" style={{ gap: 4 }}>
-            {NAV_VIEW.map(it => {
-              const active = isActive(it.path)
-              return (
-                <div key={it.path}
-                  onClick={() => navTo(it.path)}
-                  title={it.desc}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 9,
-                    padding: "9px 16px",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    fontSize: 15.5,
-                    fontWeight: active ? 700 : 500,
-                    color: active ? "var(--blue)" : "var(--t2)",
-                    background: active ? "var(--blue-bg)" : "transparent",
-                    transition: "all 0.13s",
-                    height: 42,
-                  }}
-                  onMouseEnter={e => { prefetch(it.path); if (!active) e.currentTarget.style.background = "var(--sur2)" }}
-                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
-                >
-                  <Ico n={it.ico} s={17} />
-                  <span>{it.label}</span>
-                  {it.badge > 0 && (
-                    <span style={{
-                      background: "#F59E0B",
-                      color: "#fff",
-                      padding: "2px 10px",
+          {/* เมนูหลัก (desktop) — segmented pill + ปุ่มหลักอัปโหลด */}
+          <nav className="sb-nav" style={{ gap: 12 }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "var(--sur2)", border: "1px solid var(--brd)",
+              borderRadius: 14, padding: 4,
+            }}>
+              {[...NAV_VIEW, ...NAV_ACTION.filter(it => it.path !== "/upload")].map(it => {
+                const active = isActive(it.path)
+                return (
+                  <div key={it.path}
+                    onClick={() => navTo(it.path)}
+                    title={it.desc}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "9px 17px",
                       borderRadius: 11,
-                      fontSize: 13.5,
-                      fontWeight: 700,
-                      marginLeft: 2,
-                    }}>{it.badge}</span>
-                  )}
-                </div>
-              )
-            })}
-            <div style={{ width: 1, height: 26, background: "var(--brd)", margin: "0 10px" }} />
-            {NAV_ACTION.map(it => {
+                      cursor: "pointer",
+                      fontSize: 16,
+                      fontWeight: active ? 700 : 500,
+                      color: active ? "var(--blue-h)" : "var(--t2)",
+                      background: active ? "var(--sur)" : "transparent",
+                      boxShadow: active ? "0 1px 3px rgba(20,40,50,.16)" : "none",
+                      transition: "background .13s, color .13s, box-shadow .13s",
+                      height: 44,
+                    }}
+                    onMouseEnter={e => { prefetch(it.path); if (!active) e.currentTarget.style.background = "var(--sur)" }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
+                  >
+                    <Ico n={it.ico} s={19} />
+                    <span>{it.label}</span>
+                    {it.badge > 0 && (
+                      <span style={{
+                        background: "#E58A1A",
+                        color: "#fff",
+                        padding: "2px 10px",
+                        borderRadius: 99,
+                        fontSize: 13.5,
+                        fontWeight: 700,
+                        marginLeft: 2,
+                      }}>{it.badge}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            {NAV_ACTION.filter(it => it.path === "/upload").map(it => {
               const active = isActive(it.path)
               return (
                 <div key={it.path}
@@ -190,20 +199,23 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                   title={it.desc}
                   style={{
                     display: "flex", alignItems: "center", gap: 9,
-                    padding: "9px 16px",
-                    borderRadius: 10,
+                    padding: "11px 20px",
+                    borderRadius: 12,
                     cursor: "pointer",
-                    fontSize: 15.5,
-                    fontWeight: active ? 700 : 500,
-                    color: active ? "var(--blue)" : "var(--t2)",
-                    background: active ? "var(--blue-bg)" : "transparent",
-                    transition: "all 0.13s",
-                    height: 42,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: "#fff",
+                    background: active
+                      ? "var(--blue-h)"
+                      : "linear-gradient(135deg,#316A78,#4A8E9C)",
+                    boxShadow: "0 4px 12px rgba(45,99,115,.26)",
+                    transition: "transform .13s, box-shadow .13s",
+                    height: 46,
                   }}
-                  onMouseEnter={e => { prefetch(it.path); if (!active) e.currentTarget.style.background = "var(--sur2)" }}
-                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
+                  onMouseEnter={e => { prefetch(it.path); e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(45,99,115,.34)" }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(45,99,115,.26)" }}
                 >
-                  <Ico n={it.ico} s={17} />
+                  <Ico n={it.ico} s={19} />
                   <span>{it.label}</span>
                 </div>
               )
@@ -471,6 +483,7 @@ export default function App() {
           <Route path="policies"    element={<ListPage tab="policies" />} />
           <Route path="expiring"    element={<ListPage tab="expiring" />} />
           <Route path="upload"      element={<Suspense fallback={<_Loading />}><UploadPage /></Suspense>} />
+          <Route path="batch"       element={<Suspense fallback={<_Loading />}><BatchUploadPage /></Suspense>} />
           <Route path="manual"      element={<Suspense fallback={<_Loading />}><ManualPage /></Suspense>} />
           <Route path="invoice"     element={<Suspense fallback={<_Loading />}><InvoicePage /></Suspense>} />
           <Route path="quotation"   element={<Suspense fallback={<_Loading />}><QuotationPage /></Suspense>} />

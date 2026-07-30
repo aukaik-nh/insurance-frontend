@@ -69,17 +69,17 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
         </div>
       </div>
       <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <table>
+        <table style={{ tableLayout: "fixed", width: "100%", minWidth: 900 }}>
           <thead>
             <tr>
-              <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>#</th>
-              <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>PDF</th>
-              <SortHeader label="เลขกรมธรรม์"  col="policy_number"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="ผู้เอาประกัน" col="insured_name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <th>สถานะ</th>
-              <th style={{ width: 56, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
+              <th style={{ width: 50, textAlign: "center", color: "var(--t3)" }}>#</th>
+              <th style={{ width: 54, textAlign: "center", color: "var(--t3)" }}>PDF</th>
+              <SortHeader label="เลขกรมธรรม์"  col="policy_number"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "17%" }} />
+              <SortHeader label="ผู้เอาประกัน" col="insured_name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "29%" }} />
+              <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "15%" }} />
+              <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "16%" }} />
+              <th style={{ width: "13%", whiteSpace: "nowrap" }}>สถานะ</th>
+              <th style={{ width: 54, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
             </tr>
           </thead>
           <tbody>
@@ -156,7 +156,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                       </div>
                     )}
                   </td>
-                  <td><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
+                  <td style={{ whiteSpace: "nowrap" }}><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
                   <td style={{ textAlign: "center" }}>
                     <button
                       type="button"
