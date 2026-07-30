@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
@@ -30,6 +30,15 @@ export function BatchUploadPage() {
   const [committing, setCommitting] = useState(false)
   const [done, setDone]         = useState(null)     // ผลจาก /commit
   const [err, setErr]           = useState("")
+  const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่าง AI อ่าน
+
+  // จับเวลาระหว่าง extracting — ให้ผู้ใช้เห็นว่ากำลังทำงาน ไม่ได้ค้าง
+  useEffect(() => {
+    if (!extracting) return
+    setElapsed(0)
+    const t = setInterval(() => setElapsed(e => e + 1), 1000)
+    return () => clearInterval(t)
+  }, [extracting])
 
   const addFiles = list => {
     const pdfs = Array.from(list || []).filter(
@@ -221,10 +230,15 @@ export function BatchUploadPage() {
                     </div>
                   ))}
                 </div>
-                <div style={{ padding: 16, display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ padding: 16, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
+                  {extracting && (
+                    <div style={{ fontSize: 13.5, color: "var(--t3)", textAlign: "right", lineHeight: 1.5 }}>
+                      AI อ่านทีละไฟล์ · ครั้งแรกเซิร์ฟเวอร์อาจตื่นช้า — โปรดรอ อย่าปิดหน้านี้
+                    </div>
+                  )}
                   <button className="btn btn-b" onClick={doExtract} disabled={extracting}>
                     {extracting
-                      ? <><span className="spin" style={{ width: 18, height: 18, borderWidth: 2 }} /><span>AI กำลังอ่าน {files.length} ไฟล์…</span></>
+                      ? <><span className="spin" style={{ width: 18, height: 18, borderWidth: 2 }} /><span>AI กำลังอ่าน {files.length} ไฟล์… ({elapsed}s)</span></>
                       : <><Ico n="upload" s={18} /><span>อ่านด้วย AI ({files.length} ไฟล์)</span></>}
                   </button>
                 </div>
