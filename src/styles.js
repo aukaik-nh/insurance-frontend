@@ -21,39 +21,39 @@ input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0
 input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 :root{
   --w:264px;
-  /* โทนทางการ: ขาวอมเทา + น้ำเงินอมเขียวที่นุ่มตา
-     สีส้มและแดงสงวนไว้สำหรับงานที่ต้องติดตามหรือผิดพลาดเท่านั้น */
-  --bg:#F1F4F5;
-  --bg2:#E8EDEF;
+  /* โทนงานเอกสาร: ขาวอมเขียวอ่อน + เขียวกรมท่า
+     ใช้สีเพื่อสื่อความหมายเท่านั้น: เขียว=ปกติ, ส้ม=ติดตาม, แดง=ต้องแก้ไข */
+  --bg:#F4F7F6;
+  --bg2:#EAF0EE;
   --sur:#FFFFFF;
-  --sur2:#F7F9F9;
-  --brd:#D8E0E3;
-  --brd2:#B9C7CC;
-  --blue:#2F7380;
-  --blue-h:#1D515C;
-  --blue-bg:#E7F1F3;
-  --blue-mid:#A8CDD3;
-  --accent:#4C8C96;
-  --g1:#245A66;
-  --g2:#397985;
-  --g3:#5B9BA4;
-  --green:#356D55;
-  --green-bg:#EAF3ED;
-  --green-brd:#A9CDB5;
-  --amber:#9A620C;
-  --amber-bg:#FBF2DE;
-  --amber-brd:#E7C47D;
-  --red:#B6403A;
-  --red-bg:#F9ECEA;
-  --red-brd:#E5BDB9;
-  --t1:#172B33;
-  --t2:#40545C;
-  --t3:#708189;
-  --sh0:0 1px 2px rgba(11,16,32,.05);
-  --sh1:0 2px 6px rgba(11,16,32,.07),0 1px 2px rgba(11,16,32,.04);
-  --sh2:0 8px 20px rgba(11,16,32,.08),0 2px 6px rgba(11,16,32,.05);
-  --sh3:0 24px 60px rgba(11,16,32,.22),0 6px 14px rgba(11,16,32,.08);
-  --shB:0 6px 16px rgba(45,58,55,.16),0 2px 5px rgba(45,58,55,.10);
+  --sur2:#F8FAF9;
+  --brd:#D7E2DF;
+  --brd2:#B9CDC8;
+  --blue:#1F7078;
+  --blue-h:#154F58;
+  --blue-bg:#E7F3F1;
+  --blue-mid:#9DCBC4;
+  --accent:#4E8E86;
+  --g1:#173F47;
+  --g2:#286773;
+  --g3:#579794;
+  --green:#356F59;
+  --green-bg:#EAF4EE;
+  --green-brd:#A8CFB6;
+  --amber:#9B6518;
+  --amber-bg:#FCF4E5;
+  --amber-brd:#E6C887;
+  --red:#AD4541;
+  --red-bg:#FAEFED;
+  --red-brd:#E6C0BC;
+  --t1:#1B2D33;
+  --t2:#465B60;
+  --t3:#728287;
+  --sh0:0 1px 2px rgba(20,53,53,.045);
+  --sh1:0 2px 7px rgba(20,53,53,.065),0 1px 2px rgba(20,53,53,.035);
+  --sh2:0 10px 24px rgba(20,53,53,.08),0 2px 7px rgba(20,53,53,.045);
+  --sh3:0 24px 60px rgba(20,53,53,.20),0 6px 14px rgba(20,53,53,.07);
+  --shB:0 6px 16px rgba(21,79,88,.17),0 2px 5px rgba(21,79,88,.10);
   --ez:cubic-bezier(.22,.61,.36,1);
   --ez-out:cubic-bezier(.16,1,.3,1);
   --r:12px;
@@ -79,7 +79,7 @@ body.dark{
 body{
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
   font-size:17px;color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.6;
-  background:var(--bg);
+  background:linear-gradient(135deg,#F7FAF9 0%,var(--bg) 48%,#EEF5F3 100%);
   min-height:100vh;
   min-height:100dvh;
 }
@@ -106,7 +106,7 @@ body.text-large td,body.text-large .policy-mobile-name,body.text-large .policy-m
   background:var(--sur);
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;
-  border-bottom:1px solid var(--brd);
+  border-bottom:1px solid var(--brd);box-shadow:0 1px 8px rgba(20,53,53,.035);
   padding:0 24px;height:80px;gap:0;
 }
 body.dark .sb{background:var(--sur);border-bottom-color:var(--brd)}
@@ -3254,6 +3254,21 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
   .info-card-bd{padding:12px !important}
   .page-body{padding:10px}                 /* small mobile */
 }
+
+/* Unified accent treatment: legacy dashboard cards keep their meaning but
+   use the same restrained office palette as the rest of the application. */
+.menu-card.menu-bl,.sc.sc-m-bl{--mc:#246D75;--mc2:#4C9692;--mc-glow:rgba(36,109,117,.16);--mc-tint:rgba(36,109,117,.045)}
+.menu-card.menu-gr,.sc.sc-m-gr{--mc:#3A765E;--mc2:#65977C;--mc-glow:rgba(58,118,94,.15);--mc-tint:rgba(58,118,94,.045)}
+.menu-card.menu-pu,.sc.sc-m-pu{--mc:#416E86;--mc2:#6B96A7;--mc-glow:rgba(65,110,134,.15);--mc-tint:rgba(65,110,134,.045)}
+.menu-card.menu-am,.sc.sc-m-am{--mc:#9B681C;--mc2:#C39A55;--mc-glow:rgba(155,104,28,.16);--mc-tint:rgba(155,104,28,.05)}
+.qs-teal .qs-icon{background:linear-gradient(135deg,#1A5660,#418C8B)}
+.qs-green .qs-icon{background:linear-gradient(135deg,#356F59,#6A987E)}
+.qs-amber .qs-icon{background:linear-gradient(135deg,#9B681C,#D0AA63)}
+.qs-pink .qs-icon{background:linear-gradient(135deg,#416E86,#729BAA)}
+.stat-teal .stat-val,.call-teal .call-days{color:#2D7780}
+.stat-blue .stat-val,.stat-purple .stat-val{color:#416E86}
+.stat-amber .stat-val{color:#A46E1C}
+body.dark{background:linear-gradient(135deg,#080F16 0%,var(--bg) 65%,#0C1B22 100%)}
 `
 
 export default CSS
