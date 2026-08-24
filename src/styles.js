@@ -186,7 +186,8 @@ body.dark .sb{background:var(--sur);border-bottom-color:var(--brd)}
 }
 .sb-nav-group{display:flex;align-items:center;gap:3px;min-width:0;padding:4px;background:var(--sur2);border:1px solid var(--brd);border-radius:14px}
 .sb-nav-link,.sb-nav-primary{appearance:none;border:0;font-family:inherit;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s,border-color .15s,box-shadow .15s,transform .15s}
-.sb-nav-link{height:42px;gap:8px;padding:0 13px;border-radius:10px;background:transparent;color:var(--t2);font-size:15px;font-weight:600}
+.sb-nav-link{height:42px;gap:8px;padding:0 12px;border-radius:10px;background:transparent;color:var(--t2);font-size:14.5px;font-weight:600}
+.sb-nav-sep{width:1px;height:22px;margin:0 4px;background:var(--brd2);flex:0 0 auto}
 .sb-nav-link:hover{background:var(--sur);color:var(--blue-h)}
 .sb-nav-link.on{background:var(--sur);color:var(--blue-h);font-weight:700;box-shadow:0 1px 4px rgba(20,40,50,.13)}
 .sb-nav-link svg{color:currentColor;flex-shrink:0}
@@ -1007,7 +1008,8 @@ body.dark .type-card{background:var(--sur2)!important;color:var(--t1)!important}
 .overview-stat-label{font-size:15px;font-weight:650;color:var(--t2);line-height:1.3}
 .overview-stat-copy strong{margin-top:3px;font-size:30px;line-height:1;font-weight:750;font-variant-numeric:tabular-nums;color:var(--t1)}
 .overview-stat-detail{margin-top:5px;font-size:13.5px;color:var(--t3)}
-.overview-stat-end{margin-left:auto;align-self:center;display:flex;align-items:center;gap:10px;color:var(--os);flex-shrink:0}
+.overview-stat-end{margin-left:auto;align-self:center;display:flex;align-items:flex-end;flex-direction:column;gap:8px;color:var(--os);flex-shrink:0}
+.overview-stat-action{display:inline-flex;align-items:center;gap:3px;font-size:13px;font-weight:700;color:var(--os);white-space:nowrap}
 .quick-action-alert{padding:4px 8px;border-radius:99px;background:var(--os);color:#fff;font-size:11px;font-weight:700;white-space:nowrap}
 .dashboard-actions-hd{margin-top:0}
 .dashboard-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:26px}

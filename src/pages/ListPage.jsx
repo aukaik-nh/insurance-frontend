@@ -589,13 +589,13 @@ export function ListPage({ tab }) {
               {/* ── แยก "ข้อมูลสรุป" ออกจาก "งานที่ต้องทำ" เพื่อให้สแกนง่าย ── */}
               <div className="sec-hd">
                 <Ico n="grid" s={14} />
-                <span>สรุปข้อมูลสำคัญ</span>
-                <small>กดเพื่อดูรายละเอียด</small>
+                <span>สรุปข้อมูล</span>
+                <small>เลือกบัตรเพื่อเปิดรายการ</small>
               </div>
               <div className="overview-stat-grid">
                 {[
-                  { path: "/policies", kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", ico: "list" },
-                  { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", ico: "bell", urgent: expiring.length > 0 },
+                  { path: "/policies", kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", action: "ดูทั้งหมด", ico: "list" },
+                  { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", action: "ดูรายการ", ico: "bell", urgent: expiring.length > 0 },
                 ].map(m => (
                   <button key={m.path} className={`overview-stat overview-stat-${m.kind}`}
                     onClick={() => navigate(m.path)} aria-label={`ดู${m.lbl}`}>
@@ -609,7 +609,7 @@ export function ListPage({ tab }) {
                       {m.urgent && (
                         <span className="quick-action-alert">ต้องติดตาม</span>
                       )}
-                      <Ico n="chevR" s={18} />
+                      <span className="overview-stat-action">{m.action} <Ico n="chevR" s={17} /></span>
                     </span>
                   </button>
                 ))}
@@ -617,14 +617,14 @@ export function ListPage({ tab }) {
 
               <div className="sec-hd dashboard-actions-hd">
                 <Ico n="upload" s={14} />
-                <span>งานด่วน</span>
-                <small>เลือกงานที่ต้องการทำ</small>
+                <span>เริ่มงาน</span>
+                <small>เลือกสิ่งที่ต้องการทำ</small>
               </div>
               <div className="dashboard-action-row">
                 {[
-                  { path: "/upload", label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF ให้ AI ช่วยกรอก", ico: "upload", primary: true },
-                  { path: "/batch", label: "อัปโหลดหลายไฟล์", desc: "จัดการเอกสารเป็นชุด", ico: "inbox" },
-                  { path: "/invoice", label: "สร้างใบแจ้งหนี้", desc: "สร้าง QR PromptPay และพิมพ์", ico: "banknote" },
+                  { path: "/upload", label: "เพิ่ม 1 กรมธรรม์", desc: "อัปโหลด PDF 1 ฉบับ ให้ AI ช่วยกรอก", ico: "upload", primary: true },
+                  { path: "/batch", label: "นำเข้าเอกสารเป็นชุด", desc: "เลือกหลายไฟล์ แล้วตรวจทานก่อนบันทึก", ico: "inbox" },
+                  { path: "/invoice", label: "ออกใบแจ้งหนี้", desc: "สร้าง QR PromptPay และพิมพ์", ico: "banknote" },
                 ].map(action => (
                   <button key={action.path} className={`dashboard-action${action.primary ? " dashboard-action-primary" : ""}`}
                     onClick={() => navigate(action.path)}>

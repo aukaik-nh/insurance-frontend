@@ -110,8 +110,8 @@ function Layout({ onLogout }) {
     { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ภายใน 30 วัน",            badge: expiringCount },
   ]
   const NAV_ACTION = [
-    { path: "/upload",    ico: "upload",   label: "อัปโหลด PDF",   desc: "เพิ่มกรมธรรม์ใหม่" },
-    { path: "/batch",     ico: "inbox",    label: "อัปโหลดหลายไฟล์", desc: "โยนหลายไฟล์ทีเดียว · AI จับคู่ให้" },
+    { path: "/upload",    ico: "upload",   label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF เพื่อเพิ่มกรมธรรม์ใหม่" },
+    { path: "/batch",     ico: "inbox",    label: "นำเข้าเป็นชุด", desc: "เลือกหลายไฟล์ · AI ช่วยจัดคู่เอกสาร" },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
     { path: "/quotation", ico: "doc",      label: "ใบเสนอราคา",    desc: "รูปแบบคุ้มภัย" },
   ]
@@ -134,6 +134,23 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
     }
   }
 
+  const navItem = (it) => {
+    const active = isActive(it.path)
+    return (
+      <button key={it.path} type="button"
+        className={`sb-nav-link${active ? " on" : ""}`}
+        onClick={() => navTo(it.path)}
+        title={it.desc}
+        aria-current={active ? "page" : undefined}
+        onMouseEnter={() => prefetch(it.path)}
+      >
+        <Ico n={it.ico} s={19} />
+        <span>{it.label}</span>
+        {it.badge > 0 && <span className="sb-nav-badge">{it.badge}</span>}
+      </button>
+    )
+  }
+
   return (
     <>
       <style>{CSS}</style>
@@ -154,24 +171,9 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
           {/* เมนูหลัก: ใช้ปุ่มจริง เพื่อกดด้วยคีย์บอร์ดและไม่ตัดคำหลายบรรทัด */}
           <nav className="sb-nav" aria-label="เมนูหลัก">
             <div className="sb-nav-group">
-              {[...NAV_VIEW, ...NAV_ACTION.filter(it => it.path !== "/upload")].map(it => {
-                const active = isActive(it.path)
-                return (
-                  <button key={it.path} type="button"
-                    className={`sb-nav-link${active ? " on" : ""}`}
-                    onClick={() => navTo(it.path)}
-                    title={it.desc}
-                    aria-current={active ? "page" : undefined}
-                    onMouseEnter={() => prefetch(it.path)}
-                  >
-                    <Ico n={it.ico} s={19} />
-                    <span>{it.label}</span>
-                    {it.badge > 0 && (
-                      <span className="sb-nav-badge">{it.badge}</span>
-                    )}
-                  </button>
-                )
-              })}
+              {NAV_VIEW.map(navItem)}
+              <span className="sb-nav-sep" aria-hidden="true" />
+              {NAV_ACTION.filter(it => it.path !== "/upload").map(navItem)}
             </div>
             {NAV_ACTION.filter(it => it.path === "/upload").map(it => {
               const active = isActive(it.path)
