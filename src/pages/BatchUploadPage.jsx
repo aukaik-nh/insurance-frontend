@@ -32,6 +32,7 @@ export function BatchUploadPage() {
   const [err, setErr]           = useState("")
   const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่าง AI อ่าน
   const [progress, setProgress] = useState(null)     // {done, total, current} ระหว่างอ่าน
+  const [expandedKey, setExpandedKey] = useState(null)
 
   // จับเวลาระหว่าง extracting — ให้ผู้ใช้เห็นว่ากำลังทำงาน ไม่ได้ค้าง
   useEffect(() => {
@@ -54,7 +55,7 @@ export function BatchUploadPage() {
   }
 
   const removeFile = i => setFiles(prev => prev.filter((_, idx) => idx !== i))
-  const resetAll = () => { setFiles([]); setData(null); setChecked(new Set()); setDone(null); setErr("") }
+  const resetAll = () => { setFiles([]); setData(null); setChecked(new Set()); setDone(null); setErr(""); setExpandedKey(null) }
 
   // ── รวมรายการที่ "บันทึกได้" เป็น key เดียวกัน เพื่อทำ checkbox ──
   const buildItems = (d) => {
@@ -93,7 +94,10 @@ export function BatchUploadPage() {
         if (pr.status === "error") throw new Error(pr.error || "ประมวลผลไม่สำเร็จ")
       }
       setData(result)
-      setChecked(new Set(buildItems(result).map(it => it.key)))
+      // เลือกบันทึกเฉพาะคู่ที่หลักฐานชัดเจนก่อน รายการกำกวมให้คนเปิดตรวจและติ๊กเอง
+      setChecked(new Set(buildItems(result)
+        .filter(it => it.kind === "pair" && it.status === "auto" && !it.main?.parse_error && !it.prb?.parse_error)
+        .map(it => it.key)))
     } catch (e) {
       setErr("อ่านไฟล์ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally {
@@ -106,6 +110,26 @@ export function BatchUploadPage() {
     n.has(key) ? n.delete(key) : n.add(key)
     return n
   })
+
+  const updateRecord = (key, side, field, value) => {
+    setData(prev => {
+      if (!prev) return prev
+      const [kind, rawIndex] = key.split("-")
+      const index = Number(rawIndex)
+      const update = record => ({ ...(record || {}), [field]: value })
+      if (kind === "pair") {
+        const pairs = [...(prev.pairs || [])]
+        pairs[index] = { ...pairs[index], [side]: update(pairs[index]?.[side]) }
+        return { ...prev, pairs }
+      }
+      const map = { om: "orphan_main", op: "orphan_prb", ot: "others" }
+      const listName = map[kind]
+      if (!listName) return prev
+      const list = [...(prev[listName] || [])]
+      list[index] = update(list[index])
+      return { ...prev, [listName]: list }
+    })
+  }
 
   const items = data ? buildItems(data) : []
   const selectedCount = items.filter(it => checked.has(it.key)).length
@@ -289,25 +313,29 @@ export function BatchUploadPage() {
             <Section title="คู่ กรมธรรม์ + พ.ร.บ." icon="checkc" count={(data.pairs || []).length}>
               {(data.pairs || []).map((p, i) => (
                 <ReviewRow key={`pair-${i}`} k={`pair-${i}`} checked={checked} toggle={toggle}
-                  main={p.main} prb={p.prb} status={p.status} />
+                  main={p.main} prb={p.prb} status={p.status} reasons={p.reasons} margin={p.margin}
+                  expanded={expandedKey === `pair-${i}`} onExpand={() => setExpandedKey(k => k === `pair-${i}` ? null : `pair-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
             <Section title="กรมธรรม์เดี่ยว (ไม่มี พ.ร.บ. จับคู่)" icon="doc" count={(data.orphan_main || []).length}>
               {(data.orphan_main || []).map((r, i) => (
-                <ReviewRow key={`om-${i}`} k={`om-${i}`} checked={checked} toggle={toggle} main={r} />
+                <ReviewRow key={`om-${i}`} k={`om-${i}`} checked={checked} toggle={toggle} main={r}
+                  expanded={expandedKey === `om-${i}`} onExpand={() => setExpandedKey(k => k === `om-${i}` ? null : `om-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
             <Section title="พ.ร.บ. เดี่ยว (บันทึกเป็นกรมธรรม์ พ.ร.บ.)" icon="doc" count={(data.orphan_prb || []).length}>
               {(data.orphan_prb || []).map((r, i) => (
-                <ReviewRow key={`op-${i}`} k={`op-${i}`} checked={checked} toggle={toggle} main={r} />
+                <ReviewRow key={`op-${i}`} k={`op-${i}`} checked={checked} toggle={toggle} main={r}
+                  expanded={expandedKey === `op-${i}`} onExpand={() => setExpandedKey(k => k === `op-${i}` ? null : `op-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
             <Section title="เอกสารอื่น (อัคคีภัย / PA / ฯลฯ)" icon="doc" count={(data.others || []).length}>
               {(data.others || []).map((r, i) => (
-                <ReviewRow key={`ot-${i}`} k={`ot-${i}`} checked={checked} toggle={toggle} main={r} />
+                <ReviewRow key={`ot-${i}`} k={`ot-${i}`} checked={checked} toggle={toggle} main={r}
+                  expanded={expandedKey === `ot-${i}`} onExpand={() => setExpandedKey(k => k === `ot-${i}` ? null : `ot-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
@@ -360,38 +388,66 @@ function Section({ title, icon, count, children }) {
   )
 }
 
-function ReviewRow({ k, checked, toggle, main, prb, status }) {
+function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin, expanded, onExpand, onUpdate }) {
   const m = recLine(main)
   const p = prb ? recLine(prb) : null
   const on = checked.has(k)
   return (
-    <div onClick={() => toggle(k)}
-      style={{
-        display: "flex", alignItems: "center", gap: 14, padding: "12px 16px",
-        borderBottom: "1px solid var(--sur2)", cursor: "pointer",
-        background: on ? "transparent" : "var(--sur2)", opacity: on ? 1 : 0.6,
-      }}>
-      <input type="checkbox" checked={on} readOnly
-        style={{ width: 18, height: 18, accentColor: "var(--blue)", flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontWeight: 600, color: "var(--t1)", fontSize: 15 }}>{m.name}</span>
-          <span style={{ fontSize: 12.5, background: "var(--blue-bg)", color: "var(--blue)", padding: "1px 8px", borderRadius: 99, fontWeight: 600 }}>{m.type}</span>
-          {m.plate !== "—" && <span style={{ fontSize: 13, color: "var(--t2)" }}>· {m.plate}</span>}
+    <article className={`batch-review-row${on ? "" : " is-unselected"}${expanded ? " is-open" : ""}`}>
+      <div className="batch-review-summary">
+        <input type="checkbox" checked={on} onChange={() => toggle(k)} aria-label={`เลือก ${m.name}`} />
+        <div className="batch-review-main">
+          <div className="batch-review-title">
+            <strong>{m.name}</strong>
+            <span className="batch-doc-chip">{m.type}</span>
+            {p && <span className="batch-prb-chip">มี พ.ร.บ. จับคู่</span>}
+          </div>
+          <div className="batch-review-facts">
+            <span>กธ. {m.pol}</span><span>ทะเบียน {m.plate}</span><span>หมดอายุ {m.end}</span>
+            {main?.chassis_no && <span>ตัวถัง {main.chassis_no}</span>}
+          </div>
+          {(m.err || reasons.length) && <div className="batch-review-note">{m.err || reasons.join(" · ")}</div>}
         </div>
-        <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 2 }}>
-          {m.pol} · หมดอายุ {m.end}
-          {p && <span style={{ color: "var(--green)" }}> · แนบ พ.ร.บ. ({p.plate})</span>}
-          {m.err && <span style={{ color: "var(--amber)" }}> · ⚠ {m.err}</span>}
-        </div>
+        {status && <span className={`batch-match-status ${status === "auto" ? "ok" : "review"}`}>{status === "auto" ? "จับคู่แล้ว" : "ต้องตรวจ"}</span>}
+        <button className="batch-open-btn" type="button" onClick={onExpand} aria-expanded={expanded}>
+          {expanded ? "ซ่อนรายละเอียด" : "ตรวจ/แก้ข้อมูล"} <Ico n={expanded ? "chevU" : "chevD"} s={16} />
+        </button>
       </div>
-      {status && (
-        <span style={{
-          fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 99, flexShrink: 0,
-          background: status === "auto" ? "var(--green-bg)" : "var(--amber-bg)",
-          color: status === "auto" ? "var(--green)" : "var(--amber)",
-        }}>{status === "auto" ? "จับคู่แม่น" : "ควรตรวจ"}</span>
+      {expanded && (
+        <div className="batch-editor-wrap">
+          <div className="batch-editor-help">ตรวจแก้ข้อมูลที่ AI อ่านก่อนเลือกบันทึก รายการที่แก้ไขจะถูกบันทึกตามค่านี้</div>
+          <RecordEditor title="ข้อมูลกรมธรรม์" record={main} onChange={(field, value) => onUpdate(k, "main", field, value)} />
+          {prb && <RecordEditor title="ข้อมูล พ.ร.บ. ที่จับคู่" record={prb} onChange={(field, value) => onUpdate(k, "prb", field, value)} />}
+          {status === "review" && <div className="batch-review-warning">กรุณาตรวจเลขตัวถัง ทะเบียน และวันคุ้มครองของทั้งสองเอกสารก่อนเลือกบันทึก{margin != null ? ` (คะแนนห่างคู่รอง ${margin})` : ""}</div>}
+        </div>
       )}
-    </div>
+    </article>
+  )
+}
+
+function RecordEditor({ title, record = {}, onChange }) {
+  const fields = [
+    ["policy_number", "เลขกรมธรรม์"], ["company_code", "รหัสบริษัท"], ["app_number", "เลขใบคำขอ"],
+    ["policy_type", "ประเภทกรมธรรม์"], ["new_renew", "ใหม่ / ต่ออายุ"], ["insured_name", "ผู้เอาประกัน"],
+    ["phone", "เบอร์โทรศัพท์"], ["insured_address", "ที่อยู่", "wide"],
+    ["agent_code", "รหัสตัวแทน"], ["broker_name", "ตัวแทน / นายหน้า"], ["broker_license", "เลขที่ใบอนุญาต"],
+    ["license_plate", "ทะเบียนรถ"], ["license_province", "จังหวัดทะเบียน"], ["chassis_no", "เลขตัวถัง"],
+    ["car_make", "ยี่ห้อรถ"], ["car_model", "รุ่นรถ"], ["car_year", "ปีรถ", "number"],
+    ["sum_insured", "ทุนเอาประกัน (บาท)", "number"], ["coverage_start", "วันเริ่มคุ้มครอง", "date"], ["coverage_end", "วันสิ้นสุดคุ้มครอง", "date"],
+    ["net_premium", "เบี้ยสุทธิ", "number"], ["stamp_duty", "อากร", "number"], ["vat", "ภาษี VAT", "number"], ["total_premium", "เบี้ยรวม", "number"],
+  ]
+  return (
+    <section className="batch-record-editor">
+      <h4><Ico n="doc" s={17} /> {title}</h4>
+      <div className="batch-editor-grid">
+        {fields.map(([key, label, kind]) => (
+          <label key={key} className={kind === "wide" ? "wide" : ""}>
+            <span>{label}</span>
+            <input type={kind === "date" ? "date" : kind === "number" ? "number" : "text"}
+              value={record[key] ?? ""} onChange={e => onChange(key, e.target.value)} />
+          </label>
+        ))}
+      </div>
+    </section>
   )
 }

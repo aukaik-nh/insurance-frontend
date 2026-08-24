@@ -2757,6 +2757,54 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .upload-batch-link:hover{color:var(--blue-h)}
 .upload-manual-link{pointer-events:all;border:0;background:transparent;color:var(--blue);font:600 14px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:3px 8px}
 .upload-manual-link:hover{color:var(--blue-h)}
+
+/* Batch review: one compact row per policy pair, with an editor revealed only
+   for the item being checked. This prevents a large import from becoming a wall
+   of long forms while retaining every field available on the single-file page. */
+.batch-review-row{border-bottom:1px solid var(--brd);background:var(--sur)}
+.batch-review-row:last-child{border-bottom:0}
+.batch-review-row.is-unselected{background:var(--sur2)}
+.batch-review-summary{display:flex;align-items:center;gap:13px;padding:14px 16px}
+.batch-review-summary>input{width:19px;height:19px;accent-color:var(--blue);flex:0 0 auto;cursor:pointer}
+.batch-review-main{min-width:0;flex:1}
+.batch-review-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.batch-review-title strong{font-size:15.5px;color:var(--t1)}
+.batch-doc-chip,.batch-prb-chip,.batch-match-status{display:inline-flex;align-items:center;border-radius:99px;font-size:12px;font-weight:700;line-height:1;padding:5px 8px;white-space:nowrap}
+.batch-doc-chip{background:var(--blue-bg);color:var(--blue)}
+.batch-prb-chip{background:var(--green-bg);color:var(--green)}
+.batch-review-facts{display:flex;gap:5px 12px;flex-wrap:wrap;margin-top:5px;color:var(--t3);font-size:12.5px}
+.batch-review-facts span{white-space:nowrap}
+.batch-review-note{margin-top:5px;color:var(--amber);font-size:12.5px;line-height:1.35}
+.batch-match-status.ok{background:var(--green-bg);color:var(--green)}
+.batch-match-status.review{background:var(--amber-bg);color:var(--amber)}
+.batch-open-btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--brd);border-radius:9px;background:var(--sur);color:var(--t2);font:650 13px inherit;padding:8px 10px;cursor:pointer;white-space:nowrap;flex:0 0 auto}
+.batch-open-btn:hover{border-color:var(--blue);color:var(--blue)}
+.batch-editor-wrap{border-top:1px solid var(--brd);padding:16px;background:#F8FBFC}
+.batch-editor-help{margin:0 0 13px;color:var(--t3);font-size:13px}
+.batch-record-editor{border:1px solid var(--brd);border-radius:11px;background:var(--sur);padding:14px;margin-top:12px}
+.batch-record-editor h4{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--t1);font-size:15px}
+.batch-record-editor h4 svg{color:var(--blue)}
+.batch-editor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px}
+.batch-editor-grid label{display:flex;flex-direction:column;gap:5px;min-width:0}
+.batch-editor-grid label.wide{grid-column:span 2}
+.batch-editor-grid label>span{font-size:12.5px;font-weight:650;color:var(--t2)}
+.batch-editor-grid input{width:100%;min-width:0;height:38px;border:1px solid var(--brd2);border-radius:8px;background:var(--sur);padding:0 10px;color:var(--t1);font:14px inherit;outline:none}
+.batch-editor-grid input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.batch-review-warning{margin-top:12px;border-left:3px solid var(--amber);background:var(--amber-bg);padding:10px 12px;color:#82520F;font-size:13px;line-height:1.45}
+@media(max-width:800px){
+  .batch-review-summary{align-items:flex-start;gap:10px;padding:13px}
+  .batch-match-status{display:none}
+  .batch-open-btn{padding:7px 8px;font-size:12px}
+  .batch-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .batch-editor-grid label.wide{grid-column:span 2}
+}
+@media(max-width:520px){
+  .batch-review-summary{flex-wrap:wrap}
+  .batch-review-main{order:1;flex-basis:calc(100% - 30px)}
+  .batch-open-btn{order:2;margin-left:30px}
+  .batch-editor-grid{grid-template-columns:1fr}
+  .batch-editor-grid label.wide{grid-column:span 1}
+}
 .upload-ai-status{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid var(--brd);border-radius:13px;background:var(--sur2);color:var(--t2)}
 .upload-ai-status.ready{border-color:var(--green-brd);background:var(--green-bg);color:var(--green)}
 .upload-ai-status.reading{border-color:var(--blue-mid);background:var(--blue-bg);color:var(--blue)}
