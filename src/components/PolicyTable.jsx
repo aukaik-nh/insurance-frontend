@@ -88,7 +88,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
   )
 
   return (
-    <div className="card" style={{ position: "relative" }}>
+    <div className="card policy-list-card" style={{ position: "relative" }}>
       {/* refreshing indicator — โผล่บนตารางตอนกำลังโหลด (ไม่ปิด UI) */}
       {loading && (
         <div style={{
@@ -99,11 +99,12 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
           zIndex: 5,
         }} />
       )}
-      <div className="card-hd">
+      <div className="card-hd policy-list-heading">
         <div>
           <div className="card-title">รายการกรมธรรม์</div>
-          <div className="card-sub">{total.toLocaleString()} รายการ · เรียงตามวันที่เพิ่มล่าสุด · คลิกแถวเพื่อดูรายละเอียด</div>
+          <div className="card-sub">{total.toLocaleString()} รายการ · คลิกแถวเพื่อดูรายละเอียด</div>
         </div>
+        <span className="policy-list-order"><Ico n="clock" s={15} /> ใหม่ล่าสุดก่อน</span>
       </div>
       <div className="policy-table-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         <table style={{ tableLayout: "fixed", width: "100%", minWidth: 1040 }}>
@@ -179,7 +180,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                       </span>
                     )}
                   </td>
-                  <td style={{ whiteSpace: "nowrap" }}>
+                  <td className="policy-created-cell" style={{ whiteSpace: "nowrap" }}>
                     <div style={{ color: "var(--t1)", fontSize: 14, fontWeight: 600, lineHeight: 1.2 }}>
                       {fmtDate(r.created_at) || "—"}
                     </div>

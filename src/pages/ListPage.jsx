@@ -636,10 +636,12 @@ export function ListPage({ tab }) {
               </div>
 
               <div className="dashboard-search-heading">
-                <div>
+                <span className="dashboard-search-mark" aria-hidden="true"><Ico n="search" s={21} /></span>
+                <div className="dashboard-search-copy">
                   <div className="dashboard-search-title">ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน</div>
                   <div className="dashboard-search-sub">พิมพ์ทะเบียนรถหรือชื่อผู้เอาประกัน ระบบค้นหาให้ทันที</div>
                 </div>
+                <span className="dashboard-search-note">ค้นหาได้ทันที</span>
               </div>
 
             </>
@@ -671,7 +673,7 @@ export function ListPage({ tab }) {
           })()}
 
           {/* ── Search + Excel export ── */}
-          <div className="filter-wrap" style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
+          <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}`} style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
             <div className="big-srch" style={{ flex: 1 }}>
               <Ico n="search" s={20} />
               <input
