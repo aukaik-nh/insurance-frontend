@@ -26,6 +26,7 @@ function Layout({ onLogout }) {
   const location  = useLocation()
 
   const [darkMode,      setDarkMode]      = useState(() => localStorage.getItem("theme") === "dark")
+  const [largeText,     setLargeText]     = useState(() => localStorage.getItem("large_text") === "true")
   const [mobileMenu,    setMobileMenu]    = useState(false)
   const [search,        setSearch]        = useState("")
   const [page,          setPage]          = useState(1)
@@ -37,6 +38,11 @@ function Layout({ onLogout }) {
     document.body.classList.toggle("dark", darkMode)
     localStorage.setItem("theme", darkMode ? "dark" : "light")
   }, [darkMode])
+
+  useEffect(() => {
+    document.body.classList.toggle("text-large", largeText)
+    localStorage.setItem("large_text", String(largeText))
+  }, [largeText])
 
   // Probe backend /health — Render free tier cold start อาจรอ ~50s
   // ระหว่าง probe → จุดเหลือง, ตอบแล้ว → เขียว, ครบ window แล้วยังไม่ตอบ → แดง
@@ -145,86 +151,48 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
             </div>
           </div>
 
-          {/* เมนูหลัก (desktop) — segmented pill + ปุ่มหลักอัปโหลด */}
-          <nav className="sb-nav" style={{ gap: 12 }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 4,
-              background: "var(--sur2)", border: "1px solid var(--brd)",
-              borderRadius: 14, padding: 4,
-            }}>
+          {/* เมนูหลัก: ใช้ปุ่มจริง เพื่อกดด้วยคีย์บอร์ดและไม่ตัดคำหลายบรรทัด */}
+          <nav className="sb-nav" aria-label="เมนูหลัก">
+            <div className="sb-nav-group">
               {[...NAV_VIEW, ...NAV_ACTION.filter(it => it.path !== "/upload")].map(it => {
                 const active = isActive(it.path)
                 return (
-                  <div key={it.path}
+                  <button key={it.path} type="button"
+                    className={`sb-nav-link${active ? " on" : ""}`}
                     onClick={() => navTo(it.path)}
                     title={it.desc}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "9px 17px",
-                      borderRadius: 11,
-                      cursor: "pointer",
-                      fontSize: 16,
-                      fontWeight: active ? 700 : 500,
-                      color: active ? "var(--blue-h)" : "var(--t2)",
-                      background: active ? "var(--sur)" : "transparent",
-                      boxShadow: active ? "0 1px 3px rgba(20,40,50,.16)" : "none",
-                      transition: "background .13s, color .13s, box-shadow .13s",
-                      height: 44,
-                    }}
-                    onMouseEnter={e => { prefetch(it.path); if (!active) e.currentTarget.style.background = "var(--sur)" }}
-                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = "transparent" }}
+                    aria-current={active ? "page" : undefined}
+                    onMouseEnter={() => prefetch(it.path)}
                   >
                     <Ico n={it.ico} s={19} />
                     <span>{it.label}</span>
                     {it.badge > 0 && (
-                      <span style={{
-                        background: "#E58A1A",
-                        color: "#fff",
-                        padding: "2px 10px",
-                        borderRadius: 99,
-                        fontSize: 13.5,
-                        fontWeight: 700,
-                        marginLeft: 2,
-                      }}>{it.badge}</span>
+                      <span className="sb-nav-badge">{it.badge}</span>
                     )}
-                  </div>
+                  </button>
                 )
               })}
             </div>
             {NAV_ACTION.filter(it => it.path === "/upload").map(it => {
               const active = isActive(it.path)
               return (
-                <div key={it.path}
+                <button key={it.path} type="button"
+                  className={`sb-nav-primary${active ? " on" : ""}`}
                   onClick={() => navTo(it.path)}
                   title={it.desc}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 9,
-                    padding: "11px 20px",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "#fff",
-                    background: active
-                      ? "var(--blue-h)"
-                      : "linear-gradient(135deg,#316A78,#4A8E9C)",
-                    boxShadow: "0 4px 12px rgba(45,99,115,.26)",
-                    transition: "transform .13s, box-shadow .13s",
-                    height: 46,
-                  }}
-                  onMouseEnter={e => { prefetch(it.path); e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(45,99,115,.34)" }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(45,99,115,.26)" }}
+                  aria-current={active ? "page" : undefined}
+                  onMouseEnter={() => prefetch(it.path)}
                 >
                   <Ico n={it.ico} s={19} />
                   <span>{it.label}</span>
-                </div>
+                </button>
               )
             })}
           </nav>
 
           {/* Right area */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }} title={statusMeta.label}>
+          <div className="sb-tools">
+            <div className="sb-status" title={statusMeta.label}>
               <div
                 className="sb-dot"
                 style={{
@@ -238,6 +206,15 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
             <button className="theme-btn" onClick={() => setDarkMode(d => !d)}
               title={darkMode ? "โหมดสว่าง" : "โหมดมืด"}>
               <Ico n={darkMode ? "sun" : "moon"} s={20} />
+            </button>
+            <button
+              className={`theme-btn text-size-btn${largeText ? " on" : ""}`}
+              onClick={() => setLargeText(v => !v)}
+              title={largeText ? "ใช้ขนาดตัวอักษรปกติ" : "ขยายตัวอักษรให้อ่านง่าย"}
+              aria-pressed={largeText}
+            >
+              <span aria-hidden="true">A+</span>
+              <span className="sr-only">{largeText ? "ใช้ขนาดตัวอักษรปกติ" : "ขยายตัวอักษรให้อ่านง่าย"}</span>
             </button>
             {/* ── Logout ── */}
             <button
@@ -343,6 +320,21 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                   )
                 })}
 
+                <div className="mobile-readable-row">
+                  <div>
+                    <div>ตัวอักษรอ่านง่าย</div>
+                    <small>ขยายข้อความสำคัญทั้งระบบ</small>
+                  </div>
+                  <button
+                    type="button"
+                    className={`readable-toggle${largeText ? " on" : ""}`}
+                    onClick={() => setLargeText(v => !v)}
+                    aria-pressed={largeText}
+                  >
+                    {largeText ? "เปิดอยู่" : "ปกติ"}
+                  </button>
+                </div>
+
                 {/* Logout row */}
                 <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid var(--brd)" }}>
                   <div
@@ -376,6 +368,44 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         <main className="main">
           <Outlet context={{ search, setSearch: handleSearch, page, setPage, notify, setExpiringCount }} />
         </main>
+
+        {/* Mobile: keep the five most-used actions within thumb reach.  The
+            complete menu (invoice, quotation, settings) remains under More. */}
+        <nav className="mobile-bottom-nav" aria-label="เมนูหลักบนมือถือ">
+          {[
+            { path: "/",         ico: "grid",   label: "ภาพรวม" },
+            { path: "/expiring", ico: "bell",   label: "ใกล้หมด" },
+            { path: "/upload",   ico: "upload", label: "เพิ่ม" },
+            { path: "/batch",    ico: "inbox",  label: "หลายไฟล์" },
+          ].map(it => {
+            const active = isActive(it.path)
+            return (
+              <button
+                key={it.path}
+                type="button"
+                className={`mobile-bottom-item${active ? " on" : ""}${it.path === "/upload" ? " mobile-bottom-primary" : ""}`}
+                onClick={() => navTo(it.path)}
+                aria-current={active ? "page" : undefined}
+              >
+                <span className="mobile-bottom-icon"><Ico n={it.ico} s={21} /></span>
+                <span>{it.label}</span>
+                {it.path === "/expiring" && expiringCount > 0 && (
+                  <b className="mobile-bottom-badge">{expiringCount > 99 ? "99+" : expiringCount}</b>
+                )}
+              </button>
+            )
+          })}
+          <button
+            type="button"
+            className={`mobile-bottom-item${mobileMenu ? " on" : ""}`}
+            onClick={() => setMobileMenu(m => !m)}
+            aria-expanded={mobileMenu}
+            aria-label="เมนูเพิ่มเติม"
+          >
+            <span className="mobile-bottom-icon"><Ico n="menu" s={22} /></span>
+            <span>เพิ่มเติม</span>
+          </button>
+        </nav>
       </div>
 
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
@@ -408,15 +438,18 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
 
 /* ── Root with BrowserRouter + Auth gate ── */
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem("auth_token"))
+  const [token, setToken] = useState(() => localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token"))
 
-  const handleLogin = (t) => {
-    localStorage.setItem("auth_token", t)
+  const handleLogin = (t, { remember = true } = {}) => {
+    localStorage.removeItem("auth_token")
+    sessionStorage.removeItem("auth_token")
+    ;(remember ? localStorage : sessionStorage).setItem("auth_token", t)
     setToken(t)
   }
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token")
+    sessionStorage.removeItem("auth_token")
     // ล้าง policies cache กันข้อมูลค้างข้าม account
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i)
@@ -437,7 +470,7 @@ export default function App() {
     const ping = () => fetch(healthUrl, { method: "GET", cache: "no-store" }).catch(() => {})
 
     const checkToken = () => {
-      const t = localStorage.getItem("auth_token")
+      const t = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
       if (!t) { handleLogout(); return }
       try {
         const payload = JSON.parse(atob(t.split(".")[1]))

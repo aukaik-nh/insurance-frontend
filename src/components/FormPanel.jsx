@@ -5,13 +5,13 @@ export function FormPanel({ open, onToggle, loading, parsed, setParsed, hideSect
   return (
     <div className="form-panel">
       <div className="form-panel-bar" onClick={onToggle}>
-        <div className="drop-bar-left">
-          <div className="drop-h-ic" style={{ width: 44, height: 44, borderRadius: 11, background: "var(--blue-bg)" }}>
-            <Ico n="doc" s={22} sw={1.8} style={{ stroke: "var(--blue)" }} />
+        <div className="form-panel-heading">
+          <div className="form-panel-icon">
+            <Ico n="doc" s={19} sw={1.8} />
           </div>
           <div>
-            <div className="drop-h-name" style={{ fontSize: 18 }}>ข้อมูลกรมธรรม์</div>
-            <div className="drop-h-hint" style={{ fontSize: 15 }}>
+            <div className="form-panel-title">ข้อมูลกรมธรรม์</div>
+            <div className="form-panel-subtitle">
               {loading ? "กำลังดึงข้อมูลจาก PDF…" : open ? "คลิกเพื่อย่อ" : "คลิกเพื่อขยาย"}
             </div>
           </div>

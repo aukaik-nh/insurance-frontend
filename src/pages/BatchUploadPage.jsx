@@ -84,7 +84,7 @@ export function BatchUploadPage() {
       const bid = res.data.batch_id
       // 2) poll ความคืบหน้าทีละไฟล์ จน status = done
       let result = null
-      for (let i = 0; i < 800; i++) {          // กันลูปค้าง (~20 นาที)
+      while (!result) {                         // งานกองใหญ่ใช้เวลานานได้ ไม่ตัดกลางคันตามจำนวนไฟล์
         await new Promise(r => setTimeout(r, 1500))
         let pr
         try { pr = (await api.get(`/batch/${bid}/progress`)).data } catch { continue }
@@ -92,7 +92,6 @@ export function BatchUploadPage() {
         if (pr.status === "done")  { result = (await api.get(`/batch/${bid}`)).data; break }
         if (pr.status === "error") throw new Error(pr.error || "ประมวลผลไม่สำเร็จ")
       }
-      if (!result) throw new Error("หมดเวลารอ — ลองไฟล์น้อยลง")
       setData(result)
       setChecked(new Set(buildItems(result).map(it => it.key)))
     } catch (e) {
@@ -150,7 +149,7 @@ export function BatchUploadPage() {
         <div className="page-hd-div" />
         <div className="page-hd-info">
           <div className="page-title">อัปโหลดหลายไฟล์</div>
-          <div className="page-sub">โยน PDF ทีเดียวหลายไฟล์ · AI อ่าน + จับคู่ กธ↔พรบ ให้อัตโนมัติ</div>
+          <div className="page-sub">โยน PDF ทีเดียวหลายไฟล์ · AI อ่านภาพ + จับคู่ กธ↔พรบ ให้อัตโนมัติ</div>
         </div>
         <div className="page-hd-right">
           {data && !done && (
@@ -216,7 +215,7 @@ export function BatchUploadPage() {
                 ลากไฟล์ PDF หลายไฟล์มาวางที่นี่
               </div>
               <div style={{ fontSize: 16, color: "var(--t3)", marginTop: 6 }}>
-                หรือคลิกเพื่อเลือก · โยนทั้ง กธ และ พรบ พร้อมกันได้เลย (สูงสุด 300 ไฟล์)
+                หรือคลิกเพื่อเลือก · โยนทั้ง กธ และ พรบ พร้อมกันได้เลย ระบบจะเข้าคิวอ่านทีละไฟล์
               </div>
             </div>
             <input ref={ref} type="file" accept=".pdf" multiple style={{ display: "none" }}

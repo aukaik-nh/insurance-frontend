@@ -6,6 +6,7 @@ export function LoginPage({ onLogin }) {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPass, setShowPass] = useState(false)
+  const [remember, setRemember] = useState(true)
   const [loading, setLoading]   = useState(false)
   const [err, setErr]           = useState("")
 
@@ -16,7 +17,7 @@ export function LoginPage({ onLogin }) {
     }
     setLoading(true); setErr("")
 
-    const body = { username: username.trim(), password: password.trim() }
+    const body = { username: username.trim(), password: password.trim(), remember }
     // Render free tier อาจ cold start ~50s — retry 2 ครั้งสำหรับ network error / 5xx
     // timeout ต่อครั้ง 30s × 3 attempts = ครอบคลุม window cold start
     const attempt = (n) => api.post("/auth/login", body, { timeout: 30000 })
@@ -34,7 +35,7 @@ export function LoginPage({ onLogin }) {
 
     try {
       const res = await attempt(1)
-      onLogin(res.data.token)
+      onLogin(res.data.token, { remember })
     } catch (e) {
       const status = e.response?.status
       if (!e.response) {
@@ -110,6 +111,19 @@ export function LoginPage({ onLogin }) {
             </div>
           </div>
 
+          <label className="login-remember">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={e => setRemember(e.target.checked)}
+              disabled={loading}
+            />
+            <span>
+              <strong>จำการเข้าสู่ระบบบนเครื่องนี้</strong>
+              <small>{remember ? "ไม่ต้องเข้าสู่ระบบอีกเป็นเวลา 30 วัน" : "ออกจากระบบเมื่อปิดเบราว์เซอร์"}</small>
+            </span>
+          </label>
+
           {/* Password */}
           <div className="login-field">
             <label className="login-label">รหัสผ่าน</label>
@@ -148,7 +162,7 @@ export function LoginPage({ onLogin }) {
               ? <>
                   <div className="spin"
                     style={{ width: 17, height: 17, borderWidth: 2, margin: 0 }} />
-                  กำลังเข้าสู่ระบบ…
+                  กำลังเชื่อมต่อระบบ…
                 </>
               : <>
                   <Ico n="arrowR" s={18} />

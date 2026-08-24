@@ -41,9 +41,9 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
   const sections = F_SECS.filter(s => !hideSections.includes(s.label))
 
   return (
-    <>
+    <div className="policy-form">
       {sections.map(sec => (
-        <div key={sec.label} style={{ marginBottom: 30 }}>
+        <section key={sec.label} className="policy-form-section">
           <div className="shd">
             <Ico n={sec.ico} s={17} />
             <span className="shd-lbl">{sec.label}</span>
@@ -90,7 +90,7 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
               )
             })}
           </div>
-        </div>
+        </section>
       ))}
 
       <div className="notes-card">
@@ -106,6 +106,6 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
           onChange={e => onChange({ ...values, notes: e.target.value })}
         />
       </div>
-    </>
+    </div>
   )
 }

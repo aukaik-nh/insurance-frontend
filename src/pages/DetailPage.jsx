@@ -51,6 +51,7 @@ export function DetailPage() {
 
   const [deleteModal, setDeleteModal] = useState(false)  // confirm ลบ record
   const [deleting, setDeleting]       = useState(false)
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
 
   // 🔎 Quick-search modal — ค้นหาข้ามทั้งระบบจากหน้า detail (กัน user ต้องกลับไปหน้า list)
   const [searchOpen, setSearchOpen]       = useState(false)
@@ -613,7 +614,7 @@ export function DetailPage() {
       )}
 
       <div className="page-wrap">
-        <div className="page-hd">
+        <div className="page-hd detail-page-hd">
           <button className="page-back" onClick={() => navigate(-1)}>
             <Ico n="chevL" s={19} /> กลับ
           </button>
@@ -627,7 +628,7 @@ export function DetailPage() {
               {p.insured_name || ""}{p.insured_name && p.license_plate ? "  ·  " : ""}{p.license_plate || ""}
             </div>
           </div>
-          <div className="page-hd-right">
+          <div className={`page-hd-right detail-page-actions${editMode ? " is-editing" : ""}`}>
             {editMode ? (
               <>
                 <button className="btn btn-w" onClick={cancelEdit} disabled={saving}>
@@ -639,36 +640,69 @@ export function DetailPage() {
               </>
             ) : (
               <>
-                <button className="btn btn-w"
+                <button className="btn btn-w detail-primary-action"
                   onClick={() => setSearchOpen(true)}
                   title="ค้นหากรมธรรม์ (Ctrl+K)"
                   style={{ color: "var(--t1)", borderColor: "var(--brd)" }}>
                   <Ico n="search" s={18} /> <span className="btn-label">ค้นหา</span>
                 </button>
-                <button className="btn btn-w"
+                <button className="btn btn-w detail-primary-action"
                   onClick={() => attachRef.current?.openAddDialog()}
                   style={{ color: "var(--blue)", borderColor: "var(--blue-mid)", background: "var(--blue-bg)" }}>
                   <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
                 </button>
-                <button className="btn btn-w"
+                <button className="btn btn-w detail-secondary-action"
                   onClick={() => navigate(`/invoice?policy_id=${id}`)}
                   style={{ color: "var(--purple)", borderColor: "var(--purple-mid, #c4b5fd)", background: "var(--purple-bg, #f5f3ff)" }}>
                   <Ico n="banknote" s={18} /> <span className="btn-label">ใบแจ้งหนี้</span>
                 </button>
-                <button className="btn btn-w" onClick={deletePolicy}
+                <button className="btn btn-w detail-secondary-action" onClick={deletePolicy}
                   style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
                   <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
                 </button>
-                <button className="btn btn-b" onClick={startEdit}>
+                <button className="btn btn-b detail-primary-action" onClick={startEdit}>
                   <Ico n="pen" s={18} /> <span className="btn-label">แก้ไข</span>
+                </button>
+                <button
+                  className="btn btn-w detail-more-btn"
+                  onClick={() => setMobileActionsOpen(true)}
+                  aria-label="คำสั่งเพิ่มเติม"
+                  aria-expanded={mobileActionsOpen}
+                >
+                  <Ico n="menu" s={19} /> <span className="btn-label">เพิ่มเติม</span>
                 </button>
               </>
             )}
           </div>
         </div>
 
+        {mobileActionsOpen && !editMode && (
+          <div className="detail-mobile-action-sheet" role="dialog" aria-modal="true" aria-label="คำสั่งเพิ่มเติม">
+            <div className="detail-mobile-sheet-backdrop" onClick={() => setMobileActionsOpen(false)} />
+            <div className="detail-mobile-sheet-panel">
+              <div className="detail-mobile-sheet-hd">
+                <div>
+                  <div className="detail-mobile-sheet-title">คำสั่งเพิ่มเติม</div>
+                  <div className="detail-mobile-sheet-sub">เลือกการทำงานสำหรับกรมธรรม์ฉบับนี้</div>
+                </div>
+                <button className="xbtn" onClick={() => setMobileActionsOpen(false)} aria-label="ปิด"><Ico n="x" s={20} /></button>
+              </div>
+              <button className="detail-mobile-sheet-action" onClick={() => { setMobileActionsOpen(false); navigate(`/invoice?policy_id=${id}`) }}>
+                <span className="detail-mobile-sheet-icon invoice"><Ico n="banknote" s={21} /></span>
+                <span><strong>สร้างใบแจ้งหนี้</strong><small>สร้างเอกสารและ QR PromptPay</small></span>
+                <Ico n="chevR" s={20} />
+              </button>
+              <button className="detail-mobile-sheet-action danger" onClick={() => { setMobileActionsOpen(false); deletePolicy() }}>
+                <span className="detail-mobile-sheet-icon danger"><Ico n="trash" s={21} /></span>
+                <span><strong>ลบกรมธรรม์</strong><small>ระบบจะขอให้ยืนยันก่อนลบ</small></span>
+                <Ico n="chevR" s={20} />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="page-body">
-          <div className="detail-split">
+          <div className="detail-split policy-detail-split">
 
             <div>
               {editMode ? (

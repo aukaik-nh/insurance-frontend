@@ -43,12 +43,12 @@ export function ListPage({ tab }) {
   // val: number = วันข้างหน้า, -1 = หมดอายุแล้ว
   const [expiryRange, setExpiryRange] = useState(30)
   const EXPIRY_RANGES = [
-    { val: 1,   label: "1 วัน",      ico: "warn" },
-    { val: 7,   label: "1 อาทิตย์",  ico: "bell" },
-    { val: 30,  label: "1 เดือน",    ico: "clock" },
-    { val: 60,  label: "2 เดือน",    ico: "cal" },
-    { val: 90,  label: "3 เดือน",    ico: "cal" },
-    { val: -1,  label: "หมดอายุแล้ว", ico: "xc" },
+    { val: 1,   label: "ภายใน 1 วัน",    shortLabel: "วันนี้",        ico: "warn", hint: "ควรติดต่อทันที" },
+    { val: 7,   label: "ภายใน 7 วัน",    shortLabel: "7 วัน",         ico: "bell", hint: "ติดตามภายในสัปดาห์นี้" },
+    { val: 30,  label: "ภายใน 1 เดือน",  shortLabel: "1 เดือน",       ico: "clock", hint: "กำลังติดตามในเดือนนี้" },
+    { val: 60,  label: "ภายใน 2 เดือน",  shortLabel: "2 เดือน",       ico: "cal", hint: "เตรียมรายชื่อล่วงหน้า" },
+    { val: 90,  label: "ภายใน 3 เดือน",  shortLabel: "3 เดือน",       ico: "cal", hint: "วางแผนติดตามต่อเนื่อง" },
+    { val: -1,  label: "หมดอายุแล้ว",   shortLabel: "หมดอายุแล้ว",   ico: "xc", hint: "ติดต่อเพื่อต่ออายุ" },
   ]
   const rangeMeta = EXPIRY_RANGES.find(r => r.val === expiryRange) || EXPIRY_RANGES[2]
 
@@ -547,15 +547,9 @@ export function ListPage({ tab }) {
       {/* subtitle bar — hidden on dashboard (hero covers it) */}
       {tab !== "dashboard" && (
         <div className="top">
-          <button onClick={() => navigate("/")}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "9px 14px", borderRadius: 9,
-              border: "1.5px solid var(--brd)", background: "var(--sur)",
-              color: "var(--t2)", cursor: "pointer", fontSize: 14, fontWeight: 600,
-              fontFamily: "inherit", marginRight: 12, flexShrink: 0,
-            }}>
-            <Ico n="chevL" s={16} /> กลับ
+          <button className="list-back" onClick={() => navigate("/")}>
+            <Ico n="chevL" s={21} />
+            <span>กลับหน้าหลัก</span>
           </button>
           <div className="top-l">
             <div className="top-title">{tabMeta[tab]?.title}</div>
@@ -592,36 +586,41 @@ export function ListPage({ tab }) {
                 )
               })()}
 
-              {/* ── 1. เมนูหลัก 4 ปุ่ม (ดีไซน์การ์ดสีพาสเทลแบบประเภทกรมธรรม์) ── */}
+              {/* ── งานที่ใช้บ่อย: ปุ่มมีคำอธิบายและผลลัพธ์ชัดเจน ── */}
               <div className="sec-hd">
                 <Ico n="grid" s={14} />
-                <span>เมนูหลัก</span>
-                <small>เข้าถึงได้รวดเร็ว</small>
+                <span>เริ่มงานได้ทันที</span>
+                <small>เลือกสิ่งที่ต้องการทำ</small>
               </div>
-              <div className="type-grid">
+              <div className="quick-action-grid">
                 {[
-                  { path: "/policies", lbl: "รายการกรมธรรม์", big: total.toLocaleString(),        sub: "รายการทั้งหมดในระบบ",       ico: "list",     bg: "#E5EEF0", dark: "#245863", mid: "#3E7581" },
-                  { path: "/upload",   lbl: "เพิ่มกรมธรรม์",   big: "+",                          sub: "อัปโหลด PDF · AI ช่วย",       ico: "upload",   bg: "#E6EDE9", dark: "#2E5044", mid: "#4A6E5D" },
-                  { path: "/expiring", lbl: "ใกล้หมดอายุ",     big: expiring.length.toLocaleString(), sub: "ภายใน 30 วัน",            ico: "bell",     bg: "#F0EAE4", dark: "#6A3A24", mid: "#8A5238", urgent: expiring.length > 0 },
-                  { path: "/invoice",  lbl: "ใบแจ้งหนี้",       big: "฿",                          sub: "QR PromptPay · พิมพ์",        ico: "banknote", bg: "#E7E9EF", dark: "#3A3E62", mid: "#545A7C" },
+                  { path: "/policies", kind: "policies", lbl: "รายการกรมธรรม์", value: total.toLocaleString(), detail: "รายการในระบบ", action: "ดูรายการทั้งหมด", ico: "list" },
+                  { path: "/upload",   kind: "upload",   lbl: "เพิ่มกรมธรรม์",   value: "PDF",                    detail: "AI ช่วยอ่านข้อมูล", action: "อัปโหลดกรมธรรม์", ico: "upload" },
+                  { path: "/expiring", kind: "expiring", lbl: "ใกล้หมดอายุ",     value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", action: "เปิดรายการติดตาม", ico: "bell", urgent: expiring.length > 0 },
+                  { path: "/invoice",  kind: "invoice",  lbl: "ใบแจ้งหนี้",       value: "QR",                     detail: "สร้างและพิมพ์", action: "สร้างใบแจ้งหนี้", ico: "banknote" },
                 ].map(m => (
-                  <button key={m.path} className="type-card"
+                  <button key={m.path} className={`quick-action quick-action-${m.kind}`}
                     onClick={() => navigate(m.path)}
-                    style={{ background: m.bg, color: m.dark, border: `1.6px solid ${m.mid}`, position: "relative" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                      <Ico n={m.ico} s={26} />
-                      <span style={{ fontSize: 17, fontWeight: 600 }}>{m.lbl}</span>
+                    aria-label={m.action}>
+                    <div className="quick-action-top">
+                      <span className="quick-action-icon"><Ico n={m.ico} s={24} /></span>
+                      <span className="quick-action-label">{m.lbl}</span>
                       {m.urgent && (
-                        <span style={{
-                          marginLeft: "auto", padding: "2px 8px", borderRadius: 99,
-                          background: m.dark, color: m.bg, fontSize: 11, fontWeight: 700,
-                        }}>เร่งด่วน</span>
+                        <span className="quick-action-alert">ต้องติดตาม</span>
                       )}
                     </div>
-                    <div style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.1 }}>{m.big}</div>
-                    <div style={{ fontSize: 13.5, color: m.mid, marginTop: 6 }}>{m.sub}</div>
+                    <div className="quick-action-value">{m.value}</div>
+                    <div className="quick-action-detail">{m.detail}</div>
+                    <div className="quick-action-link">{m.action} <Ico n="chevR" s={17} /></div>
                   </button>
                 ))}
+              </div>
+
+              <div className="dashboard-search-heading">
+                <div>
+                  <div className="dashboard-search-title">ค้นหากรมธรรม์</div>
+                  <div className="dashboard-search-sub">ค้นหาจากชื่อลูกค้า ทะเบียนรถ หรือเลขกรมธรรม์</div>
+                </div>
               </div>
 
             </>
@@ -788,6 +787,12 @@ export function ListPage({ tab }) {
             const baht = (n) => "฿" + Math.round(n).toLocaleString()
             return (
               <>
+                <div className="expiring-range-heading">
+                  <div>
+                    <div className="expiring-range-title">เลือกช่วงเวลาที่ต้องติดตาม</div>
+                    <div className="expiring-range-sub">แตะช่วงเวลาเพื่อดูรายชื่อลูกค้าและวันหมดอายุ</div>
+                  </div>
+                </div>
                 <div className="exp-stats">
                   {EXPIRY_RANGES.map(opt => {
                     const active = expiryRange === opt.val
@@ -795,15 +800,22 @@ export function ListPage({ tab }) {
                     return (
                       <button key={opt.val}
                         className={`exp-stat ${active ? "exp-stat-on" : ""} exp-stat-${opt.val === -1 ? "expired" : (opt.val <= 1 ? "urg1" : opt.val <= 7 ? "urg7" : opt.val <= 30 ? "urg30" : opt.val <= 60 ? "urg60" : "urg90")}`}
-                        onClick={() => setExpiryRange(opt.val)}>
+                        onClick={() => setExpiryRange(opt.val)}
+                        aria-pressed={active}>
                         <div className="exp-stat-hd">
                           <span className="exp-stat-icn"><Ico n={opt.ico} s={16} /></span>
                           <span className="exp-stat-lbl">{opt.label}</span>
                         </div>
-                        <div className="exp-stat-num">{cnt.toLocaleString()}</div>
+                        <div className="exp-stat-num">{cnt.toLocaleString()} <span>รายการ</span></div>
+                        <div className="exp-stat-hint">{active ? "กำลังแสดงรายการนี้" : opt.hint}</div>
                       </button>
                     )
                   })}
+                </div>
+                <div className="expiring-selected-summary" aria-live="polite">
+                  <span className="expiring-selected-dot" />
+                  <strong>กำลังแสดง {rangeCount(expiryRange).toLocaleString()} กรมธรรม์</strong>
+                  <span>เรียงจากวันหมดอายุใกล้ที่สุด</span>
                 </div>
 
                 {/* ── 12-month forecast chart ── */}

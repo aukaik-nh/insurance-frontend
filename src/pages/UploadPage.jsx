@@ -27,6 +27,7 @@ export function UploadPage() {
   const [pdfFull, setPdfFull]   = useState(false)
   const [formOpen, setFormOpen]       = useState(true)
   const [premiumOpen, setPremiumOpen] = useState(true)
+  const [manualMode, setManualMode]   = useState(false)
 
   // PRB state — null = ไม่เพิ่ม, object = เพิ่มแล้ว
   const [prb, setPrb]             = useState(null)
@@ -76,7 +77,7 @@ export function UploadPage() {
       setErr("กรุณาเลือกไฟล์ PDF เท่านั้น"); return
     }
     // เก็บไฟล์ไว้ใน browser — ยังไม่อัปขึ้น R2 (จะอัปตอนกด "บันทึก")
-    setFile(f); setErr(""); setHasData(false)
+    setFile(f); setErr(""); setHasData(false); setManualMode(true)
     setFilename(f.name)       // fallback name — useEffect จะ replace ทันทีที่ AI ดึงข้อมูลได้
     setFilenameAuto(true)     // เลือกไฟล์ใหม่ → เปิดโหมด auto-fill
     setLoading(true)
@@ -89,7 +90,7 @@ export function UploadPage() {
       const hasAny = Object.values(parsedData).some(v => v !== null && v !== "" && v !== undefined)
       setParsed({ ...parsedData, pdf_filename: f.name })
       setHasData(hasAny)
-      setAiWarn(hasAny ? null : "AI ไม่ได้ดึงข้อมูล — กรุณากรอกเอง")
+      setAiWarn(hasAny ? null : "AI อ่านข้อมูลได้ไม่ครบ — กรุณาตรวจและกรอกส่วนที่ขาด")
     } catch (e) {
       setErr("อ่าน PDF ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setLoading(false) }
@@ -244,7 +245,7 @@ export function UploadPage() {
       )}
 
       <div className="page-wrap">
-        <div className="page-hd">
+        <div className="page-hd upload-page-hd">
           <button className="page-back" onClick={() => navigate(-1)}>
             <Ico n="chevL" s={19} /> กลับ
           </button>
@@ -252,9 +253,9 @@ export function UploadPage() {
           <div className="page-hd-info">
             <div className="page-title">เพิ่มกรมธรรม์</div>
             <div className="page-sub">
-              {loading ? "กำลังวิเคราะห์ด้วย AI…"
+              {loading ? "AI กำลังอ่านเอกสาร…"
                 : hasData ? "ตรวจสอบและแก้ไขข้อมูลก่อนบันทึก"
-                : "วาง PDF หรือกรอกเอง"}
+                : "เลือก PDF ให้ AI ช่วยกรอก หรือบันทึกข้อมูลเอง"}
             </div>
           </div>
           <div className="page-hd-right">
@@ -281,6 +282,21 @@ export function UploadPage() {
             {/* left: drop zone + form */}
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
+              {!file && !manualMode && (
+                <section className="upload-workflow-card" aria-label="ขั้นตอนเพิ่มกรมธรรม์">
+                  <div className="upload-workflow-copy">
+                    <span className="upload-eyebrow">เพิ่มข้อมูลกรมธรรม์</span>
+                    <h2>เริ่มจากไฟล์ PDF ของกรมธรรม์</h2>
+                    <p>AI จะอ่านข้อมูลจากเอกสารให้ก่อน แล้วคุณตรวจทานและบันทึกเมื่อพร้อม</p>
+                  </div>
+                  <div className="upload-steps" aria-label="3 ขั้นตอน">
+                    <div className="upload-step active"><span>1</span><div><strong>เลือกไฟล์</strong><small>PDF กรมธรรม์</small></div></div>
+                    <div className="upload-step"><span>2</span><div><strong>AI อ่านข้อมูล</strong><small>เติมฟอร์มอัตโนมัติ</small></div></div>
+                    <div className="upload-step"><span>3</span><div><strong>ตรวจและบันทึก</strong><small>เก็บ PDF ในระบบ</small></div></div>
+                  </div>
+                </section>
+              )}
+
               {file && (
                 <div className="fname-row">
                   <Ico n="pen" s={17} />
@@ -304,7 +320,7 @@ export function UploadPage() {
               )}
 
               {/* drop zone: กรมธรรม์หลัก */}
-              <div className={`drop-wrap${file ? " has-file" : ""}`}>
+              <div className={`drop-wrap upload-drop-zone${file ? " has-file" : ""}`}>
                 {file ? (
                   <div className="drop-bar" onClick={() => ref.current.click()} style={{ cursor: "pointer" }}>
                     <div className="drop-bar-left">
@@ -336,7 +352,13 @@ export function UploadPage() {
                         <Ico n="upload" s={36} />
                       </div>
                       <span className="drop-h-name" style={{ fontSize: 21 }}>ลากไฟล์ PDF กรมธรรม์มาวางที่นี่</span>
-                      <span className="drop-h-hint" style={{ fontSize: 17 }}>หรือคลิกเพื่อเลือกไฟล์ · รองรับ PDF เท่านั้น</span>
+                      <span className="drop-h-hint" style={{ fontSize: 16 }}>AI จะอ่านจากภาพเอกสาร · รองรับ PDF เท่านั้น</span>
+                      <button className="btn btn-b upload-pick-btn" type="button" onClick={() => ref.current.click()}>
+                        <Ico n="upload" s={18} /> เลือกไฟล์ PDF
+                      </button>
+                      <button className="upload-manual-link" type="button" onClick={() => setManualMode(true)}>
+                        ไม่มีไฟล์? กรอกข้อมูลด้วยตัวเอง
+                      </button>
                     </div>
                   </div>
                 )}
@@ -348,23 +370,30 @@ export function UploadPage() {
                 <div className="bnr am" style={{ marginBottom: 0 }}>
                   <Ico n="bell" s={22} />
                   <div className="bnr-body">
-                    <div className="bnr-t">AI ไม่พร้อมใช้งาน — กรุณากรอกข้อมูลด้วยตนเอง</div>
+                    <div className="bnr-t">AI อ่านข้อมูลได้ไม่ครบ</div>
                     <div className="bnr-s">กรุณาตรวจสอบและแก้ไขข้อมูลก่อนบันทึก</div>
                   </div>
                 </div>
               )}
 
-              <FormPanel
-                open={formOpen}
-                onToggle={() => setFormOpen(o => !o)}
-                loading={loading}
-                parsed={parsed}
-                setParsed={setParsed}
-                hideSections={["เบี้ยประกัน", "ค่าคอมมิชชั่น / หัก ณ ที่จ่าย / ปัดเศษ"]}
-              />
+              {(file || manualMode) && <>
+                {file && (
+                  <div className={`upload-ai-status${loading ? " reading" : hasData ? " ready" : ""}`}>
+                    <span className="upload-ai-icon">{loading ? <span className="spin" style={{ width: 18, height: 18, borderWidth: 2 }} /> : <Ico n={hasData ? "check" : "doc"} s={19} />}</span>
+                    <div><strong>{loading ? "AI กำลังอ่านข้อมูลจากเอกสาร" : hasData ? "AI เติมข้อมูลเบื้องต้นแล้ว" : "พร้อมให้กรอกข้อมูล"}</strong><small>{loading ? "รอสักครู่ ระบบกำลังวิเคราะห์ไฟล์" : "ตรวจข้อมูลสำคัญก่อนกดบันทึกทุกครั้ง"}</small></div>
+                  </div>
+                )}
+                <FormPanel
+                  open={formOpen}
+                  onToggle={() => setFormOpen(o => !o)}
+                  loading={loading}
+                  parsed={parsed}
+                  setParsed={setParsed}
+                  hideSections={["เบี้ยประกัน", "ค่าคอมมิชชั่น / หัก ณ ที่จ่าย / ปัดเศษ"]}
+                />
 
-              {/* ── ตารางคำนวณเบี้ย 3 คอลัมน์ (หลัง FormPanel — หลังหมวดระยะเวลาคุ้มครอง) ── */}
-              <PremiumGrid
+                {/* ── ตารางคำนวณเบี้ย 3 คอลัมน์ (หลัง FormPanel — หลังหมวดระยะเวลาคุ้มครอง) ── */}
+                <PremiumGrid
                   main={parsed}
                   prb={prb}
                   onMainChange={onMainChange}
@@ -376,6 +405,7 @@ export function UploadPage() {
                   open={premiumOpen}
                   onToggle={() => setPremiumOpen(o => !o)}
                 />
+              </>}
             </div>
 
             {/* right: PDF preview + doc tabs — ซ่อนถ้ายังไม่มีไฟล์ */}

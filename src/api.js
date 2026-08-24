@@ -6,7 +6,7 @@ const api = axios.create({
 
 // ── แนบ token ทุก request ──
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem("auth_token")
+  const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -22,6 +22,7 @@ api.interceptors.response.use(
       const isLoginAttempt = url.includes("/auth/login")
       if (!isLoginAttempt) {
         localStorage.removeItem("auth_token")
+        sessionStorage.removeItem("auth_token")
         window.location.reload()
       }
     }
