@@ -21,39 +21,39 @@ input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0
 input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 :root{
   --w:264px;
-  /* โทนงานประกัน: เทาอมฟ้าอ่อน + กรมท่า + ทองอ่อน
+  /* โทนตราสัญลักษณ์: เขียวคุ้มภัย + ขาวอมเขียว
      ใช้สีเพื่อสื่อความหมายเท่านั้น: เขียว=ปกติ, ส้ม=ติดตาม, แดง=ต้องแก้ไข */
-  --bg:#F4F7F8;
-  --bg2:#E9EFF1;
+  --bg:#F4F8F5;
+  --bg2:#E7F0E9;
   --sur:#FFFFFF;
-  --sur2:#F8FAFB;
-  --brd:#D7E1E5;
-  --brd2:#B9CAD1;
-  --blue:#2B6675;
-  --blue-h:#1F4E5F;
-  --blue-bg:#E8F1F4;
-  --blue-mid:#A9C8D2;
-  --accent:#5D8E9B;
-  --g1:#1F4858;
-  --g2:#336F7E;
-  --g3:#79A7B2;
-  --green:#3D7965;
-  --green-bg:#EAF4EF;
-  --green-brd:#AFD1C0;
+  --sur2:#F8FBF8;
+  --brd:#D6E4DA;
+  --brd2:#B7CFBE;
+  --blue:#0F6B45;
+  --blue-h:#075237;
+  --blue-bg:#E6F3EB;
+  --blue-mid:#9CCCB0;
+  --accent:#3B8B64;
+  --g1:#075237;
+  --g2:#177B52;
+  --g3:#65A883;
+  --green:#237B55;
+  --green-bg:#E8F4EC;
+  --green-brd:#A8D2B7;
   --amber:#9C701F;
   --amber-bg:#FCF5E8;
   --amber-brd:#E5CD99;
   --red:#AD4541;
   --red-bg:#FAEFED;
   --red-brd:#E6C0BC;
-  --t1:#1D3038;
-  --t2:#4C6069;
-  --t3:#71818A;
-  --sh0:0 1px 2px rgba(25,57,68,.045);
-  --sh1:0 2px 7px rgba(25,57,68,.065),0 1px 2px rgba(25,57,68,.035);
-  --sh2:0 10px 24px rgba(25,57,68,.08),0 2px 7px rgba(25,57,68,.045);
-  --sh3:0 24px 60px rgba(25,57,68,.20),0 6px 14px rgba(25,57,68,.07);
-  --shB:0 6px 16px rgba(31,78,95,.17),0 2px 5px rgba(31,78,95,.10);
+  --t1:#173426;
+  --t2:#476354;
+  --t3:#728579;
+  --sh0:0 1px 2px rgba(18,67,42,.045);
+  --sh1:0 2px 7px rgba(18,67,42,.065),0 1px 2px rgba(18,67,42,.035);
+  --sh2:0 10px 24px rgba(18,67,42,.08),0 2px 7px rgba(18,67,42,.045);
+  --sh3:0 24px 60px rgba(18,67,42,.20),0 6px 14px rgba(18,67,42,.07);
+  --shB:0 6px 16px rgba(7,82,55,.17),0 2px 5px rgba(7,82,55,.10);
   --ez:cubic-bezier(.22,.61,.36,1);
   --ez-out:cubic-bezier(.16,1,.3,1);
   --r:12px;
@@ -61,18 +61,18 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
   --rXL:24px;
 }
 body.dark{
-  /* ธีมมืด: กรมท่าอมเทา ลดแสงสะท้อน แต่คงความต่างสีให้อ่านได้ชัด */
-  --bg:#0B1620;--bg2:#101E29;--sur:#12232E;--sur2:#172B37;
-  --brd:#29414E;--brd2:#3D5A67;
-  --blue:#78B9C8;--blue-h:#A9D8E0;
-  --green:#76B790;--amber:#D8AA55;--red:#E17972;
-  --t1:#EDF3F2;--t2:#B7C7C9;--t3:#84999E;
+  /* ธีมมืด: เขียวป่าอมดำ คงอัตลักษณ์สีเดียวกับตราสัญลักษณ์ */
+  --bg:#091711;--bg2:#0E2118;--sur:#11291D;--sur2:#173323;
+  --brd:#2A4D39;--brd2:#426A50;
+  --blue:#73C397;--blue-h:#A5DDBA;
+  --green:#78BD93;--amber:#D8AA55;--red:#E17972;
+  --t1:#EDF5EF;--t2:#B8CCBE;--t3:#849D8B;
   --sh0:0 1px 2px rgba(0,0,0,.25);
   --sh1:0 2px 6px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
   --sh2:0 8px 20px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.22);
   --sh3:0 24px 60px rgba(0,0,0,.55),0 6px 14px rgba(0,0,0,.3);
-  --shB:0 10px 28px rgba(83,155,169,.26),0 2px 8px rgba(83,155,169,.15);
-  --blue-bg:rgba(120,185,200,.15);--blue-mid:rgba(120,185,200,.42);
+  --shB:0 10px 28px rgba(82,164,112,.24),0 2px 8px rgba(82,164,112,.15);
+  --blue-bg:rgba(115,195,151,.15);--blue-mid:rgba(115,195,151,.42);
   --green-bg:rgba(118,183,144,.15);--green-brd:rgba(118,183,144,.36);
   --amber-bg:rgba(216,170,85,.14);--amber-brd:rgba(216,170,85,.38);
   --red-bg:rgba(225,121,114,.14);--red-brd:rgba(225,121,114,.38);
@@ -80,7 +80,7 @@ body.dark{
 body{
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
   font-size:17px;color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.6;
-  background:linear-gradient(135deg,#F8FAFB 0%,var(--bg) 48%,#EEF5F6 100%);
+  background:linear-gradient(135deg,#F8FCF9 0%,var(--bg) 48%,#EEF6F0 100%);
   min-height:100vh;
   min-height:100dvh;
 }
@@ -107,7 +107,7 @@ body.text-large td,body.text-large .policy-mobile-name,body.text-large .policy-m
   background:var(--sur);
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;
-  border-bottom:1px solid var(--brd);box-shadow:0 1px 8px rgba(25,57,68,.035);
+  border-bottom:1px solid var(--brd);box-shadow:0 1px 8px rgba(18,67,42,.035);
   padding:0 24px;height:80px;gap:0;
 }
 body.dark .sb{background:var(--sur);border-bottom-color:var(--brd)}
@@ -3260,18 +3260,18 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
 
 /* Unified accent treatment: legacy dashboard cards keep their meaning but
    use the same restrained office palette as the rest of the application. */
- .menu-card.menu-bl,.sc.sc-m-bl{--mc:#2B6675;--mc2:#6F9EAA;--mc-glow:rgba(43,102,117,.16);--mc-tint:rgba(43,102,117,.045)}
-.menu-card.menu-gr,.sc.sc-m-gr{--mc:#3D7965;--mc2:#73A18A;--mc-glow:rgba(61,121,101,.15);--mc-tint:rgba(61,121,101,.045)}
-.menu-card.menu-pu,.sc.sc-m-pu{--mc:#476B83;--mc2:#7895A8;--mc-glow:rgba(71,107,131,.15);--mc-tint:rgba(71,107,131,.045)}
+.menu-card.menu-bl,.sc.sc-m-bl{--mc:#0F6B45;--mc2:#65A883;--mc-glow:rgba(15,107,69,.16);--mc-tint:rgba(15,107,69,.045)}
+.menu-card.menu-gr,.sc.sc-m-gr{--mc:#237B55;--mc2:#72AC86;--mc-glow:rgba(35,123,85,.15);--mc-tint:rgba(35,123,85,.045)}
+.menu-card.menu-pu,.sc.sc-m-pu{--mc:#397055;--mc2:#78A889;--mc-glow:rgba(57,112,85,.15);--mc-tint:rgba(57,112,85,.045)}
 .menu-card.menu-am,.sc.sc-m-am{--mc:#9C701F;--mc2:#C5A05C;--mc-glow:rgba(156,112,31,.16);--mc-tint:rgba(156,112,31,.05)}
-.qs-teal .qs-icon{background:linear-gradient(135deg,#1F4E5F,#5F94A1)}
-.qs-green .qs-icon{background:linear-gradient(135deg,#3D7965,#73A18A)}
+.qs-teal .qs-icon{background:linear-gradient(135deg,#075237,#4E976C)}
+.qs-green .qs-icon{background:linear-gradient(135deg,#237B55,#72AC86)}
 .qs-amber .qs-icon{background:linear-gradient(135deg,#9C701F,#D3B270)}
-.qs-pink .qs-icon{background:linear-gradient(135deg,#476B83,#7895A8)}
-.stat-teal .stat-val,.call-teal .call-days{color:#2B6675}
-.stat-blue .stat-val,.stat-purple .stat-val{color:#476B83}
+.qs-pink .qs-icon{background:linear-gradient(135deg,#397055,#78A889)}
+.stat-teal .stat-val,.call-teal .call-days{color:#177B52}
+.stat-blue .stat-val,.stat-purple .stat-val{color:#397055}
 .stat-amber .stat-val{color:#9C701F}
-body.dark{background:linear-gradient(135deg,#0B1620 0%,var(--bg) 65%,#10232C 100%)}
+body.dark{background:linear-gradient(135deg,#091711 0%,var(--bg) 65%,#10281B 100%)}
 `
 
 export default CSS
