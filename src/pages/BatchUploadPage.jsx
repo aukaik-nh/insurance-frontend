@@ -33,7 +33,7 @@ export function BatchUploadPage() {
   const [done, setDone]         = useState(null)     // ผลจาก /commit
   const [err, setErr]           = useState("")
   const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่าง AI อ่าน
-  const [progress, setProgress] = useState(null)     // {done, total, current} ระหว่างอ่าน
+  const [progress, setProgress] = useState(null)     // {done, total, current, chunk, chunk_total} ระหว่างอ่าน
   const [expandedKey, setExpandedKey] = useState(null)
 
   // จับเวลาระหว่าง extracting — ให้ผู้ใช้เห็นว่ากำลังทำงาน ไม่ได้ค้าง
@@ -75,7 +75,7 @@ export function BatchUploadPage() {
 
   const doExtract = async () => {
     if (!files.length) return
-    setExtracting(true); setErr(""); setProgress({ done: 0, total: files.length, current: null })
+    setExtracting(true); setErr(""); setProgress({ done: 0, total: files.length, current: null, chunk: 0, chunk_total: Math.ceil(files.length / 10) })
     try {
       const fd = new FormData()
       files.forEach(f => fd.append("files", f))
@@ -91,7 +91,7 @@ export function BatchUploadPage() {
         await new Promise(r => setTimeout(r, 1500))
         let pr
         try { pr = (await api.get(`/batch/${bid}/progress`)).data } catch { continue }
-        setProgress({ done: pr.done || 0, total: pr.total || files.length, current: pr.current })
+        setProgress({ done: pr.done || 0, total: pr.total || files.length, current: pr.current, chunk: pr.chunk || 0, chunk_total: pr.chunk_total || Math.ceil(files.length / 10) })
         if (pr.status === "done")  { result = (await api.get(`/batch/${bid}`)).data; break }
         if (pr.status === "error") throw new Error(pr.error || "ประมวลผลไม่สำเร็จ")
       }
@@ -223,7 +223,7 @@ export function BatchUploadPage() {
           <>
             <section className="batch-workflow" aria-label="ขั้นตอนการนำเข้าเอกสาร">
               <div className="batch-workflow-step active">
-                <span>1</span><div><strong>เลือกไฟล์ PDF</strong><small>เลือกได้หลายไฟล์ในครั้งเดียว</small></div>
+                <span>1</span><div><strong>รวบรวมไฟล์ PDF</strong><small>เพิ่มไฟล์ได้เรื่อย ๆ ก่อนเริ่มอ่าน</small></div>
               </div>
               <div className="batch-workflow-line" aria-hidden="true" />
               <div className="batch-workflow-step">
@@ -252,7 +252,7 @@ export function BatchUploadPage() {
               </button>
               <div className="batch-drop-notes">
                 <span><Ico n="doc" s={15} /> รองรับ PDF เท่านั้น</span>
-                <span><Ico n="inbox" s={15} /> เลือกหลายไฟล์ได้</span>
+                <span><Ico n="inbox" s={15} /> รวมได้ทุกจำนวน</span>
                 <span><Ico n="shield" s={15} /> ยังไม่บันทึกจนกดยืนยัน</span>
               </div>
             </div>
@@ -262,7 +262,7 @@ export function BatchUploadPage() {
             {files.length > 0 && (
               <div className="info-card" style={{ marginTop: 18 }}>
                 <div className="info-card-hd" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span><Ico n="doc" s={18} /> เลือกไว้ {files.length} ไฟล์</span>
+                  <span><Ico n="doc" s={18} /> รวบรวมไว้ {files.length} ไฟล์</span>
                   <button className="btn btn-w" style={{ padding: "6px 12px" }} onClick={() => setFiles([])}>ล้างทั้งหมด</button>
                 </div>
                 <div style={{ maxHeight: 300, overflowY: "auto" }}>
@@ -285,7 +285,7 @@ export function BatchUploadPage() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14.5, fontWeight: 600, color: "var(--t1)" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                           <span className="spin" style={{ width: 16, height: 16, borderWidth: 2 }} />
-                          AI กำลังอ่าน {progress?.done ?? 0} / {progress?.total ?? files.length} ไฟล์
+                          AI กำลังอ่านรอบ {progress?.chunk || 1} / {progress?.chunk_total || Math.ceil(files.length / 10)} · {progress?.done ?? 0} / {progress?.total ?? files.length} ไฟล์
                         </span>
                         <span style={{ color: "var(--t3)", fontWeight: 500 }}>{elapsed}s</span>
                       </div>
@@ -302,9 +302,9 @@ export function BatchUploadPage() {
                     </div>
                   ) : (
                     <div className="batch-file-ready">
-                      <span><Ico n="shield" s={16} /> ตรวจทานผลลัพธ์ก่อนบันทึกทุกครั้ง</span>
+                      <span><Ico n="shield" s={16} /> เพิ่มไฟล์ได้ครบแล้วจึงเริ่มอ่าน · ระบบอ่านครั้งละ 10 ไฟล์</span>
                       <button className="btn btn-b" onClick={doExtract} disabled={extracting}>
-                        <Ico n="upload" s={18} /><span>อ่านด้วย AI ({files.length} ไฟล์)</span>
+                        <Ico n="upload" s={18} /><span>เริ่มอ่าน AI ทั้งกอง ({files.length} ไฟล์)</span>
                       </button>
                     </div>
                   )}
