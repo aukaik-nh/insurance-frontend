@@ -54,6 +54,7 @@ function PolicyMobileCards({ rows, pageOffset, onRow }) {
             <div className="policy-mobile-name">{r.insured_name || "ไม่ระบุผู้เอาประกัน"}</div>
             <div className="policy-mobile-policy">{r.policy_number || "ไม่ระบุเลขกรมธรรม์"}</div>
             <div className="policy-mobile-meta">
+              <span><Ico n="clock" s={15} /> เพิ่ม {fmtDate(r.created_at) || "ไม่ระบุวันที่"}</span>
               <span><Ico n="cal" s={15} /> หมดอายุ {endDate}</span>
               <span className="policy-mobile-open">ดูรายละเอียด <Ico n="chevR" s={16} /></span>
             </div>
@@ -101,20 +102,21 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
       <div className="card-hd">
         <div>
           <div className="card-title">รายการกรมธรรม์</div>
-          <div className="card-sub">{total.toLocaleString()} รายการ · คลิกแถวเพื่อดูรายละเอียด</div>
+          <div className="card-sub">{total.toLocaleString()} รายการ · เรียงตามวันที่เพิ่มล่าสุด · คลิกแถวเพื่อดูรายละเอียด</div>
         </div>
       </div>
       <div className="policy-table-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-        <table style={{ tableLayout: "fixed", width: "100%", minWidth: 900 }}>
+        <table style={{ tableLayout: "fixed", width: "100%", minWidth: 1040 }}>
           <thead>
             <tr>
               <th style={{ width: 50, textAlign: "center", color: "var(--t3)" }}>#</th>
               <th style={{ width: 54, textAlign: "center", color: "var(--t3)" }}>PDF</th>
               <SortHeader label="เลขกรมธรรม์"  col="policy_number"  sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "17%" }} />
-              <SortHeader label="ผู้เอาประกัน" col="insured_name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "29%" }} />
-              <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "15%" }} />
-              <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "16%" }} />
-              <th style={{ width: "13%", whiteSpace: "nowrap" }}>สถานะ</th>
+              <SortHeader label="ผู้เอาประกัน" col="insured_name"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "24%" }} />
+              <SortHeader label="เพิ่มล่าสุด"  col="created_at"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "13%" }} />
+              <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "13%" }} />
+              <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "14%" }} />
+              <th style={{ width: "12%", whiteSpace: "nowrap" }}>สถานะ</th>
               <th style={{ width: 54, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
             </tr>
           </thead>
@@ -176,6 +178,12 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                         +{r._historyCount} ฉบับ
                       </span>
                     )}
+                  </td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <div style={{ color: "var(--t1)", fontSize: 14, fontWeight: 600, lineHeight: 1.2 }}>
+                      {fmtDate(r.created_at) || "—"}
+                    </div>
+                    <div style={{ color: "var(--t3)", fontSize: 12, marginTop: 3 }}>วันที่บันทึก</div>
                   </td>
                   <td style={{ whiteSpace: "nowrap" }}>
                     <div style={{ color: "var(--t1)", fontSize: 15, fontWeight: 500, lineHeight: 1.2 }}>

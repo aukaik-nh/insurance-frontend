@@ -29,8 +29,8 @@ export function ListPage({ tab }) {
   const [total, setTotal]             = useState(0)
   const [loading, setLoading]         = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
-  // default: "เพิ่มล่าสุด" = coverage_start desc (กรมธรรม์ที่เริ่มล่าสุด)
-  const [sortKey, setSortKey]         = useState("coverage_start")
+  // ค่าเริ่มต้นต้องเป็นวันที่บันทึกจริง ไม่ใช่วันเริ่มคุ้มครองในเอกสาร
+  const [sortKey, setSortKey]         = useState("created_at")
   const [sortDir, setSortDir]         = useState("desc")
 
   // filter state
