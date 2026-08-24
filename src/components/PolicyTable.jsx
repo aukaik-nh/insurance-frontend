@@ -118,7 +118,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
               <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "13%" }} />
               <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "14%" }} />
               <th style={{ width: "12%", whiteSpace: "nowrap" }}>สถานะ</th>
-              <th style={{ width: 54, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
+              <th className="policy-open-col" style={{ width: 68, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
             </tr>
           </thead>
           <tbody>
@@ -149,7 +149,7 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
                   <td style={{ textAlign: "center", color: "var(--t2)", fontSize: 15, fontVariantNumeric: "tabular-nums" }}>
                     {pageOffset + idx + 1}
                   </td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="policy-open-col" style={{ textAlign: "center" }}>
                     {hasPdf ? (
                       <span title="มีไฟล์ PDF" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--blue)" }}>
                         <Ico n="doc" s={20} />

@@ -2239,6 +2239,12 @@ body.dark .type-card{background:var(--sur2)!important;color:var(--t1)!important}
 .policy-list-card tbody tr{transition:background .15s ease}
 .policy-list-card tbody tr:hover{background:#F6FAFA}
 .policy-list-card .policy-created-cell{background:linear-gradient(90deg,rgba(229,238,240,.45),transparent)}
+.policy-table-wrap{position:relative}
+/* ปุ่มเปิดรายละเอียดต้องมองเห็นเสมอ แม้ตารางกว้างและผู้ใช้เลื่อนแนวนอน */
+.policy-open-col{position:sticky;right:0;z-index:2;min-width:68px;padding-left:12px !important;padding-right:12px !important;background:var(--sur);border-left:1px solid var(--brd);box-shadow:-9px 0 14px -13px rgba(20,47,60,.45)}
+.policy-list-card thead .policy-open-col{z-index:4;background:var(--sur2)}
+.policy-list-card tbody tr:hover .policy-open-col{background:#F6FAFA}
+body.dark .policy-list-card tbody tr:hover .policy-open-col{background:var(--sur2)}
 @media(max-width:639px){.policy-list-heading{padding:14px 14px}.policy-list-order{font-size:11.5px;padding:6px 8px}}
 
 table{width:100%;border-collapse:separate;border-spacing:0}
