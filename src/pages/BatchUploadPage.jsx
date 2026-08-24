@@ -3,6 +3,8 @@ import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
 import { fmtDate, POLICY_TYPE_LABEL } from "../helpers"
+import { usePdfBlob } from "../pdfUtils"
+import { PdfLightbox } from "../components/PdfLightbox"
 
 // สรุปข้อมูลย่อของ record ที่ AI อ่านได้ — ใช้โชว์ในรายการรีวิว
 function recLine(r) {
@@ -327,28 +329,28 @@ export function BatchUploadPage() {
               {(data.pairs || []).map((p, i) => (
                 <ReviewRow key={`pair-${i}`} k={`pair-${i}`} checked={checked} toggle={toggle}
                   main={p.main} prb={p.prb} status={p.status} reasons={p.reasons} margin={p.margin}
-                  expanded={expandedKey === `pair-${i}`} onExpand={() => setExpandedKey(k => k === `pair-${i}` ? null : `pair-${i}`)} onUpdate={updateRecord} />
+                  batchId={data.batch_id} expanded={expandedKey === `pair-${i}`} onExpand={() => setExpandedKey(k => k === `pair-${i}` ? null : `pair-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
             <Section title="กรมธรรม์เดี่ยว (ไม่มี พ.ร.บ. จับคู่)" icon="doc" count={(data.orphan_main || []).length}>
               {(data.orphan_main || []).map((r, i) => (
                 <ReviewRow key={`om-${i}`} k={`om-${i}`} checked={checked} toggle={toggle} main={r}
-                  expanded={expandedKey === `om-${i}`} onExpand={() => setExpandedKey(k => k === `om-${i}` ? null : `om-${i}`)} onUpdate={updateRecord} />
+                  batchId={data.batch_id} expanded={expandedKey === `om-${i}`} onExpand={() => setExpandedKey(k => k === `om-${i}` ? null : `om-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
             <Section title="พ.ร.บ. เดี่ยว (บันทึกเป็นกรมธรรม์ พ.ร.บ.)" icon="doc" count={(data.orphan_prb || []).length}>
               {(data.orphan_prb || []).map((r, i) => (
                 <ReviewRow key={`op-${i}`} k={`op-${i}`} checked={checked} toggle={toggle} main={r}
-                  expanded={expandedKey === `op-${i}`} onExpand={() => setExpandedKey(k => k === `op-${i}` ? null : `op-${i}`)} onUpdate={updateRecord} />
+                  batchId={data.batch_id} expanded={expandedKey === `op-${i}`} onExpand={() => setExpandedKey(k => k === `op-${i}` ? null : `op-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
             <Section title="เอกสารอื่น (อัคคีภัย / PA / ฯลฯ)" icon="doc" count={(data.others || []).length}>
               {(data.others || []).map((r, i) => (
                 <ReviewRow key={`ot-${i}`} k={`ot-${i}`} checked={checked} toggle={toggle} main={r}
-                  expanded={expandedKey === `ot-${i}`} onExpand={() => setExpandedKey(k => k === `ot-${i}` ? null : `ot-${i}`)} onUpdate={updateRecord} />
+                  batchId={data.batch_id} expanded={expandedKey === `ot-${i}`} onExpand={() => setExpandedKey(k => k === `ot-${i}` ? null : `ot-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
@@ -401,7 +403,7 @@ function Section({ title, icon, count, children }) {
   )
 }
 
-function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin, expanded, onExpand, onUpdate }) {
+function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin, batchId, expanded, onExpand, onUpdate }) {
   const m = recLine(main)
   const p = prb ? recLine(prb) : null
   const on = checked.has(k)
@@ -428,13 +430,57 @@ function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin
       </div>
       {expanded && (
         <div className="batch-editor-wrap">
-          <div className="batch-editor-help">ตรวจแก้ข้อมูลที่ AI อ่านก่อนเลือกบันทึก รายการที่แก้ไขจะถูกบันทึกตามค่านี้</div>
-          <RecordEditor title="ข้อมูลกรมธรรม์" record={main} onChange={(field, value) => onUpdate(k, "main", field, value)} />
-          {prb && <RecordEditor title="ข้อมูล พ.ร.บ. ที่จับคู่" record={prb} onChange={(field, value) => onUpdate(k, "prb", field, value)} />}
+          <div className="batch-editor-help">เทียบข้อมูลกับ PDF แล้วแก้ไขได้ทันที ก่อนเลือกบันทึก รายการที่แก้ไขจะถูกบันทึกตามค่านี้</div>
+          <div className="batch-review-workspace">
+            <BatchPdfEvidence batchId={batchId} main={main} prb={prb} />
+            <div className="batch-editor-column">
+              <RecordEditor title="ข้อมูลกรมธรรม์" record={main} onChange={(field, value) => onUpdate(k, "main", field, value)} />
+              {prb && <RecordEditor title="ข้อมูล พ.ร.บ. ที่จับคู่" record={prb} onChange={(field, value) => onUpdate(k, "prb", field, value)} />}
+            </div>
+          </div>
           {status === "review" && <div className="batch-review-warning">กรุณาตรวจเลขตัวถัง ทะเบียน และวันคุ้มครองของทั้งสองเอกสารก่อนเลือกบันทึก{margin != null ? ` (คะแนนห่างคู่รอง ${margin})` : ""}</div>}
         </div>
       )}
     </article>
+  )
+}
+
+function BatchPdfEvidence({ batchId, main, prb }) {
+  const docs = [
+    { key: "main", label: "กรมธรรม์", record: main },
+    ...(prb ? [{ key: "prb", label: "พ.ร.บ.", record: prb }] : []),
+  ].filter(doc => doc.record?.file_id)
+  const [active, setActive] = useState(docs[0]?.key || "main")
+  const [fullscreen, setFullscreen] = useState(false)
+  const current = docs.find(doc => doc.key === active) || docs[0]
+  const apiUrl = current ? `${api.defaults.baseURL}/batch/${batchId}/files/${current.record.file_id}/pdf` : null
+  const { blobUrl, loading } = usePdfBlob(apiUrl)
+
+  if (!current) return null
+  return (
+    <aside className="batch-pdf-evidence" aria-label="เอกสาร PDF สำหรับตรวจสอบ">
+      <div className="batch-pdf-head">
+        <div><Ico n="doc" s={18} /><span>เอกสารอ้างอิง</span></div>
+        <button type="button" className="batch-pdf-expand" onClick={() => setFullscreen(true)} disabled={!blobUrl} title="เปิด PDF เต็มจอ">
+          <Ico n="expand" s={17} /><span>เต็มจอ</span>
+        </button>
+      </div>
+      <div className="batch-pdf-tabs" role="tablist" aria-label="เลือกเอกสาร">
+        {docs.map(doc => (
+          <button key={doc.key} type="button" role="tab" aria-selected={active === doc.key}
+            className={active === doc.key ? "active" : ""} onClick={() => setActive(doc.key)}>
+            {doc.label}<span>{doc.record.orig_filename || "PDF"}</span>
+          </button>
+        ))}
+      </div>
+      <div className="batch-pdf-frame">
+        {loading && <div className="batch-pdf-loading"><span className="spin" /> กำลังเปิด PDF…</div>}
+        {!loading && blobUrl && <iframe src={blobUrl} title={`PDF ${current.label}`} />}
+        {!loading && !blobUrl && <div className="batch-pdf-loading">เปิด PDF ไม่สำเร็จ กรุณาลองอีกครั้ง</div>}
+      </div>
+      <p>PDF นี้ใช้เพื่อตรวจทานเท่านั้น และจะเก็บเข้าระบบเมื่อกดบันทึกรายการ</p>
+      {fullscreen && <PdfLightbox src={blobUrl} filename={current.record.orig_filename} sizeKB={current.record.size ? Math.round(current.record.size / 1024) : null} onClose={() => setFullscreen(false)} />}
+    </aside>
   )
 }
 

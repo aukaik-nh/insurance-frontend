@@ -2846,6 +2846,25 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .batch-open-btn:hover{border-color:var(--blue);color:var(--blue)}
 .batch-editor-wrap{border-top:1px solid var(--brd);padding:16px;background:var(--sur2)}
 .batch-editor-help{margin:0 0 13px;color:var(--t3);font-size:13px}
+.batch-review-workspace{display:grid;grid-template-columns:minmax(360px,.9fr) minmax(0,1.1fr);gap:14px;align-items:start}
+.batch-editor-column{min-width:0}
+.batch-editor-column .batch-record-editor:first-child{margin-top:0}
+.batch-pdf-evidence{position:sticky;top:12px;overflow:hidden;border:1px solid var(--brd);border-radius:11px;background:var(--sur);box-shadow:var(--sh0)}
+.batch-pdf-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-bottom:1px solid var(--brd);background:var(--blue-bg)}
+.batch-pdf-head>div{display:flex;align-items:center;gap:7px;color:var(--t1);font-size:14px;font-weight:750}
+.batch-pdf-head>div svg{color:var(--blue)}
+.batch-pdf-expand{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--blue-mid);border-radius:7px;background:var(--sur);color:var(--blue);padding:5px 7px;font:650 12px inherit;cursor:pointer}
+.batch-pdf-expand:disabled{opacity:.55;cursor:wait}
+.batch-pdf-tabs{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--brd);background:var(--sur2);overflow:auto}
+.batch-pdf-tabs button{min-width:0;display:flex;flex:1;flex-direction:column;gap:2px;align-items:flex-start;border:1px solid transparent;border-radius:8px;background:transparent;padding:7px 8px;color:var(--t2);font:700 12px inherit;cursor:pointer;text-align:left}
+.batch-pdf-tabs button:hover{background:var(--sur)}
+.batch-pdf-tabs button.active{border-color:var(--blue-mid);background:var(--sur);color:var(--blue)}
+.batch-pdf-tabs button span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3);font-size:10.5px;font-weight:500}
+.batch-pdf-frame{position:relative;height:520px;background:#F4F5F6}
+.batch-pdf-frame iframe{width:100%;height:100%;display:block;border:0;background:#fff}
+.batch-pdf-loading{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;color:var(--t3);font-size:13px;text-align:center;padding:18px}
+.batch-pdf-loading .spin{width:18px;height:18px;border-width:2px}
+.batch-pdf-evidence>p{margin:0;padding:9px 12px;border-top:1px solid var(--brd);color:var(--t3);font-size:11.5px;line-height:1.4}
 .batch-record-editor{border:1px solid var(--brd);border-radius:11px;background:var(--sur);padding:14px;margin-top:12px}
 .batch-record-editor h4{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--t1);font-size:15px}
 .batch-record-editor h4 svg{color:var(--blue)}
@@ -2868,6 +2887,8 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .batch-review-summary{align-items:flex-start;gap:10px;padding:13px}
   .batch-match-status{display:none}
   .batch-open-btn{padding:7px 8px;font-size:12px}
+  .batch-review-workspace{grid-template-columns:1fr}
+  .batch-pdf-evidence{position:static}
   .batch-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .batch-editor-grid label.wide{grid-column:span 2}
 }
@@ -2889,6 +2910,8 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .batch-open-btn{order:2;margin-left:30px}
   .batch-editor-grid{grid-template-columns:1fr}
   .batch-editor-grid label.wide{grid-column:span 1}
+  .batch-pdf-frame{height:420px}
+  .batch-pdf-expand span{display:none}
 }
 .upload-ai-status{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid var(--brd);border-radius:13px;background:var(--sur2);color:var(--t2)}
 .upload-ai-status.ready{border-color:var(--green-brd);background:var(--green-bg);color:var(--green)}
