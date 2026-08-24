@@ -64,13 +64,14 @@ export function LoginPage({ onLogin }) {
             <img src="/logo_no_bg.png" alt="logo"
               style={{ width: 52, height: 52, objectFit: "contain" }} />
           </div>
-          <div>
-            <div className="login-app-name">ประกันคุ้มภัย</div>
-            <div className="login-app-sub">ระบบจัดการกรมธรรม์ประกันภัย</div>
-          </div>
+          <div className="login-app-name">ประกันคุ้มภัย</div>
+          <div className="login-app-sub">ระบบจัดการกรมธรรม์ประกันภัย</div>
         </div>
 
-        <div className="login-divider" />
+        <div className="login-intro">
+          <h1>เข้าสู่ระบบ</h1>
+          <p>กรอกชื่อผู้ใช้และรหัสผ่านเพื่อจัดการข้อมูลกรมธรรม์</p>
+        </div>
 
         {/* ── Error banner ── */}
         {err && (
@@ -111,19 +112,6 @@ export function LoginPage({ onLogin }) {
             </div>
           </div>
 
-          <label className="login-remember">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={e => setRemember(e.target.checked)}
-              disabled={loading}
-            />
-            <span>
-              <strong>จำการเข้าสู่ระบบบนเครื่องนี้</strong>
-              <small>{remember ? "ไม่ต้องเข้าสู่ระบบอีกเป็นเวลา 30 วัน" : "ออกจากระบบเมื่อปิดเบราว์เซอร์"}</small>
-            </span>
-          </label>
-
           {/* Password */}
           <div className="login-field">
             <label className="login-label">รหัสผ่าน</label>
@@ -151,6 +139,19 @@ export function LoginPage({ onLogin }) {
               </button>
             </div>
           </div>
+
+          <label className="login-remember">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={e => setRemember(e.target.checked)}
+              disabled={loading}
+            />
+            <span>
+              <strong>จำการเข้าสู่ระบบบนเครื่องนี้</strong>
+              <small>{remember ? "ไม่ต้องเข้าสู่ระบบอีก 30 วัน" : "จะออกจากระบบเมื่อปิดเบราว์เซอร์"}</small>
+            </span>
+          </label>
 
           {/* Submit */}
           <button

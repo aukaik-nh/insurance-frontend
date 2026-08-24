@@ -2909,22 +2909,19 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .fname-row button:hover{text-decoration:underline}
 
 /* ═══════════════════════════════════════════════════════════
-   LOGIN PAGE — aurora gradient backdrop
+   LOGIN PAGE — clear, calm, staff-first entry point
    ═══════════════════════════════════════════════════════════ */
 .login-wrap{
   min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
   padding:20px;position:relative;overflow:hidden;
-  background:var(--bg);
+  background:#F5F9F6;
   background-image:
-    radial-gradient(at 20% 25%, rgba(99,102,241,.22) 0, transparent 50%),
-    radial-gradient(at 85% 75%, rgba(34,211,238,.18) 0, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(168,85,247,.15) 0, transparent 55%);
+    radial-gradient(at 12% 18%, rgba(15,107,69,.10) 0, transparent 34%),
+    radial-gradient(at 88% 82%, rgba(101,168,131,.12) 0, transparent 38%);
 }
 body.dark .login-wrap{
-  background-image:
-    radial-gradient(at 20% 25%, rgba(99,102,241,.35) 0, transparent 50%),
-    radial-gradient(at 85% 75%, rgba(34,211,238,.22) 0, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(168,85,247,.22) 0, transparent 55%);
+  background:#091711;
+  background-image:radial-gradient(at 16% 18%, rgba(115,195,151,.13) 0, transparent 38%),radial-gradient(at 88% 82%, rgba(115,195,151,.10) 0, transparent 40%);
 }
 .login-bg-blob{
   position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.5;
@@ -2933,52 +2930,50 @@ body.dark .login-wrap{
 @keyframes floaty{from{transform:translate(0,0) scale(1)}to{transform:translate(20px,-20px) scale(1.05)}}
 .login-bg-blob-1{
   width:520px;height:520px;
-  background:radial-gradient(circle,rgba(99,102,241,.45) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(15,107,69,.16) 0%,transparent 70%);
   top:-160px;right:-120px;animation-delay:0s;
 }
 .login-bg-blob-2{
   width:420px;height:420px;
-  background:radial-gradient(circle,rgba(34,211,238,.38) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(101,168,131,.16) 0%,transparent 70%);
   bottom:-100px;left:-100px;animation-delay:2s;
 }
 .login-card{
   width:100%;max-width:440px;
-  background:rgba(255,255,255,.85);
-  -webkit-backdrop-filter:saturate(180%) blur(24px);
-  backdrop-filter:saturate(180%) blur(24px);
-  border:1px solid rgba(255,255,255,.6);
-  border-radius:24px;padding:38px 36px 30px;
-  box-shadow:0 30px 70px rgba(11,16,32,.18),0 8px 20px rgba(11,16,32,.08),inset 0 1px 0 rgba(255,255,255,.6);
+  background:var(--sur);border:1px solid var(--brd);
+  border-radius:18px;padding:36px 34px 28px;
+  box-shadow:0 18px 44px rgba(7,82,55,.13),0 3px 10px rgba(7,82,55,.06);
   position:relative;z-index:1;
   animation:login-in .55s var(--ez-out);
 }
 body.dark .login-card{
-  background:rgba(23,28,50,.72);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 30px 70px rgba(0,0,0,.55),0 8px 20px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);
+  background:var(--sur);border-color:var(--brd);
+  box-shadow:0 18px 44px rgba(0,0,0,.38),0 3px 10px rgba(0,0,0,.20);
 }
 @keyframes login-in{
   from{opacity:0;transform:translateY(20px) scale(.96)}
   to{opacity:1;transform:none}
 }
-.login-brand{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.login-brand{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:24px;text-align:center}
 .login-logo-wrap{
-  width:68px;height:68px;border-radius:20px;
+  width:76px;height:76px;border-radius:18px;
   background:linear-gradient(135deg,var(--g1),var(--g2));
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  box-shadow:0 10px 24px rgba(99,102,241,.40);
+  box-shadow:0 8px 20px rgba(7,82,55,.22);
   position:relative;overflow:hidden;
 }
 .login-logo-wrap::after{
-  content:"";position:absolute;inset:2px;border-radius:18px;
-  background:rgba(255,255,255,.96);
+  content:"";position:absolute;inset:2px;border-radius:16px;
+  background:var(--sur);
   display:flex;
 }
 .login-logo-wrap img{position:relative;z-index:1}
-body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
+body.dark .login-logo-wrap::after{background:var(--sur)}
 .login-app-name{font-size:23px;font-weight:700;color:var(--t1);letter-spacing:-.4px;line-height:1.2}
-.login-app-sub{font-size:14px;color:var(--t3);margin-top:5px;font-weight:400;line-height:1.4}
-.login-divider{height:1px;background:linear-gradient(90deg,transparent,var(--brd),transparent);margin-bottom:26px}
+.login-app-sub{font-size:14px;color:var(--t3);font-weight:400;line-height:1.4}
+.login-intro{padding:20px 0 22px;border-top:1px solid var(--brd);text-align:center}
+.login-intro h1{font-size:24px;font-weight:700;line-height:1.25;color:var(--blue-h)}
+.login-intro p{margin-top:7px;font-size:14px;line-height:1.5;color:var(--t2)}
 .login-field{display:flex;flex-direction:column;gap:8px}
 .login-label{font-size:14.5px;font-weight:700;color:var(--t2)}
 .login-input-wrap{
@@ -2989,7 +2984,7 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
 }
 .login-input-wrap:focus-within{
   border-color:var(--blue);background:var(--sur);
-  box-shadow:0 0 0 3px rgba(30,111,229,.10);
+  box-shadow:0 0 0 3px var(--blue-bg);
 }
 .login-input-ico{
   padding:0 0 0 15px;color:var(--t3);flex-shrink:0;
@@ -3011,8 +3006,8 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
 .login-eye:hover{color:var(--blue)}
 .login-submit{
   width:100%;justify-content:center;
-  padding:15px 22px;font-size:17px;border-radius:12px;
-  margin-top:4px;letter-spacing:.2px;
+  min-height:54px;padding:15px 22px;font-size:17px;border-radius:12px;
+  margin-top:2px;letter-spacing:.2px;
 }
 .login-remember{display:flex;align-items:flex-start;gap:10px;cursor:pointer;color:var(--t2);font-size:14px;line-height:1.35;margin-top:-2px}
 .login-remember input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--blue);flex:0 0 auto;cursor:pointer}
@@ -3032,7 +3027,9 @@ body.dark .login-logo-wrap::after{background:rgba(23,28,50,.96)}
   .login-card{padding:26px 20px 22px;border-radius:16px}
   .login-app-name{font-size:19px}
   .login-app-sub{font-size:13px}
-  .login-logo-wrap{width:52px;height:52px;border-radius:14px}
+  .login-logo-wrap{width:62px;height:62px;border-radius:15px}
+  .login-intro{padding:17px 0 20px}
+  .login-intro h1{font-size:22px}
   .login-submit{padding:14px 20px;font-size:16px}
   .login-bg-blob-1,.login-bg-blob-2{display:none}
 }
