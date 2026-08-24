@@ -2802,7 +2802,14 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .batch-workflow-line{width:44px;height:1px;background:var(--brd);flex:0 0 auto}
 .batch-dropzone{min-height:250px;padding:28px 24px;border:2px dashed var(--brd2);border-radius:16px;background:var(--sur);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;outline:none}
 .batch-dropzone:hover,.batch-dropzone:focus-visible,.batch-dropzone.is-dragging{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 10%,transparent)}
-.batch-dropzone.has-files{min-height:210px}
+.batch-dropzone.has-files{min-height:94px;padding:14px 18px;flex-direction:row;justify-content:flex-start;gap:12px;text-align:left}
+.batch-dropzone.has-files .batch-drop-icon{width:44px;height:44px;border-radius:11px;margin:0;flex:0 0 auto}
+.batch-dropzone.has-files .batch-drop-icon svg{width:22px!important;height:22px!important}
+.batch-dropzone.has-files .batch-drop-kicker{display:none}
+.batch-dropzone.has-files .batch-drop-title{margin:0;font-size:16px}
+.batch-dropzone.has-files .batch-drop-desc{margin:2px 0 0;flex:1;max-width:none;font-size:13px}
+.batch-dropzone.has-files .batch-pick-btn{min-height:38px;margin:0 0 0 auto;padding:0 13px!important;flex:0 0 auto}
+.batch-dropzone.has-files .batch-drop-notes{display:none}
 .batch-drop-icon{display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:var(--blue-bg);color:var(--blue);margin-bottom:12px}
 .batch-drop-kicker{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.45px}
 .batch-drop-title{margin-top:4px;font-size:21px;font-weight:700;color:var(--t1);line-height:1.35}
@@ -2811,6 +2818,10 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .batch-drop-notes{display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;margin-top:16px;color:var(--t3);font-size:12.5px}
 .batch-drop-notes span{display:inline-flex;align-items:center;gap:5px}
 .batch-drop-notes svg{color:var(--blue)}
+.batch-file-footer{padding:14px 16px;border-top:1px solid var(--brd);background:var(--sur2)}
+.batch-file-ready{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-right:82px}
+.batch-file-ready>span{display:inline-flex;align-items:center;gap:7px;color:var(--t3);font-size:13px}
+.batch-file-ready>span svg{color:var(--green)}
 
 /* Batch review: one compact row per policy pair, with an editor revealed only
    for the item being checked. This prevents a large import from becoming a wall
@@ -2853,6 +2864,7 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .batch-workflow-step small{display:none}
   .batch-workflow-line{width:18px;margin-top:12px}
   .batch-dropzone{min-height:230px;padding:24px 16px}
+  .batch-file-ready{padding-right:66px}
   .batch-review-summary{align-items:flex-start;gap:10px;padding:13px}
   .batch-match-status{display:none}
   .batch-open-btn{padding:7px 8px;font-size:12px}
@@ -2865,6 +2877,13 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .batch-workflow-step{padding:5px 0}
   .batch-drop-title{font-size:19px}
   .batch-drop-notes{display:grid;grid-template-columns:1fr;justify-items:start;gap:6px;margin-top:14px}
+  .batch-dropzone.has-files{min-height:0;padding:13px;gap:9px;flex-wrap:wrap}
+  .batch-dropzone.has-files .batch-drop-desc{flex-basis:calc(100% - 54px)}
+  .batch-dropzone.has-files .batch-pick-btn{margin-left:54px}
+  .batch-file-footer{padding:12px}
+  .batch-file-ready{align-items:stretch;flex-direction:column;padding-right:0}
+  .batch-file-ready>span{font-size:12.5px}
+  .batch-file-ready .btn{width:100%;justify-content:center}
   .batch-review-summary{flex-wrap:wrap}
   .batch-review-main{order:1;flex-basis:calc(100% - 30px)}
   .batch-open-btn{order:2;margin-left:30px}

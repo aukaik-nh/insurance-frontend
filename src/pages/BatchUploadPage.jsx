@@ -243,8 +243,8 @@ export function BatchUploadPage() {
                 <Ico n="upload" s={34} />
               </div>
               <div className="batch-drop-kicker">ขั้นตอนที่ 1</div>
-              <div className="batch-drop-title">เลือกไฟล์ PDF ที่ต้องการนำเข้า</div>
-              <div className="batch-drop-desc">ลากไฟล์มาวาง หรือเลือกไฟล์จากเครื่องได้หลายไฟล์พร้อมกัน</div>
+              <div className="batch-drop-title">{files.length ? "เพิ่มไฟล์ PDF อีก" : "เลือกไฟล์ PDF ที่ต้องการนำเข้า"}</div>
+              <div className="batch-drop-desc">{files.length ? `เลือกไว้ ${files.length} ไฟล์แล้ว · สามารถเพิ่มไฟล์ได้อีก` : "ลากไฟล์มาวาง หรือเลือกไฟล์จากเครื่องได้หลายไฟล์พร้อมกัน"}</div>
               <button type="button" className="btn btn-b batch-pick-btn" onClick={e => { e.stopPropagation(); ref.current?.click() }}>
                 <Ico n="upload" s={18} /> เลือกไฟล์ PDF
               </button>
@@ -277,7 +277,7 @@ export function BatchUploadPage() {
                     </div>
                   ))}
                 </div>
-                <div style={{ padding: 16 }}>
+                <div className="batch-file-footer">
                   {extracting ? (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14.5, fontWeight: 600, color: "var(--t1)" }}>
@@ -299,7 +299,8 @@ export function BatchUploadPage() {
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <div className="batch-file-ready">
+                      <span><Ico n="shield" s={16} /> ตรวจทานผลลัพธ์ก่อนบันทึกทุกครั้ง</span>
                       <button className="btn btn-b" onClick={doExtract} disabled={extracting}>
                         <Ico n="upload" s={18} /><span>อ่านด้วย AI ({files.length} ไฟล์)</span>
                       </button>
