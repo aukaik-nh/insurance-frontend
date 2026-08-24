@@ -2752,6 +2752,9 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .upload-drop-zone .drop-body{min-height:250px;padding:20px}
 .upload-drop-zone .drop-body-inner{gap:10px;padding:24px 32px}
 .upload-pick-btn{margin-top:6px;pointer-events:all;min-height:44px;padding:0 18px !important;border-radius:11px}
+.upload-batch-btn{min-height:42px;padding:0 15px!important}
+.upload-batch-link{pointer-events:all;border:0;background:transparent;color:var(--blue);font:650 14px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 8px;max-width:520px;line-height:1.45}
+.upload-batch-link:hover{color:var(--blue-h)}
 .upload-manual-link{pointer-events:all;border:0;background:transparent;color:var(--blue);font:600 14px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:3px 8px}
 .upload-manual-link:hover{color:var(--blue-h)}
 .upload-ai-status{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid var(--brd);border-radius:13px;background:var(--sur2);color:var(--t2)}

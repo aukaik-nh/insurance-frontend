@@ -259,6 +259,10 @@ export function UploadPage() {
             </div>
           </div>
           <div className="page-hd-right">
+            <button className="btn btn-w upload-batch-btn" type="button" onClick={() => navigate("/batch")} disabled={loading || saving}>
+              <Ico n="inbox" s={18} />
+              <span>อัปโหลดหลายไฟล์</span>
+            </button>
             <button className="btn btn-b" onClick={doSave} disabled={!hasAnyInput || saving}>
               <Ico n="save" s={18} />
               {saving ? "กำลังบันทึก..." : "บันทึก"}
@@ -355,6 +359,9 @@ export function UploadPage() {
                       <span className="drop-h-hint" style={{ fontSize: 16 }}>AI จะอ่านจากภาพเอกสาร · รองรับ PDF เท่านั้น</span>
                       <button className="btn btn-b upload-pick-btn" type="button" onClick={() => ref.current.click()}>
                         <Ico n="upload" s={18} /> เลือกไฟล์ PDF
+                      </button>
+                      <button className="upload-batch-link" type="button" onClick={() => navigate("/batch")}>
+                        มีหลายไฟล์? ไปที่อัปโหลดหลายไฟล์ เพื่อให้ AI อ่านและจับคู่เอกสารเป็นชุด
                       </button>
                       <button className="upload-manual-link" type="button" onClick={() => setManualMode(true)}>
                         ไม่มีไฟล์? กรอกข้อมูลด้วยตัวเอง
