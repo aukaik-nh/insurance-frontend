@@ -172,8 +172,8 @@ export function BatchUploadPage() {
         </button>
         <div className="page-hd-div" />
         <div className="page-hd-info">
-          <div className="page-title">อัปโหลดหลายไฟล์</div>
-          <div className="page-sub">โยน PDF ทีเดียวหลายไฟล์ · AI อ่านภาพ + จับคู่ กธ↔พรบ ให้อัตโนมัติ</div>
+          <div className="page-title">นำเข้าเอกสารเป็นชุด</div>
+          <div className="page-sub">เลือก PDF หลายไฟล์ · ระบบอ่านข้อมูลและช่วยจับคู่ กธ. กับ พ.ร.บ.</div>
         </div>
         <div className="page-hd-right">
           {data && !done && (
@@ -219,27 +219,39 @@ export function BatchUploadPage() {
         ) : !data ? (
           /* ── STEP 1: drop zone เต็มหน้า + รายการไฟล์ที่เลือก ── */
           <>
+            <section className="batch-workflow" aria-label="ขั้นตอนการนำเข้าเอกสาร">
+              <div className="batch-workflow-step active">
+                <span>1</span><div><strong>เลือกไฟล์ PDF</strong><small>เลือกได้หลายไฟล์ในครั้งเดียว</small></div>
+              </div>
+              <div className="batch-workflow-line" aria-hidden="true" />
+              <div className="batch-workflow-step">
+                <span>2</span><div><strong>ระบบอ่านและจับคู่</strong><small>AI แยก กธ. และ พ.ร.บ.</small></div>
+              </div>
+              <div className="batch-workflow-line" aria-hidden="true" />
+              <div className="batch-workflow-step">
+                <span>3</span><div><strong>ตรวจทานก่อนบันทึก</strong><small>ยืนยันเฉพาะข้อมูลที่ถูกต้อง</small></div>
+              </div>
+            </section>
             <div
+              className={`batch-dropzone${drag ? " is-dragging" : ""}${files.length ? " has-files" : ""}`}
               onClick={() => ref.current?.click()}
               onDragOver={e => { e.preventDefault(); setDrag(true) }}
               onDragLeave={e => { e.preventDefault(); setDrag(false) }}
               onDrop={e => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files) }}
-              style={{
-                border: `2.5px dashed ${drag ? "var(--blue)" : "var(--brd2)"}`,
-                background: drag ? "var(--blue-bg)" : "var(--sur2)",
-                borderRadius: 20, minHeight: files.length ? 200 : 340,
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", transition: "all .15s", textAlign: "center", padding: 24,
-              }}
             >
-              <div className="drop-h-ic" style={{ width: 84, height: 84, borderRadius: 22, marginBottom: 14 }}>
-                <Ico n="upload" s={40} />
+              <div className="batch-drop-icon">
+                <Ico n="upload" s={34} />
               </div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: "var(--t1)" }}>
-                ลากไฟล์ PDF หลายไฟล์มาวางที่นี่
-              </div>
-              <div style={{ fontSize: 16, color: "var(--t3)", marginTop: 6 }}>
-                หรือคลิกเพื่อเลือก · โยนทั้ง กธ และ พรบ พร้อมกันได้เลย ระบบจะเข้าคิวอ่านทีละไฟล์
+              <div className="batch-drop-kicker">ขั้นตอนที่ 1</div>
+              <div className="batch-drop-title">เลือกไฟล์ PDF ที่ต้องการนำเข้า</div>
+              <div className="batch-drop-desc">ลากไฟล์มาวาง หรือเลือกไฟล์จากเครื่องได้หลายไฟล์พร้อมกัน</div>
+              <button type="button" className="btn btn-b batch-pick-btn" onClick={e => { e.stopPropagation(); ref.current?.click() }}>
+                <Ico n="upload" s={18} /> เลือกไฟล์ PDF
+              </button>
+              <div className="batch-drop-notes">
+                <span><Ico n="doc" s={15} /> รองรับ PDF เท่านั้น</span>
+                <span><Ico n="inbox" s={15} /> เลือกหลายไฟล์ได้</span>
+                <span><Ico n="shield" s={15} /> ยังไม่บันทึกจนกดยืนยัน</span>
               </div>
             </div>
             <input ref={ref} type="file" accept=".pdf" multiple style={{ display: "none" }}

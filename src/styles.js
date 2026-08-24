@@ -2789,6 +2789,29 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .upload-manual-link{pointer-events:all;border:0;background:transparent;color:var(--blue);font:600 14px inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:3px 8px}
 .upload-manual-link:hover{color:var(--blue-h)}
 
+/* Batch import starts with a short, explicit workflow instead of a large empty drop area. */
+.batch-workflow{display:flex;align-items:center;gap:10px;margin:0 auto 18px;max-width:980px;padding:13px 16px;border:1px solid var(--brd);border-radius:13px;background:var(--sur)}
+.batch-workflow-step{display:flex;align-items:center;gap:9px;min-width:0;flex:1;color:var(--t3)}
+.batch-workflow-step>span{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--brd2);border-radius:50%;font-size:13px;font-weight:700;flex:0 0 auto}
+.batch-workflow-step>div{display:flex;flex-direction:column;min-width:0}
+.batch-workflow-step strong{font-size:14px;line-height:1.25;color:var(--t2)}
+.batch-workflow-step small{margin-top:2px;font-size:12px;line-height:1.25;color:var(--t3)}
+.batch-workflow-step.active{color:var(--blue)}
+.batch-workflow-step.active>span{border-color:var(--blue);background:var(--blue);color:#fff}
+.batch-workflow-step.active strong{color:var(--blue-h)}
+.batch-workflow-line{width:44px;height:1px;background:var(--brd);flex:0 0 auto}
+.batch-dropzone{min-height:250px;padding:28px 24px;border:2px dashed var(--brd2);border-radius:16px;background:var(--sur);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;outline:none}
+.batch-dropzone:hover,.batch-dropzone:focus-visible,.batch-dropzone.is-dragging{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 4px color-mix(in srgb,var(--blue) 10%,transparent)}
+.batch-dropzone.has-files{min-height:210px}
+.batch-drop-icon{display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:var(--blue-bg);color:var(--blue);margin-bottom:12px}
+.batch-drop-kicker{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.45px}
+.batch-drop-title{margin-top:4px;font-size:21px;font-weight:700;color:var(--t1);line-height:1.35}
+.batch-drop-desc{max-width:620px;margin-top:5px;font-size:14.5px;color:var(--t3);line-height:1.5}
+.batch-pick-btn{min-height:44px;margin-top:16px;padding:0 18px!important}
+.batch-drop-notes{display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;margin-top:16px;color:var(--t3);font-size:12.5px}
+.batch-drop-notes span{display:inline-flex;align-items:center;gap:5px}
+.batch-drop-notes svg{color:var(--blue)}
+
 /* Batch review: one compact row per policy pair, with an editor revealed only
    for the item being checked. This prevents a large import from becoming a wall
    of long forms while retaining every field available on the single-file page. */
@@ -2823,6 +2846,13 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .batch-editor-grid input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
 .batch-review-warning{margin-top:12px;border-left:3px solid var(--amber);background:var(--amber-bg);padding:10px 12px;color:#82520F;font-size:13px;line-height:1.45}
 @media(max-width:800px){
+  .batch-workflow{align-items:flex-start;gap:7px;padding:12px}
+  .batch-workflow-step{gap:7px}
+  .batch-workflow-step>span{width:25px;height:25px;font-size:12px}
+  .batch-workflow-step strong{font-size:12.5px}
+  .batch-workflow-step small{display:none}
+  .batch-workflow-line{width:18px;margin-top:12px}
+  .batch-dropzone{min-height:230px;padding:24px 16px}
   .batch-review-summary{align-items:flex-start;gap:10px;padding:13px}
   .batch-match-status{display:none}
   .batch-open-btn{padding:7px 8px;font-size:12px}
@@ -2830,6 +2860,11 @@ body.dark .toast{background:rgba(23,28,50,.92)}
   .batch-editor-grid label.wide{grid-column:span 2}
 }
 @media(max-width:520px){
+  .batch-workflow{display:grid;grid-template-columns:1fr;gap:8px}
+  .batch-workflow-line{display:none}
+  .batch-workflow-step{padding:5px 0}
+  .batch-drop-title{font-size:19px}
+  .batch-drop-notes{display:grid;grid-template-columns:1fr;justify-items:start;gap:6px;margin-top:14px}
   .batch-review-summary{flex-wrap:wrap}
   .batch-review-main{order:1;flex-basis:calc(100% - 30px)}
   .batch-open-btn{order:2;margin-left:30px}
