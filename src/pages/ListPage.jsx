@@ -617,20 +617,20 @@ export function ListPage({ tab }) {
 
               <div className="sec-hd dashboard-actions-hd">
                 <Ico n="upload" s={14} />
-                <span>เริ่มงาน</span>
-                <small>เลือกสิ่งที่ต้องการทำ</small>
+                <span>เริ่มต้นที่นี่</span>
+                <small>เลือกตามงานที่ต้องการทำ</small>
               </div>
               <div className="dashboard-action-row">
                 {[
-                  { path: "/upload", label: "เพิ่ม 1 กรมธรรม์", desc: "อัปโหลด PDF 1 ฉบับ ให้ AI ช่วยกรอก", ico: "upload", primary: true },
-                  { path: "/batch", label: "นำเข้าเอกสารเป็นชุด", desc: "เลือกหลายไฟล์ แล้วตรวจทานก่อนบันทึก", ico: "inbox" },
-                  { path: "/invoice", label: "ออกใบแจ้งหนี้", desc: "สร้าง QR PromptPay และพิมพ์", ico: "banknote" },
+                  { path: "/upload", label: "มี PDF 1 ไฟล์", desc: "เพิ่มกรมธรรม์ 1 ฉบับ", ico: "upload", primary: true },
+                  { path: "/batch", label: "มี PDF หลายไฟล์", desc: "นำเข้าเป็นชุด และช่วยจับคู่เอกสาร", ico: "inbox" },
+                  { path: "/invoice", label: "ต้องการใบแจ้งหนี้", desc: "สร้าง QR PromptPay และพิมพ์", ico: "banknote" },
                 ].map(action => (
                   <button key={action.path} className={`dashboard-action${action.primary ? " dashboard-action-primary" : ""}`}
                     onClick={() => navigate(action.path)}>
                     <span className="dashboard-action-icon"><Ico n={action.ico} s={21} /></span>
                     <span><strong>{action.label}</strong><small>{action.desc}</small></span>
-                    <Ico n="chevR" s={18} />
+                    <span className="dashboard-action-cta">เริ่ม <Ico n="chevR" s={16} /></span>
                   </button>
                 ))}
               </div>
