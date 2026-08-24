@@ -586,32 +586,51 @@ export function ListPage({ tab }) {
                 )
               })()}
 
-              {/* ── งานที่ใช้บ่อย: ปุ่มมีคำอธิบายและผลลัพธ์ชัดเจน ── */}
+              {/* ── แยก "ข้อมูลสรุป" ออกจาก "งานที่ต้องทำ" เพื่อให้สแกนง่าย ── */}
               <div className="sec-hd">
                 <Ico n="grid" s={14} />
-                <span>เริ่มงานได้ทันที</span>
-                <small>เลือกสิ่งที่ต้องการทำ</small>
+                <span>สรุปข้อมูลสำคัญ</span>
+                <small>กดเพื่อดูรายละเอียด</small>
               </div>
-              <div className="quick-action-grid">
+              <div className="overview-stat-grid">
                 {[
-                  { path: "/policies", kind: "policies", lbl: "รายการกรมธรรม์", value: total.toLocaleString(), detail: "รายการในระบบ", action: "ดูรายการทั้งหมด", ico: "list" },
-                  { path: "/upload",   kind: "upload",   lbl: "เพิ่มกรมธรรม์",   value: "PDF",                    detail: "AI ช่วยอ่านข้อมูล", action: "อัปโหลดกรมธรรม์", ico: "upload" },
-                  { path: "/expiring", kind: "expiring", lbl: "ใกล้หมดอายุ",     value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", action: "เปิดรายการติดตาม", ico: "bell", urgent: expiring.length > 0 },
-                  { path: "/invoice",  kind: "invoice",  lbl: "ใบแจ้งหนี้",       value: "QR",                     detail: "สร้างและพิมพ์", action: "สร้างใบแจ้งหนี้", ico: "banknote" },
+                  { path: "/policies", kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", ico: "list" },
+                  { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", ico: "bell", urgent: expiring.length > 0 },
                 ].map(m => (
-                  <button key={m.path} className={`quick-action quick-action-${m.kind}`}
-                    onClick={() => navigate(m.path)}
-                    aria-label={m.action}>
-                    <div className="quick-action-top">
-                      <span className="quick-action-icon"><Ico n={m.ico} s={24} /></span>
-                      <span className="quick-action-label">{m.lbl}</span>
+                  <button key={m.path} className={`overview-stat overview-stat-${m.kind}`}
+                    onClick={() => navigate(m.path)} aria-label={`ดู${m.lbl}`}>
+                    <span className="overview-stat-icon"><Ico n={m.ico} s={22} /></span>
+                    <span className="overview-stat-copy">
+                      <span className="overview-stat-label">{m.lbl}</span>
+                      <strong>{m.value}</strong>
+                      <span className="overview-stat-detail">{m.detail}</span>
+                    </span>
+                    <span className="overview-stat-end">
                       {m.urgent && (
                         <span className="quick-action-alert">ต้องติดตาม</span>
                       )}
-                    </div>
-                    <div className="quick-action-value">{m.value}</div>
-                    <div className="quick-action-detail">{m.detail}</div>
-                    <div className="quick-action-link">{m.action} <Ico n="chevR" s={17} /></div>
+                      <Ico n="chevR" s={18} />
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="sec-hd dashboard-actions-hd">
+                <Ico n="upload" s={14} />
+                <span>งานด่วน</span>
+                <small>เลือกงานที่ต้องการทำ</small>
+              </div>
+              <div className="dashboard-action-row">
+                {[
+                  { path: "/upload", label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF ให้ AI ช่วยกรอก", ico: "upload", primary: true },
+                  { path: "/batch", label: "อัปโหลดหลายไฟล์", desc: "จัดการเอกสารเป็นชุด", ico: "inbox" },
+                  { path: "/invoice", label: "สร้างใบแจ้งหนี้", desc: "สร้าง QR PromptPay และพิมพ์", ico: "banknote" },
+                ].map(action => (
+                  <button key={action.path} className={`dashboard-action${action.primary ? " dashboard-action-primary" : ""}`}
+                    onClick={() => navigate(action.path)}>
+                    <span className="dashboard-action-icon"><Ico n={action.ico} s={21} /></span>
+                    <span><strong>{action.label}</strong><small>{action.desc}</small></span>
+                    <Ico n="chevR" s={18} />
                   </button>
                 ))}
               </div>
