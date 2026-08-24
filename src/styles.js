@@ -21,38 +21,39 @@ input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0
 input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 :root{
   --w:264px;
-  /* โทนแบบ GitHub: ผิวเทากลาง อ่านง่าย สีใช้ตามความหมายของงาน */
-  --bg:#F6F8FA;
-  --bg2:#F3F4F6;
+  /* โทนงานประกัน: เทาอมฟ้าอ่อน + กรมท่า + ทองอ่อน
+     ใช้สีเพื่อสื่อความหมายเท่านั้น: เขียว=ปกติ, ส้ม=ติดตาม, แดง=ต้องแก้ไข */
+  --bg:#F4F7F8;
+  --bg2:#E9EFF1;
   --sur:#FFFFFF;
-  --sur2:#F6F8FA;
-  --brd:#D0D7DE;
-  --brd2:#AFB8C1;
-  --blue:#0969DA;
-  --blue-h:#0550AE;
-  --blue-bg:#DDF4FF;
-  --blue-mid:#54AEFF;
-  --accent:#0969DA;
-  --g1:#1F883D;
-  --g2:#2DA44E;
-  --g3:#56D364;
-  --green:#1A7F37;
-  --green-bg:#DAFBE1;
-  --green-brd:#ACEABB;
-  --amber:#9A6700;
-  --amber-bg:#FFF8C5;
-  --amber-brd:#D4A72C;
-  --red:#CF222E;
-  --red-bg:#FFEBE9;
-  --red-brd:#FF8182;
-  --t1:#1F2328;
-  --t2:#57606A;
-  --t3:#6E7781;
-  --sh0:0 1px 0 rgba(31,35,40,.04);
-  --sh1:0 1px 3px rgba(31,35,40,.10),0 1px 2px rgba(31,35,40,.06);
-  --sh2:0 8px 24px rgba(31,35,40,.12),0 2px 6px rgba(31,35,40,.06);
-  --sh3:0 24px 60px rgba(31,35,40,.22),0 6px 14px rgba(31,35,40,.08);
-  --shB:0 3px 7px rgba(31,35,40,.16),0 1px 2px rgba(31,35,40,.10);
+  --sur2:#F8FAFB;
+  --brd:#D7E1E5;
+  --brd2:#B9CAD1;
+  --blue:#2B6675;
+  --blue-h:#1F4E5F;
+  --blue-bg:#E8F1F4;
+  --blue-mid:#A9C8D2;
+  --accent:#5D8E9B;
+  --g1:#1F4E5F;
+  --g2:#336F7E;
+  --g3:#79A7B2;
+  --green:#3D7965;
+  --green-bg:#EAF4EF;
+  --green-brd:#AFD1C0;
+  --amber:#9C701F;
+  --amber-bg:#FCF5E8;
+  --amber-brd:#E5CD99;
+  --red:#AD4541;
+  --red-bg:#FAEFED;
+  --red-brd:#E6C0BC;
+  --t1:#1D3038;
+  --t2:#4C6069;
+  --t3:#71818A;
+  --sh0:0 1px 2px rgba(25,57,68,.045);
+  --sh1:0 2px 7px rgba(25,57,68,.065),0 1px 2px rgba(25,57,68,.035);
+  --sh2:0 10px 24px rgba(25,57,68,.08),0 2px 7px rgba(25,57,68,.045);
+  --sh3:0 24px 60px rgba(25,57,68,.20),0 6px 14px rgba(25,57,68,.07);
+  --shB:0 6px 16px rgba(31,78,95,.17),0 2px 5px rgba(31,78,95,.10);
   --ez:cubic-bezier(.22,.61,.36,1);
   --ez-out:cubic-bezier(.16,1,.3,1);
   --r:12px;
@@ -60,26 +61,26 @@ input[type="number"]{-moz-appearance:textfield;appearance:textfield}
   --rXL:24px;
 }
 body.dark{
-  /* ธีม GitHub Dark: พื้นผิวต่างระดับชัด และลดแสงสะท้อน */
-  --bg:#0D1117;--bg2:#010409;--sur:#161B22;--sur2:#0D1117;
-  --brd:#30363D;--brd2:#484F58;
-  --blue:#58A6FF;--blue-h:#1F6FEB;
-  --green:#3FB950;--amber:#D29922;--red:#FF7B72;
-  --t1:#F0F6FC;--t2:#C9D1D9;--t3:#8B949E;
+  /* ธีมมืด: กรมท่าอมเทา ลดแสงสะท้อน แต่คงความต่างสีให้อ่านได้ชัด */
+  --bg:#0B1620;--bg2:#101E29;--sur:#12232E;--sur2:#172B37;
+  --brd:#29414E;--brd2:#3D5A67;
+  --blue:#78B9C8;--blue-h:#2B6A82;
+  --green:#76B790;--amber:#D8AA55;--red:#E17972;
+  --t1:#EDF3F2;--t2:#B7C7C9;--t3:#84999E;
   --sh0:0 1px 2px rgba(0,0,0,.25);
   --sh1:0 2px 6px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
   --sh2:0 8px 20px rgba(0,0,0,.42),0 2px 6px rgba(0,0,0,.22);
   --sh3:0 24px 60px rgba(0,0,0,.55),0 6px 14px rgba(0,0,0,.3);
-  --shB:0 3px 7px rgba(1,4,9,.34),0 1px 2px rgba(1,4,9,.24);
-  --blue-bg:rgba(56,139,253,.15);--blue-mid:rgba(56,139,253,.46);
-  --green-bg:rgba(46,160,67,.16);--green-brd:rgba(46,160,67,.42);
-  --amber-bg:rgba(187,128,9,.16);--amber-brd:rgba(187,128,9,.44);
-  --red-bg:rgba(248,81,73,.16);--red-brd:rgba(248,81,73,.44);
+  --shB:0 10px 28px rgba(83,155,169,.26),0 2px 8px rgba(83,155,169,.15);
+  --blue-bg:rgba(120,185,200,.15);--blue-mid:rgba(120,185,200,.42);
+  --green-bg:rgba(118,183,144,.15);--green-brd:rgba(118,183,144,.36);
+  --amber-bg:rgba(216,170,85,.14);--amber-brd:rgba(216,170,85,.38);
+  --red-bg:rgba(225,121,114,.14);--red-brd:rgba(225,121,114,.38);
 }
 body{
   font-family:'Sarabun','Noto Sans Thai',sans-serif;
   font-size:17px;color:var(--t1);-webkit-font-smoothing:antialiased;line-height:1.6;
-  background:var(--bg);
+  background:linear-gradient(135deg,#F8FAFB 0%,var(--bg) 48%,#EEF5F6 100%);
   min-height:100vh;
   min-height:100dvh;
 }
@@ -106,7 +107,7 @@ body.text-large td,body.text-large .policy-mobile-name,body.text-large .policy-m
   background:var(--sur);
   position:sticky;top:0;z-index:100;
   display:flex;align-items:center;
-  border-bottom:1px solid var(--brd);box-shadow:0 1px 0 rgba(31,35,40,.04);
+  border-bottom:1px solid var(--brd);box-shadow:0 1px 8px rgba(25,57,68,.035);
   padding:0 24px;height:80px;gap:0;
 }
 body.dark .sb{background:var(--sur);border-bottom-color:var(--brd)}
@@ -191,7 +192,7 @@ body.dark .sb{background:var(--sur);border-bottom-color:var(--brd)}
 .sb-nav-link:hover{background:var(--sur);color:var(--blue-h)}
 .sb-nav-link.on{background:var(--sur);color:var(--blue-h);font-weight:700;box-shadow:0 1px 4px rgba(20,40,50,.13)}
 .sb-nav-link svg{color:currentColor;flex-shrink:0}
-.sb-nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:23px;padding:0 7px;border-radius:99px;background:#BF8700;color:#fff;font-size:12px;font-weight:800;line-height:1}
+.sb-nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:23px;padding:0 7px;border-radius:99px;background:#E58A1A;color:#fff;font-size:12px;font-weight:800;line-height:1}
 .sb-nav-primary{height:46px;gap:8px;padding:0 17px;border-radius:12px;background:var(--blue-h);color:#fff;font-size:15px;font-weight:700;box-shadow:0 4px 12px rgba(45,99,115,.24)}
 .sb-nav-primary:hover{background:var(--blue);transform:translateY(-1px);box-shadow:0 7px 16px rgba(45,99,115,.30)}
 .sb-nav-primary.on{background:#174650}
@@ -2916,14 +2917,14 @@ body.dark .toast{background:rgba(23,28,50,.92)}
 .login-wrap{
   min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
   padding:20px;position:relative;overflow:hidden;
-  background:#F6F8FA;
+  background:#F5F7F8;
   background-image:
-    radial-gradient(at 12% 18%, rgba(9,105,218,.08) 0, transparent 34%),
-    radial-gradient(at 88% 82%, rgba(45,164,78,.08) 0, transparent 38%);
+    radial-gradient(at 12% 18%, rgba(43,102,117,.09) 0, transparent 34%),
+    radial-gradient(at 88% 82%, rgba(156,112,31,.07) 0, transparent 38%);
 }
 body.dark .login-wrap{
-  background:#0D1117;
-  background-image:radial-gradient(at 16% 18%, rgba(56,139,253,.12) 0, transparent 38%),radial-gradient(at 88% 82%, rgba(46,160,67,.09) 0, transparent 40%);
+  background:#0B1620;
+  background-image:radial-gradient(at 16% 18%, rgba(120,185,200,.12) 0, transparent 38%),radial-gradient(at 88% 82%, rgba(216,170,85,.08) 0, transparent 40%);
 }
 .login-bg-blob{
   position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;opacity:.5;
@@ -2932,19 +2933,19 @@ body.dark .login-wrap{
 @keyframes floaty{from{transform:translate(0,0) scale(1)}to{transform:translate(20px,-20px) scale(1.05)}}
 .login-bg-blob-1{
   width:520px;height:520px;
-  background:radial-gradient(circle,rgba(9,105,218,.14) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(43,102,117,.14) 0%,transparent 70%);
   top:-160px;right:-120px;animation-delay:0s;
 }
 .login-bg-blob-2{
   width:420px;height:420px;
-  background:radial-gradient(circle,rgba(45,164,78,.12) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(156,112,31,.10) 0%,transparent 70%);
   bottom:-100px;left:-100px;animation-delay:2s;
 }
 .login-card{
   width:100%;max-width:440px;
   background:var(--sur);border:1px solid var(--brd);
   border-radius:18px;padding:36px 34px 28px;
-  box-shadow:0 16px 36px rgba(31,35,40,.14),0 2px 6px rgba(31,35,40,.08);
+  box-shadow:0 18px 44px rgba(31,78,95,.13),0 3px 10px rgba(31,78,95,.06);
   position:relative;z-index:1;
   animation:login-in .55s var(--ez-out);
 }
@@ -2961,7 +2962,7 @@ body.dark .login-card{
   width:76px;height:76px;border-radius:18px;
   background:linear-gradient(135deg,var(--g1),var(--g2));
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  box-shadow:0 6px 14px rgba(31,35,40,.18);
+  box-shadow:0 8px 20px rgba(31,78,95,.22);
   position:relative;overflow:hidden;
 }
 .login-logo-wrap::after{
@@ -3259,18 +3260,18 @@ body.dark .login-logo-wrap::after{background:var(--sur)}
 
 /* Unified accent treatment: legacy dashboard cards keep their meaning but
    use the same restrained office palette as the rest of the application. */
-.menu-card.menu-bl,.sc.sc-m-bl{--mc:#0969DA;--mc2:#54AEFF;--mc-glow:rgba(9,105,218,.16);--mc-tint:rgba(9,105,218,.045)}
-.menu-card.menu-gr,.sc.sc-m-gr{--mc:#1A7F37;--mc2:#2DA44E;--mc-glow:rgba(26,127,55,.15);--mc-tint:rgba(26,127,55,.045)}
-.menu-card.menu-pu,.sc.sc-m-pu{--mc:#8250DF;--mc2:#A475F9;--mc-glow:rgba(130,80,223,.15);--mc-tint:rgba(130,80,223,.045)}
-.menu-card.menu-am,.sc.sc-m-am{--mc:#9A6700;--mc2:#BF8700;--mc-glow:rgba(154,103,0,.16);--mc-tint:rgba(154,103,0,.05)}
-.qs-teal .qs-icon{background:linear-gradient(135deg,#0550AE,#218BFF)}
-.qs-green .qs-icon{background:linear-gradient(135deg,#1A7F37,#2DA44E)}
-.qs-amber .qs-icon{background:linear-gradient(135deg,#9A6700,#BF8700)}
-.qs-pink .qs-icon{background:linear-gradient(135deg,#8250DF,#A475F9)}
-.stat-teal .stat-val,.call-teal .call-days{color:#0969DA}
-.stat-blue .stat-val,.stat-purple .stat-val{color:#8250DF}
-.stat-amber .stat-val{color:#9A6700}
-body.dark{background:var(--bg)}
+.menu-card.menu-bl,.sc.sc-m-bl{--mc:#2B6675;--mc2:#6F9EAA;--mc-glow:rgba(43,102,117,.16);--mc-tint:rgba(43,102,117,.045)}
+.menu-card.menu-gr,.sc.sc-m-gr{--mc:#3D7965;--mc2:#73A18A;--mc-glow:rgba(61,121,101,.15);--mc-tint:rgba(61,121,101,.045)}
+.menu-card.menu-pu,.sc.sc-m-pu{--mc:#476B83;--mc2:#7895A8;--mc-glow:rgba(71,107,131,.15);--mc-tint:rgba(71,107,131,.045)}
+.menu-card.menu-am,.sc.sc-m-am{--mc:#9C701F;--mc2:#C5A05C;--mc-glow:rgba(156,112,31,.16);--mc-tint:rgba(156,112,31,.05)}
+.qs-teal .qs-icon{background:linear-gradient(135deg,#1F4E5F,#5F94A1)}
+.qs-green .qs-icon{background:linear-gradient(135deg,#3D7965,#73A18A)}
+.qs-amber .qs-icon{background:linear-gradient(135deg,#9C701F,#D3B270)}
+.qs-pink .qs-icon{background:linear-gradient(135deg,#476B83,#7895A8)}
+.stat-teal .stat-val,.call-teal .call-days{color:#2B6675}
+.stat-blue .stat-val,.stat-purple .stat-val{color:#476B83}
+.stat-amber .stat-val{color:#9C701F}
+body.dark{background:linear-gradient(135deg,#0B1620 0%,var(--bg) 65%,#10232C 100%)}
 `
 
 export default CSS
