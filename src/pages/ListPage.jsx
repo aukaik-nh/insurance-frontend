@@ -637,8 +637,8 @@ export function ListPage({ tab }) {
 
               <div className="dashboard-search-heading">
                 <div>
-                  <div className="dashboard-search-title">ค้นหากรมธรรม์</div>
-                  <div className="dashboard-search-sub">ค้นหาจากชื่อลูกค้า ทะเบียนรถ หรือเลขกรมธรรม์</div>
+                  <div className="dashboard-search-title">ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน</div>
+                  <div className="dashboard-search-sub">พิมพ์ทะเบียนรถหรือชื่อผู้เอาประกัน ระบบค้นหาให้ทันที</div>
                 </div>
               </div>
 
@@ -675,7 +675,7 @@ export function ListPage({ tab }) {
             <div className="big-srch" style={{ flex: 1 }}>
               <Ico n="search" s={20} />
               <input
-                placeholder="พิมพ์ค้นหา — ทะเบียนรถ, ชื่อ-นามสกุล, เลขกรมธรรม์, ที่อยู่"
+                placeholder="เช่น 1กก 1234 หรือ สมชาย ใจดี"
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
               />

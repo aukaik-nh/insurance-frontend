@@ -24,12 +24,15 @@ export const baht = n => n
 const MONTH_TH = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
                        "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
 
-// แปลง "2025-06-24" → "24 มิ.ย. 2568"  (พ.ศ.)
+// แปลง "2025-06-24" หรือ ISO timestamp → "24 มิ.ย. 2568"  (พ.ศ.)
 export const fmtDate = iso => {
   if (!iso) return null
-  const parts = String(iso).split("-")
-  if (parts.length < 3) return iso
-  const [y, m, d] = parts.map(Number)
+  // ตัดเฉพาะส่วนวันที่ก่อน เพื่อไม่ให้ timestamp เช่น
+  // 2026-08-24T08:17:46.032912+00:00 แสดงค่า raw ในตาราง
+  const match = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!match) return iso
+  const [, year, month, day] = match
+  const [y, m, d] = [Number(year), Number(month), Number(day)]
   if (!y || !m || !d || m > 12) return iso
   return `${d} ${MONTH_TH[m]} ${y + 543}`
 }
