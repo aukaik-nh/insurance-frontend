@@ -32,7 +32,7 @@ function SortHeader({ label, col, sortKey, sortDir, onSort, style }) {
   )
 }
 
-function PolicyMobileCards({ rows, pageOffset, onRow }) {
+function PolicyMobileCards({ rows, pageOffset, onRow, activeId }) {
   return (
     <div className="policy-mobile-list" aria-label="รายการกรมธรรม์">
       {rows.map((r, idx) => {
@@ -43,7 +43,8 @@ function PolicyMobileCards({ rows, pageOffset, onRow }) {
           <button
             key={r.id}
             type="button"
-            className="policy-mobile-card"
+            className={`policy-mobile-card${String(activeId) === String(r.id) ? " tr-active" : ""}`}
+            data-policy-id={r.id}
             onClick={() => onRow(r)}
             aria-label={`เปิดรายละเอียด ${r.insured_name || r.policy_number || "กรมธรรม์"}`}
           >
@@ -105,7 +106,7 @@ export function PolicyTable({ groupedByCustomer = false, rows, loading, total, p
       <div className="card-hd policy-list-heading">
         <div>
           <div className="card-title">รายการกรมธรรม์</div>
-          <div className="card-sub">{total.toLocaleString()} {groupedByCustomer ? "ผู้เอาประกัน · แสดงฉบับล่าสุดของแต่ละชื่อ" : "กรมธรรม์"} · แตะเพื่อดูรายละเอียด</div>
+          <div className="card-sub">{total.toLocaleString()} {groupedByCustomer ? "ผู้เอาประกัน" : "กรมธรรม์"} · แตะเพื่อดูรายละเอียด</div>
         </div>
         <span className="policy-list-order"><Ico n="clock" s={15} /> {{ created_at: "วันที่เพิ่ม", policy_number: "เลขกรมธรรม์", insured_name: "ชื่อผู้เอาประกัน", coverage_start: "วันเริ่ม", coverage_end: "วันหมดอายุ" }[sortKey] || "วันที่เพิ่ม"} · {sortDir === "asc" ? "น้อยไปมาก" : "มากไปน้อย"}</span>
       </div>
@@ -120,8 +121,8 @@ export function PolicyTable({ groupedByCustomer = false, rows, loading, total, p
               <SortHeader label="เพิ่มล่าสุด"  col="created_at"     sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "13%" }} />
               <SortHeader label="วันเริ่ม"      col="coverage_start" sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "13%" }} />
               <SortHeader label="วันหมดอายุ"   col="coverage_end"   sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: "14%" }} />
-              <th style={{ width: "12%", whiteSpace: "nowrap" }}>สถานะ</th>
-              <th className="policy-open-col" style={{ width: 68, textAlign: "center", color: "var(--t3)" }}>เปิด</th>
+              <th className="policy-status-col" style={{ width: "12%", whiteSpace: "nowrap" }}>สถานะ</th>
+              <th className="policy-open-col" style={{ width: 68, textAlign: "center" }}>เปิด</th>
             </tr>
           </thead>
           <tbody>
@@ -146,13 +147,15 @@ export function PolicyTable({ groupedByCustomer = false, rows, loading, total, p
                 :                   { txt: `เหลือ ${daysLeft} วัน`,    color: "var(--green)" }
               return (
                 <tr key={r.id}
+                  data-policy-id={r.id}
+                  tabIndex={-1}
                   onClick={() => onRow(r)}
                   onMouseEnter={() => onRowHover?.(r)}
-                  className={activeId === r.id ? "tr-active" : ""}>
+                  className={String(activeId) === String(r.id) ? "tr-active" : ""}>
                   <td style={{ textAlign: "center", color: "var(--t2)", fontSize: 15, fontVariantNumeric: "tabular-nums" }}>
                     {pageOffset + idx + 1}
                   </td>
-                  <td className="policy-open-col" style={{ textAlign: "center" }}>
+                  <td style={{ textAlign: "center" }}>
                     {hasPdf ? (
                       <span title="มีไฟล์ PDF" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--blue)" }}>
                         <Ico n="doc" s={20} />
@@ -204,21 +207,18 @@ export function PolicyTable({ groupedByCustomer = false, rows, loading, total, p
                       </div>
                     )}
                   </td>
-                  <td style={{ whiteSpace: "nowrap" }}><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="policy-status-col" style={{ whiteSpace: "nowrap" }}><span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span></td>
+                  <td className="policy-open-col" style={{ textAlign: "center" }}>
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()  // อย่าให้ trigger onRow (จะเปิดหน้ารายละเอียด แทน new tab)
-                        window.open(`/policies/${r.id}`, "_blank", "noopener,noreferrer")
-                      }}
-                      title="เปิดหน้ารายละเอียดในแท็บใหม่"
-                      style={{
-                        display: "inline-flex", alignItems: "center", justifyContent: "center",
-                        width: 32, height: 32, borderRadius: 8,
-                        border: "1px solid var(--brd)",
-                        background: "var(--sur)", color: "var(--blue)",
-                        cursor: "pointer", padding: 0,
+                      className="policy-row-open-btn"
+                      title="เปิดในแท็บใหม่"
+                      aria-label={`เปิด ${r.policy_number || "กรมธรรม์"} ในแท็บใหม่`}
+                      onClick={e => {
+                        e.stopPropagation()
+                        const returnTo = `${window.location.pathname}${window.location.search}`
+                        const query = new URLSearchParams({ returnTo, returnPolicyId: String(r.id) })
+                        window.open(`/policies/${r.id}?${query.toString()}`, "_blank", "noopener,noreferrer")
                       }}
                     >
                       <Ico n="open" s={16} />
@@ -230,24 +230,24 @@ export function PolicyTable({ groupedByCustomer = false, rows, loading, total, p
           </tbody>
         </table>
       </div>
-      <PolicyMobileCards rows={rows} pageOffset={pageOffset} onRow={onRow} />
+      <PolicyMobileCards rows={rows} pageOffset={pageOffset} onRow={onRow} activeId={activeId} />
       <div className="pg">
         <span className="pg-info">หน้า {page} / {pages || 1} · {total.toLocaleString()} รายการ</span>
-        <div className="pg-btns">
-          <button className="pg-btn" onClick={() => setPage(1)} disabled={page === 1}>
-            <Ico n="chevLL" s={17} />
+        <nav className="pg-btns" aria-label="เปลี่ยนหน้ารายการกรมธรรม์">
+          <button className="pg-btn pg-nav-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} aria-label="หน้าก่อนหน้า">
+            <Ico n="chevL" s={17} /><span>ก่อนหน้า</span>
           </button>
-          <button className="pg-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
-            <Ico n="chevL" s={17} />
+          <label className="pg-current">
+            <span>หน้า</span>
+            <select value={page} onChange={e => setPage(Number(e.target.value))} aria-label="เลือกหน้าที่ต้องการ">
+              {Array.from({ length: pages || 1 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <span>จาก {pages || 1}</span>
+          </label>
+          <button className="pg-btn pg-nav-btn" onClick={() => setPage(p => p + 1)} disabled={page >= (pages || 1)} aria-label="หน้าถัดไป">
+            <span>ถัดไป</span><Ico n="chevR" s={17} />
           </button>
-          <div className="pg-btn cur">{page}</div>
-          <button className="pg-btn" onClick={() => setPage(p => p + 1)} disabled={page >= (pages || 1)}>
-            <Ico n="chevR" s={17} />
-          </button>
-          <button className="pg-btn" onClick={() => setPage(pages || 1)} disabled={page >= (pages || 1)}>
-            <Ico n="chevRR" s={17} />
-          </button>
-        </div>
+        </nav>
       </div>
     </div>
   )

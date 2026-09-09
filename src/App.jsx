@@ -25,6 +25,7 @@ function Layout({ onLogout }) {
   const [darkMode,      setDarkMode]      = useState(() => localStorage.getItem("theme") === "dark")
   const [largeText,     setLargeText]     = useState(() => localStorage.getItem("large_text") === "true")
   const [mobileMenu,    setMobileMenu]    = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem("sidebar_collapsed") === "true")
   const [search,        setSearch]        = useState("")
   const [page,          setPage]          = useState(1)
   const [toast,         setToast]         = useState(null)
@@ -42,6 +43,10 @@ function Layout({ onLogout }) {
     document.body.classList.toggle("text-large", largeText)
     localStorage.setItem("large_text", String(largeText))
   }, [largeText])
+
+  useEffect(() => {
+    localStorage.setItem("sidebar_collapsed", String(sidebarCollapsed))
+  }, [sidebarCollapsed])
 
   // Probe backend /health — Render free tier cold start อาจรอ ~50s
   // ระหว่าง probe → จุดเหลือง, ตอบแล้ว → เขียว, ครบ window แล้วยังไม่ตอบ → แดง
@@ -91,13 +96,20 @@ function Layout({ onLogout }) {
   }, [])
 
   const statusMeta = {
-    checking: { color: "#F59E0B", shadow: "rgba(245,158,11,.35)", label: "กำลังปลุกเซิร์ฟเวอร์..." },
-    ready:    { color: "#34D399", shadow: "rgba(52,211,153,.3)",  label: "ระบบพร้อมใช้งาน" },
-    error:    { color: "#EF4444", shadow: "rgba(239,68,68,.3)",   label: "เซิร์ฟเวอร์ไม่ตอบสนอง" },
+    checking: { color: "#CA8A04", shadow: "rgba(202,138,4,.35)", label: "กำลังปลุกเซิร์ฟเวอร์..." },
+    ready:    { color: "#22C55E", shadow: "rgba(34,197,94,.3)",  label: "ระบบพร้อมใช้งาน" },
+    error:    { color: "#991B1B", shadow: "rgba(153,27,27,.28)", label: "เซิร์ฟเวอร์ไม่ตอบสนอง" },
   }[serverStatus]
 
   // reset page when search changes
   const handleSearch = v => { setSearch(v); setPage(1) }
+
+  const submitHeaderSearch = e => {
+    e.preventDefault()
+    if (!search.trim()) return
+    navigate("/policies")
+    setPage(1)
+  }
 
   const notify = (msg, type = "success") => setToast({ msg, type })
 
@@ -106,14 +118,12 @@ function Layout({ onLogout }) {
   // เมนูแบ่งเป็น 2 กลุ่ม
   const NAV_VIEW = [
     { path: "/",         ico: "grid", label: "ภาพรวม",        desc: "Dashboard + สถิติ",       badge: 0 },
-    { path: "/policies", ico: "list", label: "กรมธรรม์ทั้งหมด", desc: "ค้นหาและจัดการกรมธรรม์", badge: 0 },
     { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ภายใน 30 วัน",            badge: expiringCount },
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF เพื่อเพิ่มกรมธรรม์ใหม่" },
     { path: "/batch",     ico: "inbox",    label: "นำเข้าเป็นชุด", desc: "เลือกหลายไฟล์ · AI ช่วยจัดคู่เอกสาร" },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
-    { path: "/quotation", ico: "doc",      label: "ใบเสนอราคา",    desc: "รูปแบบคุ้มภัย" },
   ]
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
   const isActive = navPath => navPath === "/" ? path === "/" : path.startsWith(navPath)
@@ -154,7 +164,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
   return (
     <>
       <style>{CSS}</style>
-      <div className="app">
+      <div className={`app${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
 
         {/* ── TOPNAV ── */}
         <header className="sb">
@@ -167,7 +177,16 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
               <div className="sb-brand-sub">ระบบจัดการกรมธรรม์</div>
             </div>
           </div>
-
+          <button
+            type="button"
+            className="sb-collapse-toggle"
+            onClick={() => setSidebarCollapsed(value => !value)}
+            title={sidebarCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
+            aria-label={sidebarCollapsed ? "ขยายเมนูด้านข้าง" : "ย่อเมนูด้านข้าง"}
+            aria-expanded={!sidebarCollapsed}
+          >
+            <Ico n={sidebarCollapsed ? "chevR" : "chevL"} s={16} />
+          </button>
           {/* เมนูหลัก: ใช้ปุ่มจริง เพื่อกดด้วยคีย์บอร์ดและไม่ตัดคำหลายบรรทัด */}
           <nav className="sb-nav" aria-label="เมนูหลัก">
             <div className="sb-nav-group">
@@ -276,7 +295,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                       </div>
                       {it.badge > 0 && (
                         <span style={{
-                          background: "var(--amber, #f59e0b)", color: "white",
+                          background: "var(--amber, #CA8A04)", color: "#1A0F0A",
                           padding: "4px 12px", borderRadius: 12, fontSize: 14, fontWeight: 700
                         }}>{it.badge}</span>
                       )}
@@ -370,6 +389,23 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
 
         {/* ── PAGE CONTENT ── */}
         <main className="main">
+          <div className="utility-header">
+            <div className="utility-actions">
+              <form className="utility-search" role="search" onSubmit={submitHeaderSearch}>
+                <Ico n="search" s={17} />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={e => handleSearch(e.target.value)}
+                  placeholder="ค้นหาเลขกรมธรรม์หรือผู้เอาประกัน..."
+                  aria-label="ค้นหาเลขกรมธรรม์หรือผู้เอาประกัน"
+                />
+              </form>
+              <div className="utility-profile" title="คุณปรีชา">
+                <img src="/image.png" alt="คุณปรีชา" />
+              </div>
+            </div>
+          </div>
           <Outlet context={{ search, setSearch: handleSearch, page, setPage, notify, setExpiringCount }} />
         </main>
 
@@ -414,28 +450,6 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
 
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── Scroll-to-top floating button (always visible) ── */}
-      <button
-        className="scroll-top"
-        onClick={() => {
-          // Custom smooth scroll — easeOutQuart curve, ~800ms duration
-          const startY = window.scrollY
-          if (startY === 0) return
-          const startTime = performance.now()
-          const duration = Math.min(900, 400 + startY * 0.4)  // scale by distance, cap 900ms
-          const easeOutQuart = t => 1 - Math.pow(1 - t, 4)
-          const step = (now) => {
-            const t = Math.min((now - startTime) / duration, 1)
-            window.scrollTo(0, startY * (1 - easeOutQuart(t)))
-            if (t < 1) requestAnimationFrame(step)
-          }
-          requestAnimationFrame(step)
-        }}
-        title="กลับไปด้านบน"
-        aria-label="กลับไปด้านบน"
-      >
-        <Ico n="chevU" s={22} />
-      </button>
     </>
   )
 }

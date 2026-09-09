@@ -4,6 +4,7 @@ import { F_SECS, F_LBL } from "../helpers"
 
 const DATE_KEYS = ["coverage_start", "coverage_end", "date_notify", "date_cancel", "date_policy_receive"]
 const CALC_KEYS = ["stamp_duty", "vat", "total_premium"]
+const HIDDEN_FIELDS = new Set(["policy_type", "sum_insured"])
 
 // normalize: รับได้ทั้ง ISO ("2016-12-03"), DD/MM/YYYY (พ.ศ.), DD/MM/YYYY (ค.ศ.)
 // คืน ISO เสมอ — ถ้า parse ไม่ได้ คืน input เดิม
@@ -51,7 +52,7 @@ export function PolicyForm({ values, onChange, hideSections = [], embedded = fal
             <span className="shd-lbl">{sec.label}</span>
           </div>}
           <div className="fg">
-            {sec.keys.map(k => {
+            {sec.keys.filter(k => !HIDDEN_FIELDS.has(k)).map(k => {
               const isDate  = DATE_KEYS.includes(k)
               const isCalc  = CALC_KEYS.includes(k)
               const isWide  = k === "insured_address"

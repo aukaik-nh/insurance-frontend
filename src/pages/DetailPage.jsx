@@ -23,7 +23,8 @@ function calcPremium(net) {
 
 export function DetailPage() {
   const navigate      = useNavigate()
-  const { state }     = useLocation()
+  const location      = useLocation()
+  const { state }     = location
   const { id }        = useParams()
 
   // ⚡ instant render: ถ้ามีข้อมูลจาก list (navigate state) ใช้ทันที — ไม่ต้องรอ API
@@ -630,8 +631,26 @@ export function DetailPage() {
 
       <div className="page-wrap">
         <div className="page-hd detail-page-hd">
-          <button className="page-back" onClick={() => navigate(-1)}>
-            <Ico n="chevL" s={19} /> กลับ
+          <button
+            className="page-back detail-back-to-list"
+            title="กลับไปยังหน้ารายการและแถวที่เปิดก่อนหน้านี้"
+            aria-label="กลับไปหน้ารายการกรมธรรม์"
+            onClick={() => {
+            const query = new URLSearchParams(location.search)
+            const returnTo = state?.returnTo || query.get("returnTo")
+            const returnPolicyId = state?.returnPolicyId || query.get("returnPolicyId") || p?.id
+            if (returnTo) {
+              navigate(returnTo, {
+                replace: true,
+                state: {
+                  returnPolicyId,
+                  returnScrollY: state?.returnScrollY,
+                },
+              })
+            } else navigate("/policies", { replace: true })
+          }}>
+            <span className="detail-back-icon"><Ico n="chevL" s={19} /></span>
+            <span className="page-back-text">กลับ<span className="page-back-destination">หน้ารายการ</span></span>
           </button>
           <div className="page-hd-div" />
           <div className="page-hd-info">
@@ -950,6 +969,152 @@ export function DetailPage() {
                 headless
               />
 
+              {/* isLegacyPdf ใช้กับ tab หลัก / related เท่านั้น — ถ้าเป็น attachment ให้ข้ามไป */}
+              {(isLegacyPdf && activeDocId === "main") ? (
+                <div className="info-card" style={{ marginBottom: 0 }}>
+                  <div className="info-card-bd">
+                    <div className="pdf-placeholder" style={{ height: 360, padding: 24 }}>
+                      <Ico n="warn" s={48} sw={1} />
+                      <div className="ph-title" style={{ marginTop: 14, fontSize: 17 }}>ไฟล์ PDF ไม่พร้อมใช้งาน</div>
+                      <div className="ph-hint" style={{ marginTop: 8, lineHeight: 1.6, maxWidth: 380, fontSize: 15 }}>
+                        ไฟล์ถูกเก็บใน Google Drive ที่ไม่สามารถเข้าถึงได้แล้ว<br />
+                        กรุณาอัปโหลดไฟล์ใหม่ผ่านเมนู "อัปโหลด PDF"
+                      </div>
+                      {p.pdf_filename && (
+                        <div style={{ marginTop: 14, fontSize: 14, color: "var(--t3)" }}>
+                          ชื่อไฟล์เดิม: <span style={{ fontWeight: 600 }}>{p.pdf_filename}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : hasActiveDoc ? (
+                <div
+                  className="pdf-preview-wrap"
+                  onDragOver={e => { e.preventDefault() }}
+                  onDrop={e => { e.preventDefault(); uploadPdf(e.dataTransfer.files[0]) }}
+                >
+                  <div className="pdf-preview-bar">
+                    <Ico n="doc" s={17} />
+                    {editName ? (
+                      <>
+                        <input value={name} onChange={e => setName(e.target.value)} autoFocus
+                          placeholder="policy.pdf"
+                          style={{ flex: 1, border: "1.5px solid var(--blue)", borderRadius: 9, padding: "7px 12px", fontSize: 15, fontFamily: "inherit", color: "var(--t1)", background: "var(--blue-bg)", outline: "none" }}
+                        />
+                        <button className="btn btn-b" onClick={saveName} disabled={savingName}
+                          style={{ padding: "7px 13px", fontSize: 14 }}>
+                          <Ico n="check" s={16} /> {savingName ? "..." : "บันทึก"}
+                        </button>
+                        <button className="btn btn-w"
+                          onClick={() => { setEditName(false); setName(p.pdf_filename || "") }}
+                          style={{ padding: "7px 10px", fontSize: 14 }}>
+                          <Ico n="x" s={16} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="pdf-fname">{activePolicy.pdf_filename || "PDF"}</span>
+                        {activePolicy.pdf_size && (
+                          <span className="pdf-size">{(activePolicy.pdf_size / 1024).toFixed(0)} KB</span>
+                        )}
+                        {/* ── action buttons ── */}
+                        <button className="pdf-zoom-btn" onClick={() => setEditName(true)} title="แก้ไขชื่อ">
+                          <Ico n="pen" s={17} />
+                        </button>
+                        <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ"
+                          disabled={!pdfBlobUrl}>
+                          <Ico n="expand" s={17} />
+                        </button>
+                        <button className="pdf-zoom-btn" onClick={() => openPdfTab(currentDocUrl)} title="เปิดแท็บใหม่">
+                          <Ico n="open" s={17} />
+                        </button>
+                        <button className="pdf-zoom-btn" onClick={() => downloadPdf(currentDocDlUrl, activePolicy.pdf_filename || "policy.pdf")} title="ดาวน์โหลด">
+                          <Ico n="download" s={17} />
+                        </button>
+                        <button className="pdf-zoom-btn" onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingPdf} title="เปลี่ยนไฟล์ PDF">
+                          {uploadingPdf
+                            ? <div className="spin" style={{ width: 15, height: 15, borderWidth: 2 }} />
+                            : <Ico n="upload" s={17} />}
+                        </button>
+                        <button className="pdf-zoom-btn" onClick={deletePdf} title="ลบไฟล์ PDF"
+                          style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
+                          <Ico n="trash" s={17} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {pdfBlobLoading ? (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 14, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)" }}>
+                      <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
+                      <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>
+                    </div>
+                  ) : pdfBlobUrl && useMobilePdfViewer ? (
+                    <PdfCanvasViewer
+                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-mobile`}
+                      src={pdfBlobUrl}
+                      filename={activePolicy.pdf_filename || "PDF"}
+                      onOpenFallback={() => openPdfTab(currentDocUrl)}
+                    />
+                  ) : pdfBlobUrl ? (
+                    <iframe
+                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
+                      className="pdf-iframe"
+                      src={pdfBlobUrl}
+                      title="PDF Preview"
+                      style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)", color: "var(--t3)" }}>
+                      <Ico n="warn" s={40} sw={1} />
+                      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--t2)" }}>โหลด PDF ไม่สำเร็จ</div>
+                      <button className="btn btn-w" style={{ fontSize: 14, padding: "9px 18px" }}
+                        onClick={() => openPdfTab(currentDocUrl)}>
+                        <Ico n="open" s={16} /> เปิดในแท็บใหม่แทน
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  onDragOver={e => { e.preventDefault() }}
+                  onDrop={e => { e.preventDefault(); uploadPdf(e.dataTransfer.files[0]) }}
+                  style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
+                    padding: "44px 24px",
+                    border: "2px dashed var(--brd2)",
+                    borderRadius: 14,
+                    background: "var(--sur2)",
+                    textAlign: "center",
+                  }}
+                >
+                  {uploadingPdf ? (
+                    <>
+                      <div className="spin" style={{ width: 36, height: 36 }} />
+                      <div style={{ fontSize: 17, fontWeight: 600, color: "var(--t1)" }}>กำลังอัปโหลด…</div>
+                      <div style={{ fontSize: 14, color: "var(--t3)" }}>กรุณารอสักครู่</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ width: 72, height: 72, borderRadius: 18, background: "var(--blue-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Ico n="upload" s={34} sw={1.5} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: "var(--t1)", marginBottom: 4 }}>ยังไม่มีไฟล์ PDF</div>
+                        <div style={{ fontSize: 15, color: "var(--t3)" }}>ลากไฟล์ PDF มาวางที่นี่ หรือคลิกปุ่มเพื่อเลือกไฟล์</div>
+                      </div>
+                      <button
+                        className="btn btn-b"
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ fontSize: 16, padding: "12px 24px", flexShrink: 0 }}
+                      >
+                        <Ico n="upload" s={18} /> เลือกไฟล์ PDF
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* ── เอกสาร PDF ทั้งหมด — รวม related policies + attachments ── */}
               {(() => {
                 const totalDocs = relatedPdfs.length + attachItems.length
@@ -1124,188 +1289,16 @@ export function DetailPage() {
                 )
               })()}
 
-              {/* ── doc-type tab bar (กรมธรรม์ / พ.ร.บ. / สลักหลัง) ── */}
-              {showDocTabs && (
-                <div className="detail-doc-tabs" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-                  {docTabs.map(tab => {
-                    const isActive = tab.id === activeDocId
-                    const c = DOC_TAB_META[tab.type] || DOC_TAB_META.main
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveDocId(tab.id)}
-                        style={{
-                          padding: "9px 16px",
-                          border: `1.5px solid ${isActive ? c.color : "var(--brd)"}`,
-                          borderRadius: 99,
-                          background: isActive ? c.bg : "var(--sur)",
-                          color: isActive ? c.color : "var(--t2)",
-                          fontWeight: isActive ? 700 : 500,
-                          fontSize: 14, cursor: "pointer", fontFamily: "inherit",
-                          display: "flex", alignItems: "center", gap: 7,
-                          transition: "all .15s",
-                          boxShadow: isActive ? `0 0 0 3px ${c.bg}` : "none",
-                        }}
-                      >
-                        <Ico n={c.ico} s={15} />
-                        {tab.label}
-                        {isActive && (
-                          <span style={{
-                            display: "inline-flex", width: 8, height: 8,
-                            borderRadius: "50%", background: c.color,
-                            marginLeft: 2,
-                          }} />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* isLegacyPdf ใช้กับ tab หลัก / related เท่านั้น — ถ้าเป็น attachment ให้ข้ามไป */}
-              {(isLegacyPdf && activeDocId === "main") ? (
-                <div className="info-card" style={{ marginBottom: 0 }}>
-                  <div className="info-card-bd">
-                    <div className="pdf-placeholder" style={{ height: 360, padding: 24 }}>
-                      <Ico n="warn" s={48} sw={1} />
-                      <div className="ph-title" style={{ marginTop: 14, fontSize: 17 }}>ไฟล์ PDF ไม่พร้อมใช้งาน</div>
-                      <div className="ph-hint" style={{ marginTop: 8, lineHeight: 1.6, maxWidth: 380, fontSize: 15 }}>
-                        ไฟล์ถูกเก็บใน Google Drive ที่ไม่สามารถเข้าถึงได้แล้ว<br />
-                        กรุณาอัปโหลดไฟล์ใหม่ผ่านเมนู "อัปโหลด PDF"
-                      </div>
-                      {p.pdf_filename && (
-                        <div style={{ marginTop: 14, fontSize: 14, color: "var(--t3)" }}>
-                          ชื่อไฟล์เดิม: <span style={{ fontWeight: 600 }}>{p.pdf_filename}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) : hasActiveDoc ? (
-                <div
-                  className="pdf-preview-wrap"
-                  onDragOver={e => { e.preventDefault() }}
-                  onDrop={e => { e.preventDefault(); uploadPdf(e.dataTransfer.files[0]) }}
+              {hasActiveDoc && (
+                <button
+                  type="button"
+                  className="detail-pdf-open-float"
+                  onClick={() => openPdfTab(currentDocUrl)}
+                  title="เปิด PDF ในแท็บใหม่"
+                  aria-label="เปิด PDF ในแท็บใหม่"
                 >
-                  <div className="pdf-preview-bar">
-                    <Ico n="doc" s={17} />
-                    {editName ? (
-                      <>
-                        <input value={name} onChange={e => setName(e.target.value)} autoFocus
-                          placeholder="policy.pdf"
-                          style={{ flex: 1, border: "1.5px solid var(--blue)", borderRadius: 9, padding: "7px 12px", fontSize: 15, fontFamily: "inherit", color: "var(--t1)", background: "var(--blue-bg)", outline: "none" }}
-                        />
-                        <button className="btn btn-b" onClick={saveName} disabled={savingName}
-                          style={{ padding: "7px 13px", fontSize: 14 }}>
-                          <Ico n="check" s={16} /> {savingName ? "..." : "บันทึก"}
-                        </button>
-                        <button className="btn btn-w"
-                          onClick={() => { setEditName(false); setName(p.pdf_filename || "") }}
-                          style={{ padding: "7px 10px", fontSize: 14 }}>
-                          <Ico n="x" s={16} />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="pdf-fname">{activePolicy.pdf_filename || "PDF"}</span>
-                        {activePolicy.pdf_size && (
-                          <span className="pdf-size">{(activePolicy.pdf_size / 1024).toFixed(0)} KB</span>
-                        )}
-                        {/* ── action buttons ── */}
-                        <button className="pdf-zoom-btn" onClick={() => setEditName(true)} title="แก้ไขชื่อ">
-                          <Ico n="pen" s={17} />
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ"
-                          disabled={!pdfBlobUrl}>
-                          <Ico n="expand" s={17} />
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => openPdfTab(currentDocUrl)} title="เปิดแท็บใหม่">
-                          <Ico n="open" s={17} />
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => downloadPdf(currentDocDlUrl, activePolicy.pdf_filename || "policy.pdf")} title="ดาวน์โหลด">
-                          <Ico n="download" s={17} />
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => fileInputRef.current?.click()}
-                          disabled={uploadingPdf} title="เปลี่ยนไฟล์ PDF">
-                          {uploadingPdf
-                            ? <div className="spin" style={{ width: 15, height: 15, borderWidth: 2 }} />
-                            : <Ico n="upload" s={17} />}
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={deletePdf} title="ลบไฟล์ PDF"
-                          style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
-                          <Ico n="trash" s={17} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  {pdfBlobLoading ? (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 14, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)" }}>
-                      <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
-                      <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>
-                    </div>
-                  ) : pdfBlobUrl && useMobilePdfViewer ? (
-                    <PdfCanvasViewer
-                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-mobile`}
-                      src={pdfBlobUrl}
-                      filename={activePolicy.pdf_filename || "PDF"}
-                      onOpenFallback={() => openPdfTab(currentDocUrl)}
-                    />
-                  ) : pdfBlobUrl ? (
-                    <iframe
-                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
-                      className="pdf-iframe"
-                      src={pdfBlobUrl}
-                      title="PDF Preview"
-                      style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
-                  ) : (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)", color: "var(--t3)" }}>
-                      <Ico n="warn" s={40} sw={1} />
-                      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--t2)" }}>โหลด PDF ไม่สำเร็จ</div>
-                      <button className="btn btn-w" style={{ fontSize: 14, padding: "9px 18px" }}
-                        onClick={() => openPdfTab(currentDocUrl)}>
-                        <Ico n="open" s={16} /> เปิดในแท็บใหม่แทน
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div
-                  onDragOver={e => { e.preventDefault() }}
-                  onDrop={e => { e.preventDefault(); uploadPdf(e.dataTransfer.files[0]) }}
-                  style={{
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: 14,
-                    padding: "44px 24px",
-                    border: "2px dashed var(--brd2)",
-                    borderRadius: 14,
-                    background: "var(--sur2)",
-                    textAlign: "center",
-                  }}
-                >
-                  {uploadingPdf ? (
-                    <>
-                      <div className="spin" style={{ width: 36, height: 36 }} />
-                      <div style={{ fontSize: 17, fontWeight: 600, color: "var(--t1)" }}>กำลังอัปโหลด…</div>
-                      <div style={{ fontSize: 14, color: "var(--t3)" }}>กรุณารอสักครู่</div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ width: 72, height: 72, borderRadius: 18, background: "var(--blue-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Ico n="upload" s={34} sw={1.5} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: "var(--t1)", marginBottom: 4 }}>ยังไม่มีไฟล์ PDF</div>
-                        <div style={{ fontSize: 15, color: "var(--t3)" }}>ลากไฟล์ PDF มาวางที่นี่ หรือคลิกปุ่มเพื่อเลือกไฟล์</div>
-                      </div>
-                      <button
-                        className="btn btn-b"
-                        onClick={() => fileInputRef.current?.click()}
-                        style={{ fontSize: 16, padding: "12px 24px", flexShrink: 0 }}
-                      >
-                        <Ico n="upload" s={18} /> เลือกไฟล์ PDF
-                      </button>
-                    </>
-                  )}
-                </div>
+                  <Ico n="open" s={19} />
+                </button>
               )}
               <input
                 ref={fileInputRef}

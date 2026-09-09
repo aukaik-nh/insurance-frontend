@@ -1,40 +1,52 @@
-.renewal{padding:26px;margin-bottom:24px;overflow:hidden}
+.renewal{padding:26px;margin-bottom:24px;overflow:hidden;border-color:var(--brd2);box-shadow:var(--sh1)}
 .renewal-header{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
-.renewal-eyebrow{color:var(--blue);font-size:13px;font-weight:700;display:block;margin-bottom:6px}
-.renewal h2{font-size:23px;line-height:1.5;margin:0;color:var(--t1)}
-.renewal-header p{font-size:13px;color:var(--t3);margin-top:7px}
-.renewal-switch{display:flex;gap:4px;padding:4px;background:var(--sur2);border:1px solid var(--brd);border-radius:999px;flex-shrink:0}
-.renewal-switch button{font:600 13px inherit;font-family:inherit;padding:10px 15px;min-height:44px;border:0;border-radius:999px;background:transparent;color:var(--t2);cursor:pointer;white-space:nowrap}
-.renewal-switch button[aria-pressed=true]{background:var(--blue);color:var(--sur)}
-.renewal-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0}
-.renewal-summary>div{padding:18px 20px;border-radius:18px;background:var(--sur2);border:1px solid var(--brd)}
-.renewal-summary>div:last-child{background:var(--amber-bg);border-color:var(--amber-brd)}
+.renewal-eyebrow{color:var(--blue);font-size:13px;font-weight:800;display:block;margin-bottom:6px;letter-spacing:.2px}
+.renewal h2{font-size:23px;line-height:1.4;margin:0;color:var(--t1)}
+.renewal-header p{font-size:13px;color:var(--t3);margin-top:7px;line-height:1.55}
+.renewal-data-badge{display:inline-flex;align-items:center;min-height:38px;padding:0 13px;border:1px solid var(--green-brd);border-radius:999px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:700;white-space:nowrap}
+.renewal-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+.renewal-summary>div{padding:16px 18px;border-radius:14px;background:var(--sur2);border:1px solid var(--brd)}
+.renewal-summary>div:first-child{box-shadow:inset 3px 0 0 var(--red)}
+.renewal-summary>div:nth-child(2){box-shadow:inset 3px 0 0 var(--accent)}
+.renewal-summary>div:last-child{background:var(--amber-bg);border-color:var(--amber-brd);box-shadow:inset 3px 0 0 var(--amber)}
 .renewal-summary span{display:block;font-size:13px;color:var(--t2)}
-.renewal-summary strong{display:block;margin-top:6px;font-size:27px;font-variant-numeric:tabular-nums;color:var(--t1)}
-.renewal-summary small{font-size:13px;font-weight:500;color:var(--t2)}
-.renewal-chart-caption{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--t2)}
+.renewal-summary strong{display:block;margin-top:5px;font-size:25px;font-variant-numeric:tabular-nums;color:var(--t1)}
+.renewal-summary small{font-size:13px;font-weight:600;color:var(--t2)}
+.renewal-chart-caption{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--t2);padding-top:3px}
 .renewal-chart-caption span{color:var(--t3)}
-.renewal-bars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin:16px 0 24px;padding:12px 4px 0;background:repeating-linear-gradient(to top,transparent 0,transparent 59px,var(--brd) 60px,transparent 61px);border-bottom:1px solid var(--brd)}
-.renewal-month{display:flex;flex-direction:column;align-items:center;min-width:0;border:0;background:transparent;color:var(--t3);cursor:pointer;font-family:inherit;border-radius:10px;padding:0 4px}
-.renewal-month:hover{background:var(--blue-bg)}
-.renewal-bar-track{height:220px;display:flex;align-items:flex-end;justify-content:center;width:100%}
-.renewal-bar{width:70%;max-width:50px;min-height:2px;background:linear-gradient(0deg,#108F88,#65CEC5);border-radius:9px 9px 0 0;position:relative;transition:height .25s}
-.renewal-month.selected .renewal-bar{background:linear-gradient(0deg,#E8B823,#FFE47A)}
-.renewal-bar b{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding-bottom:9px;font-size:12px;color:var(--t1);white-space:nowrap}
-.renewal-month-label{display:block;padding:12px 0;font-size:12px;white-space:nowrap}
-.renewal-month.selected .renewal-month-label{color:var(--blue);font-weight:700}
-.renewal-selection{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--brd);padding-bottom:14px}
+.renewal-legend{display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--t3);font-size:12px}
+.renewal-legend span{display:inline-flex;align-items:center;gap:6px}
+.renewal-legend i{display:block;width:9px;height:9px;border-radius:3px}
+.renewal-legend i.urgent{background:#b42318}.renewal-legend i.soon{background:#ca8a04}.renewal-legend i.planned{background:#5d7a68}
+.renewal-line-scroll{margin:12px 0 22px;overflow-x:auto;border:1px solid var(--brd);border-radius:16px;background:linear-gradient(180deg,var(--sur),var(--sur2));box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.renewal-line-chart{display:block;width:100%;min-width:820px;height:auto;overflow:visible}
+.renewal-grid-line{stroke:var(--brd);stroke-width:1;stroke-dasharray:4 6}
+.renewal-axis-value{fill:var(--t3);font-family:inherit;font-size:11px;text-anchor:end;font-variant-numeric:tabular-nums}
+.renewal-axis-month{fill:var(--t3);font-family:inherit;font-size:11px;text-anchor:middle}
+.renewal-area{fill:url(#renewalArea)}
+.renewal-line{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 4px 5px rgba(202,138,4,.18))}
+.renewal-selected-line{stroke:var(--amber-brd);stroke-width:1.5;stroke-dasharray:5 5;pointer-events:none}
+.renewal-point{cursor:pointer;outline:none}
+.renewal-point-hit{fill:transparent}
+.renewal-point-dot{stroke:var(--sur);stroke-width:3;transition:r .15s,filter .15s}
+.renewal-point.urgent .renewal-point-dot{fill:#b42318}.renewal-point.soon .renewal-point-dot{fill:#ca8a04}.renewal-point.planned .renewal-point-dot{fill:#5d7a68}
+.renewal-point:hover .renewal-point-dot,.renewal-point:focus .renewal-point-dot{filter:drop-shadow(0 0 5px rgba(138,93,3,.45));stroke-width:4}
+.renewal-point:focus .renewal-point-hit{fill:var(--blue-mid)}
+.renewal-point.selected .renewal-point-dot{stroke:var(--t1);stroke-width:3}
+.renewal-point-value{fill:var(--t1);font-family:inherit;font-size:12px;font-weight:700;text-anchor:middle;font-variant-numeric:tabular-nums}
+.renewal-point.selected .renewal-point-value{fill:var(--blue);font-size:14px;font-weight:800}
+.renewal-selection{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--brd);padding:2px 2px 14px}
 .renewal-selection h3{font-size:18px;color:var(--t1)}
 .renewal-selection h3 span,.renewal-selection p,.renewal-selection>span{font-size:13px;color:var(--t3);font-weight:400}
-.renewal-records{max-height:320px;overflow-y:auto;overscroll-behavior:contain}
-.renewal-record{display:flex;width:100%;align-items:center;text-align:left;gap:16px;padding:14px 8px;border:0;border-bottom:1px solid var(--brd);background:var(--sur);color:var(--t1);font-family:inherit;cursor:pointer}
-.renewal-record:hover{background:var(--blue-bg)}
-.renewal-record-date{color:var(--blue);font-size:13px;min-width:70px}
-.renewal-record-person{flex:1;min-width:0}.renewal-record-person strong{font-size:15px;display:block;overflow-wrap:anywhere}
-.renewal-record-person small{display:block;font-size:12px;color:var(--t3);margin-top:3px}
-.renewal-record-money{font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.renewal-note{font-size:12px;line-height:1.8;color:var(--t3);background:var(--sur2);padding:12px 16px;border-radius:12px;margin-top:16px}
-.renewal-empty{padding:24px;text-align:center;color:var(--t3);font-size:14px}
-@media(max-width:1100px){.renewal-header{flex-direction:column}.renewal-summary strong{font-size:23px}.renewal-bars{gap:4px}}
-@media(max-width:639px){.renewal{padding:18px 14px}.renewal h2{font-size:20px}.renewal-header{gap:16px}.renewal-summary{grid-template-columns:1fr;gap:8px;margin:18px 0}.renewal-summary>div{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:10px}.renewal-summary strong{font-size:21px;margin:0}.renewal-chart-caption{flex-direction:column;gap:4px}.renewal-bars{grid-template-columns:repeat(12,52px);overflow-x:auto;padding-top:12px;gap:4px}.renewal-bar-track{height:180px}.renewal-selection{align-items:flex-start;flex-direction:column;gap:4px}.renewal-record{gap:9px;flex-wrap:wrap}.renewal-record-date{min-width:55px}.renewal-record-person{min-width:140px}.renewal-record-money{font-size:12px}.renewal-switch{width:100%}.renewal-switch button{flex:1}}
-@media(prefers-reduced-motion:reduce){.renewal-bar{transition:none}}
+.renewal-records{max-height:330px;overflow-y:auto;overscroll-behavior:contain}
+.renewal-record{display:flex;width:100%;align-items:center;text-align:left;gap:16px;padding:13px 8px;border:0;border-bottom:1px solid var(--brd);background:var(--sur);color:var(--t1);font-family:inherit;cursor:pointer;transition:background .14s,padding .14s}
+.renewal-record:hover{background:var(--blue-bg);padding-left:12px}
+.renewal-record-date{color:var(--blue);min-width:88px;font-variant-numeric:tabular-nums}
+.renewal-record-date strong{display:block;font-size:14px}.renewal-record-date small{display:block;margin-top:3px;font-size:11px;color:var(--t3)}
+.renewal-record-person{flex:1;min-width:0}.renewal-record-person strong{font-size:15px;display:block;overflow-wrap:anywhere}.renewal-record-person small{display:block;font-size:12px;color:var(--t3);margin-top:3px}
+.renewal-record-open{min-width:58px;padding:6px 9px;border:1px solid var(--brd);border-radius:8px;color:var(--blue);font-size:12px;font-weight:700;text-align:center;background:var(--sur)}
+.renewal-note{font-size:12px;line-height:1.7;color:var(--t3);background:var(--sur2);border:1px solid var(--brd);padding:11px 14px;border-radius:10px;margin-top:16px}
+.renewal-empty{padding:28px;text-align:center;color:var(--t3);font-size:14px;background:var(--sur2);border-radius:10px;margin-top:12px}
+@media(max-width:1100px){.renewal-header{flex-direction:column}.renewal-summary strong{font-size:22px}.renewal-legend{justify-content:flex-start}}
+@media(max-width:639px){.renewal{padding:18px 14px}.renewal h2{font-size:20px}.renewal-header{gap:14px}.renewal-summary{grid-template-columns:1fr;gap:8px;margin:16px 0}.renewal-summary>div{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;gap:10px}.renewal-summary strong{font-size:20px;margin:0}.renewal-chart-caption{flex-direction:column;gap:4px}.renewal-legend{gap:9px;align-items:flex-start;flex-direction:column}.renewal-line-chart{min-width:760px}.renewal-selection{align-items:flex-start;flex-direction:column;gap:4px}.renewal-record{gap:9px;flex-wrap:wrap}.renewal-record-date{min-width:72px}.renewal-record-person{min-width:150px}.renewal-record-open{margin-left:auto}.renewal-data-badge{min-height:34px}}
+@media(prefers-reduced-motion:reduce){.renewal-point-dot,.renewal-record{transition:none}}

@@ -1,6 +1,6 @@
 import { RenewalChart } from "../components/RenewalChart"
 import { useState, useEffect, useRef } from "react"
-import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom"
+import { useNavigate, useLocation, useOutletContext, useSearchParams } from "react-router-dom"
 import { policyTypeCategory, dedupLatestByCustomer } from "../helpers"
 import api from "../api"
 import { Ico } from "../icons"
@@ -20,6 +20,7 @@ const STATUS_OPTS = [
 
 export function ListPage({ tab }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const typeFilter = searchParams.get("type")  // motor | prb | fire | pa | null
   const { search, setSearch, page, setPage, notify, setExpiringCount } = useOutletContext()
@@ -230,7 +231,17 @@ export function ListPage({ tab }) {
 
   // expiring: ใช้ allRows เป็นแหล่งข้อมูลเดียว — กัน chip count กับ table mismatch
   // (เดิมใช้ rows จาก backend filter ทำให้ตัวเลขในชิปกับตารางไม่ตรงกัน)
-  const _expiringSource = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
+  const _rawExpiringSource = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
+  const normalizedExpiringSearch = debouncedSearch.trim().toLocaleLowerCase("th-TH")
+  const _expiringSource = normalizedExpiringSearch
+    ? _rawExpiringSource.filter(r => [
+        r.policy_number,
+        r.insured_name,
+        r.license_plate,
+        r.chassis_number,
+        r.phone,
+      ].some(value => String(value || "").toLocaleLowerCase("th-TH").includes(normalizedExpiringSearch)))
+    : _rawExpiringSource
   const expiring = tab === "expiring"
     ? (() => {
         // filter ตาม expiryRange เดียวกับชิปด้านบน
@@ -492,7 +503,7 @@ export function ListPage({ tab }) {
 
   const expiringSubText = expiryRange === -1
     ? `${expiring.length} รายการ · หมดอายุแล้ว`
-    : `${expiring.length} รายการ · ภายใน ${rangeMeta.label}`
+    : `${expiring.length} รายการ · ${rangeMeta.label}`
   const tabMeta = {
     dashboard: { title: "ภาพรวมระบบ",          sub: "สรุปสถานะกรมธรรม์ประกันภัยรถยนต์" },
     policies:  { title: "กรมธรรม์ทั้งหมด",     sub: `${total.toLocaleString()} ฉบับในระบบ · 1 รายชื่อ = 1 แถว (ฉบับล่าสุด)` },
@@ -542,6 +553,23 @@ export function ListPage({ tab }) {
   const displayPages = needsClientPage
     ? Math.max(1, Math.ceil(displayTotal / LIMIT))
     : pages
+
+  const [returnFocusId, setReturnFocusId] = useState(() => location.state?.returnPolicyId || null)
+  useEffect(() => {
+    const policyId = location.state?.returnPolicyId
+    if (!policyId || loading) return
+    const frame = requestAnimationFrame(() => {
+      setReturnFocusId(policyId)
+      const target = [...document.querySelectorAll("[data-policy-id]")]
+        .find(el => String(el.dataset.policyId) === String(policyId))
+      const savedY = Number(location.state?.returnScrollY)
+      if (Number.isFinite(savedY)) window.scrollTo({ top: savedY, behavior: "auto" })
+      else target?.scrollIntoView({ block: "center", behavior: "auto" })
+      target?.focus?.({ preventScroll: true })
+    })
+    const timer = setTimeout(() => setReturnFocusId(null), 2200)
+    return () => { cancelAnimationFrame(frame); clearTimeout(timer) }
+  }, [location.state, loading])
 
   return (
     <>
@@ -593,9 +621,10 @@ export function ListPage({ tab }) {
                 <span>สรุปข้อมูล</span>
                 <small>เลือกบัตรเพื่อเปิดรายการ</small>
               </div>
-              <div className="overview-stat-grid">
+              <div className="overview-stat-grid dashboard-overview-grid">
                 {[
                   { path: "/policies", kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", action: "ดูทั้งหมด", ico: "list" },
+                  { path: "/policies", kind: "active", lbl: "คุ้มครองอยู่", value: active.toLocaleString(), detail: "กรมธรรม์ที่ยังมีผล", action: "ดูรายการ", ico: "shield" },
                   { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", action: "ดูรายการ", ico: "bell", urgent: expiring.length > 0 },
                 ].map(m => (
                   <button key={m.path} className={`overview-stat overview-stat-${m.kind}`}
@@ -616,31 +645,11 @@ export function ListPage({ tab }) {
                 ))}
               </div>
 
-              <div className="sec-hd dashboard-actions-hd">
-                <Ico n="upload" s={14} />
-                <span>เริ่มต้นที่นี่</span>
-                <small>เลือกตามงานที่ต้องการทำ</small>
-              </div>
-              <div className="dashboard-action-row">
-                {[
-                  { path: "/upload", label: "มี PDF 1 ไฟล์", desc: "เพิ่มกรมธรรม์ 1 ฉบับ", ico: "upload", primary: true },
-                  { path: "/batch", label: "มี PDF หลายไฟล์", desc: "นำเข้าเป็นชุด และช่วยจับคู่เอกสาร", ico: "inbox" },
-                  { path: "/invoice", label: "ต้องการใบแจ้งหนี้", desc: "สร้าง QR PromptPay และพิมพ์", ico: "banknote" },
-                ].map(action => (
-                  <button key={action.path} className={`dashboard-action${action.primary ? " dashboard-action-primary" : ""}`}
-                    onClick={() => navigate(action.path)}>
-                    <span className="dashboard-action-icon"><Ico n={action.ico} s={21} /></span>
-                    <span><strong>{action.label}</strong><small>{action.desc}</small></span>
-                    <span className="dashboard-action-cta">เริ่ม <Ico n="chevR" s={16} /></span>
-                  </button>
-                ))}
-              </div>
-
               <div className="dashboard-search-heading">
                 <span className="dashboard-search-mark" aria-hidden="true"><Ico n="search" s={21} /></span>
                 <div className="dashboard-search-copy">
                   <div className="dashboard-search-title">ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน</div>
-                  <div className="dashboard-search-sub">พิมพ์ทะเบียนรถหรือชื่อผู้เอาประกัน ระบบค้นหาให้ทันที</div>
+                  {/* <div className="dashboard-search-sub">พิมพ์ทะเบียนรถหรือชื่อผู้เอาประกัน ระบบค้นหา</div> */}
                 </div>
                 <span className="dashboard-search-note">ค้นหาได้ทันที</span>
               </div>
@@ -674,14 +683,14 @@ export function ListPage({ tab }) {
           })()}
 
           {/* ── Search ── */}
-          <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}`} style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
+          <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}${tab === "expiring" ? " expiring-search-wrap" : ""}`} style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
             <div className="big-srch" style={{ flex: 1 }}>
               <Ico n="search" s={20} />
               <input
                 aria-label="ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน"
-                placeholder="เช่น 1กก 1234 หรือ สมชาย ใจดี"
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
+                placeholder={tab === "expiring" ? "ค้นหาชื่อ เลขกรมธรรม์ ทะเบียนรถ หรือเบอร์โทร..." : ""}
               />
               {search && (
                 <button className="big-srch-clr" aria-label="ล้างคำค้นหา" onClick={() => { setSearch(""); setPage(1) }}>
@@ -758,11 +767,20 @@ export function ListPage({ tab }) {
                 </div>
                 <div className="expiring-selected-summary" aria-live="polite">
                   <span className="expiring-selected-dot" />
-                  <strong>กำลังแสดง {rangeCount(expiryRange).toLocaleString()} กรมธรรม์</strong>
-                  <span>เรียงจากวันหมดอายุใกล้ที่สุด</span>
+                  <strong>กำลังแสดง {expiring.length.toLocaleString()} กรมธรรม์</strong>
+                  <span>{normalizedExpiringSearch ? `ผลค้นหา “${debouncedSearch.trim()}” · ` : ""}เรียงจากวันหมดอายุใกล้ที่สุด</span>
                 </div>
 
-                <RenewalChart rows={statsRows} loading={loading} />
+                <RenewalChart
+                  rows={_expiringSource}
+                  loading={loading}
+                  onOpenPolicy={r => navigate(`/policies/${r.id}`, { state: {
+                    policy: r,
+                    returnTo: `${location.pathname}${location.search}`,
+                    returnPolicyId: r.id,
+                    returnScrollY: window.scrollY,
+                  } })}
+                />
               </>
             )
           })()}
@@ -775,9 +793,14 @@ export function ListPage({ tab }) {
             page={page}
             pages={displayPages}
             setPage={setPage}
-            onRow={r => navigate(`/policies/${r.id}`, { state: { policy: r } })}
+            onRow={r => navigate(`/policies/${r.id}`, { state: {
+              policy: r,
+              returnTo: `${location.pathname}${location.search}`,
+              returnPolicyId: r.id,
+              returnScrollY: window.scrollY,
+            } })}
             onRowHover={prefetchPolicy}
-            activeId={previewPolicy?.id}
+            activeId={previewPolicy?.id || returnFocusId}
             pageOffset={(page - 1) * LIMIT}
             sortKey={sortKey}
             sortDir={sortDir}
