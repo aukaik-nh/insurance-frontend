@@ -57,6 +57,31 @@
 .detail-page-actions .btn-b{
   box-shadow:0 5px 14px rgba(37,99,71,.18);
 }
+.detail-page-actions{
+  gap:9px;
+}
+.detail-page-actions .btn-w{
+  color:var(--t2);
+  border-color:var(--brd);
+  background:var(--sur);
+}
+.detail-page-actions .detail-document-action,
+.detail-page-actions .detail-invoice-action{
+  color:var(--blue);
+  border-color:var(--amber-brd);
+  background:var(--amber-bg);
+}
+.detail-page-actions .detail-delete-action{
+  margin-left:5px;
+  color:var(--red);
+  border-color:var(--red-brd);
+  background:transparent;
+  box-shadow:none;
+}
+.detail-page-actions .detail-delete-action:hover:not(:disabled){
+  background:var(--red-bg);
+  box-shadow:none;
+}
 
 .policy-detail-split{
   grid-template-columns:minmax(420px,.92fr) minmax(560px,1.08fr);

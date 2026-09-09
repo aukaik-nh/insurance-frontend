@@ -674,28 +674,25 @@ export function DetailPage() {
               </>
             ) : (
               <>
-                <button className="btn btn-w detail-primary-action"
-                  onClick={() => setSearchOpen(true)}
-                  title="ค้นหากรมธรรม์ (Ctrl+K)"
-                  style={{ color: "var(--t1)", borderColor: "var(--brd)" }}>
-                  <Ico n="search" s={18} /> <span className="btn-label">ค้นหา</span>
+                <button className="btn btn-b detail-primary-action detail-edit-action" onClick={startEdit}>
+                  <Ico n="pen" s={18} /> <span className="btn-label">แก้ไขข้อมูล</span>
                 </button>
-                <button className="btn btn-w detail-primary-action"
-                  onClick={() => attachRef.current?.openAddDialog()}
-                  style={{ color: "var(--blue)", borderColor: "var(--blue-mid)", background: "var(--blue-bg)" }}>
+                <button className="btn btn-w detail-primary-action detail-document-action"
+                  onClick={() => attachRef.current?.openAddDialog()}>
                   <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
                 </button>
-                <button className="btn btn-w detail-secondary-action"
-                  onClick={() => navigate(`/invoice?policy_id=${id}`)}
-                  style={{ color: "var(--purple)", borderColor: "var(--purple-mid, #c4b5fd)", background: "var(--purple-bg, #f5f3ff)" }}>
+                <button className="btn btn-w detail-secondary-action detail-invoice-action"
+                  onClick={() => navigate(`/invoice?policy_id=${id}`)}>
                   <Ico n="banknote" s={18} /> <span className="btn-label">ใบแจ้งหนี้</span>
                 </button>
-                <button className="btn btn-w detail-secondary-action" onClick={deletePolicy}
-                  style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
-                  <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
+                <button className="btn btn-w detail-primary-action detail-search-action"
+                  onClick={() => setSearchOpen(true)}
+                  title="ค้นหากรมธรรม์ (Ctrl+K)">
+                  <Ico n="search" s={18} /> <span className="btn-label">ค้นหา</span>
                 </button>
-                <button className="btn btn-b detail-primary-action" onClick={startEdit}>
-                  <Ico n="pen" s={18} /> <span className="btn-label">แก้ไข</span>
+                <button className="btn btn-w detail-secondary-action detail-delete-action" onClick={deletePolicy}
+                  title="ลบกรมธรรม์นี้">
+                  <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
                 </button>
                 <button
                   className="btn btn-w detail-more-btn"
