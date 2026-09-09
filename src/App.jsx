@@ -4,7 +4,6 @@ import CSS from "./styles"
 import { Ico } from "./icons"
 import { Toast } from "./components/Toast"
 import { ListPage } from "./pages/ListPage"        // หน้าแรก → eager
-import { LoginPage } from "./pages/LoginPage"      // login → eager
 // ── lazy load หน้าอื่น เพื่อให้ initial bundle เล็ก โหลดหน้าแรกเร็ว ──
 const UploadPage  = lazy(() => import("./pages/UploadPage").then(m  => ({ default: m.UploadPage })))
 const BatchUploadPage = lazy(() => import("./pages/BatchUploadPage").then(m => ({ default: m.BatchUploadPage })))
@@ -441,84 +440,12 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
   )
 }
 
-const AUTH_DISABLED = import.meta.env.VITE_AUTH_DISABLED === "true"
-
-/* ── Root with BrowserRouter + Auth gate ── */
+/* ── Root with BrowserRouter ── */
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token"))
-
-  const handleLogin = (t, { remember = true } = {}) => {
-    localStorage.removeItem("auth_token")
-    sessionStorage.removeItem("auth_token")
-    ;(remember ? localStorage : sessionStorage).setItem("auth_token", t)
-    setToken(t)
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem("auth_token")
-    sessionStorage.removeItem("auth_token")
-    // ล้าง policies cache กันข้อมูลค้างข้าม account
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const k = localStorage.key(i)
-      if (k && k.startsWith("policies-cache:")) localStorage.removeItem(k)
-    }
-    setToken(null)
-  }
-
-  // ── Keep-alive backend + auto re-check token ตอน tab กลับมา ──
-  //   1. ping /health ทุก 10 นาที (กันกรณี GitHub Actions cron delay/หาย)
-  //   2. ping + ตรวจ token ตอน tab visible อีกครั้ง (กรณีเปิดทิ้งไว้นานๆ)
-  //   3. ถ้า JWT หมดอายุ → logout ทันที (เด้งไป login โดยไม่ต้องรอ API call)
-  useEffect(() => {
-    if (AUTH_DISABLED || !token) return
-
-    const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
-    const healthUrl = apiBase.replace(/\/api\/?$/, "") + "/health"
-    const ping = () => fetch(healthUrl, { method: "GET", cache: "no-store" }).catch(() => {})
-
-    const checkToken = () => {
-      const t = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
-      if (!t) { handleLogout(); return }
-      try {
-        const payload = JSON.parse(atob(t.split(".")[1]))
-        if (payload.exp && payload.exp * 1000 < Date.now()) handleLogout()
-      } catch {
-        handleLogout()
-      }
-    }
-
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") ping()
-    }, 10 * 60 * 1000)
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        ping()
-        checkToken()
-      }
-    }
-    document.addEventListener("visibilitychange", onVisible)
-
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener("visibilitychange", onVisible)
-    }
-  }, [token])
-
-  // หน้า login — แสดงนอก BrowserRouter (ไม่มี nav)
-  if (!AUTH_DISABLED && !token) {
-    return (
-      <>
-        <style>{CSS}</style>
-        <LoginPage onLogin={handleLogin} />
-      </>
-    )
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout onLogout={AUTH_DISABLED ? null : handleLogout} />}>
+        <Route element={<Layout onLogout={null} />}>
           <Route index              element={<ListPage tab="dashboard" />} />
           <Route path="policies"    element={<ListPage tab="policies" />} />
           <Route path="expiring"    element={<ListPage tab="expiring" />} />
