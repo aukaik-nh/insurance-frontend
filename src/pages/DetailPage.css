@@ -97,6 +97,29 @@ body.dark .detail-page-actions .detail-invoice-action{
   border-color:var(--purple-brd);
   background:var(--purple-bg);
 }
+body.dark .policy-detail-split > :first-child > .info-card,
+body.dark .policy-detail-split > :first-child > .info-card-bd > .info-card,
+body.dark .policy-detail-split > .detail-aside > .info-card{
+  border-color:var(--brd);
+  box-shadow:none;
+}
+body.dark .policy-detail-split > :first-child .info-card-hd,
+body.dark .policy-detail-split > .detail-aside > .info-card .info-card-hd{
+  background:var(--sur2);
+  border-bottom-color:var(--brd);
+  box-shadow:inset 3px 0 0 var(--accent);
+}
+body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"]{
+  background:var(--sur2) !important;
+  border-color:var(--brd2) !important;
+  box-shadow:none !important;
+}
+body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-label{
+  color:var(--t2);
+}
+body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{
+  color:var(--blue);
+}
 
 .policy-detail-split{
   grid-template-columns:minmax(420px,.92fr) minmax(560px,1.08fr);

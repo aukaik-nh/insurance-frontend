@@ -59,6 +59,11 @@ body.dark .dashboard-filter-wrap{box-shadow:var(--sh1)}
 body.dark .dashboard-filter-wrap .big-srch input::placeholder{color:var(--t3)}
 body.dark .sb-nav-link.on{box-shadow:0 4px 14px rgba(0,0,0,.28)}
 body.dark .sb-nav-link:not(.on):hover{background:var(--sur2)}
+body.dark .policy-list-card .policy-created-cell{background:var(--sur);border-left:1px solid var(--brd)}
+body.dark .policy-list-card tbody tr:hover .policy-created-cell{background:var(--sur2)}
+body.dark .policy-list-card .policy-table-wrap th:first-child,
+body.dark .policy-list-card .policy-table-wrap td:first-child,
+body.dark .policy-open-col{box-shadow:none}
 .dashboard-search-heading{align-items:center;margin:6px 0 10px;padding:0;background:transparent;border:0}
 .dashboard-search-mark{width:42px;height:42px;border-radius:13px;background:var(--blue-bg);color:var(--blue)}
 .dashboard-search-title{font-size:18px;line-height:1.25}
