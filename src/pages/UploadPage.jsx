@@ -312,12 +312,12 @@ export function UploadPage() {
         <div className="page-hd upload-page-hd">
           <button
             className="page-back upload-back-to-home"
-            onClick={() => navigate("/")}
-            title="กลับไปหน้าภาพรวมระบบ"
-            aria-label="กลับไปหน้าภาพรวมระบบ"
+            onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/")}
+            title="กลับไปหน้าก่อนหน้า"
+            aria-label="กลับไปหน้าก่อนหน้า"
           >
             <span className="upload-back-icon"><Ico n="chevL" s={19} /></span>
-            <span className="upload-back-label">กลับ<span className="upload-back-destination">หน้าหลัก</span></span>
+            <span className="upload-back-label">กลับ<span className="upload-back-destination">หน้าก่อนหน้า</span></span>
           </button>
           <div className="page-hd-div" />
           <div className="page-hd-info">
