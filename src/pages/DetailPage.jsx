@@ -655,23 +655,27 @@ export function DetailPage() {
               </>
             ) : (
               <>
-                <button className="btn btn-w detail-primary-action detail-action-search"
+                <button className="btn btn-w detail-primary-action"
                   onClick={() => setSearchOpen(true)}
-                  title="ค้นหากรมธรรม์ (Ctrl+K)">
+                  title="ค้นหากรมธรรม์ (Ctrl+K)"
+                  style={{ color: "var(--t1)", borderColor: "var(--brd)" }}>
                   <Ico n="search" s={18} /> <span className="btn-label">ค้นหา</span>
                 </button>
-                <button className="btn btn-w detail-primary-action detail-action-document"
-                  onClick={() => attachRef.current?.openAddDialog()}>
+                <button className="btn btn-w detail-primary-action"
+                  onClick={() => attachRef.current?.openAddDialog()}
+                  style={{ color: "var(--blue)", borderColor: "var(--blue-mid)", background: "var(--blue-bg)" }}>
                   <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
                 </button>
-                <button className="btn btn-w detail-secondary-action detail-action-invoice"
-                  onClick={() => navigate(`/invoice?policy_id=${id}`)}>
+                <button className="btn btn-w detail-secondary-action"
+                  onClick={() => navigate(`/invoice?policy_id=${id}`)}
+                  style={{ color: "var(--purple)", borderColor: "var(--purple-mid, #c4b5fd)", background: "var(--purple-bg, #f5f3ff)" }}>
                   <Ico n="banknote" s={18} /> <span className="btn-label">ใบแจ้งหนี้</span>
                 </button>
-                <button className="btn btn-w detail-secondary-action detail-action-delete" onClick={deletePolicy}>
+                <button className="btn btn-w detail-secondary-action" onClick={deletePolicy}
+                  style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
                   <Ico n="trash" s={18} /> <span className="btn-label">ลบข้อมูล</span>
                 </button>
-                <button className="btn btn-b detail-primary-action detail-action-edit" onClick={startEdit}>
+                <button className="btn btn-b detail-primary-action" onClick={startEdit}>
                   <Ico n="pen" s={18} /> <span className="btn-label">แก้ไข</span>
                 </button>
                 <button
