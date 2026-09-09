@@ -217,6 +217,7 @@ export function ListPage({ tab }) {
         const totalCount = result.total
         setRows(data)
         setTotal(totalCount)
+        if (tab === "dashboard") setAllRows(data)
         const expCnt = data.filter(r => {
           if (!r.coverage_end) return false
           const d = (new Date(r.coverage_end) - new Date()) / 86400000
@@ -246,7 +247,8 @@ export function ListPage({ tab }) {
   // ⚡ Analytics fetch ทั้งหมด (limit=20000) แล้ว cache 30 นาที
   // ใช้สำหรับ dashboard charts + expiring page stat strip
   useEffect(() => {
-    if (tab !== "dashboard" && tab !== "expiring") return
+    // dashboard ได้ข้อมูลทั้งหมดจาก request หลักอยู่แล้ว ไม่ต้องโหลด 3 MB ซ้ำอีกรอบ
+    if (tab !== "expiring") return
     let cancelled = false
     const CACHE_KEY = "policies-stats-cache:v1"
     const TTL = 30 * 60 * 1000  // 30 นาที
