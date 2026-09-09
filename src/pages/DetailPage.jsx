@@ -1248,6 +1248,7 @@ export function DetailPage() {
                       key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-mobile`}
                       src={pdfBlobUrl}
                       filename={activePolicy.pdf_filename || "PDF"}
+                      onOpenFallback={() => openPdfTab(currentDocUrl)}
                     />
                   ) : pdfBlobUrl ? (
                     <iframe

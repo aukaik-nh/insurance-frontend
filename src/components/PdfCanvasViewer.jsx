@@ -62,7 +62,7 @@ function PdfImagePage({ imageUrl, availableWidth, zoom, pageCount }) {
   </section>
 }
 
-export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, fullscreen = false }) {
+export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, fullscreen = false, onOpenFallback }) {
   const stageRef = useRef(null)
   const [pdf, setPdf] = useState(null)
   const [pageCount, setPageCount] = useState(initialPageCount || 0)
@@ -84,22 +84,37 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
     if (!src || imageUrl) return undefined
 
     let cancelled = false
-    const loadingTask = getDocument(src)
-    loadingTask.promise.then(document => {
-      if (cancelled) {
-        document.destroy()
-        return
+    let loadingTask
+
+    const loadPdf = async () => {
+      try {
+        setStatus("loading")
+        // Safari/iOS มักส่ง blob: URL เข้า PDF worker ไม่สำเร็จ
+        // โหลดใน main thread ก่อน แล้วส่ง bytes ให้ worker โดยตรงแทน
+        const response = await fetch(src)
+        if (!response.ok) throw new Error(`PDF HTTP ${response.status}`)
+        const data = new Uint8Array(await response.arrayBuffer())
+        if (cancelled) return
+
+        loadingTask = getDocument({ data })
+        const document = await loadingTask.promise
+        if (cancelled) {
+          document.destroy()
+          return
+        }
+        setPdf(document)
+        setPageCount(document.numPages)
+        setStatus("ready")
+      } catch (error) {
+        if (!cancelled && error?.name !== "AbortException") setStatus("error")
       }
-      setPdf(document)
-      setPageCount(document.numPages)
-      setStatus("ready")
-    }).catch(() => {
-      if (!cancelled) setStatus("error")
-    })
+    }
+
+    loadPdf()
 
     return () => {
       cancelled = true
-      loadingTask.destroy()
+      loadingTask?.destroy()
     }
   }, [src, imageUrl, initialPageCount])
 
@@ -124,7 +139,12 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
         <PdfImagePage imageUrl={imageUrl} availableWidth={availableWidth} zoom={zoom} pageCount={pageCount} />
       </div>}
       {!imageUrl && status === "loading" && <div className="pdf-canvas-state"><span className="spin" /><strong>กำลังเปิดเอกสาร…</strong><small>ระบบกำลังจัดหน้า PDF ให้พร้อมตรวจสอบ</small></div>}
-      {!imageUrl && status === "error" && <div className="pdf-canvas-state error"><Ico n="warn" s={28} /><strong>เปิด PDF ไม่สำเร็จ</strong><small>ลองเปลี่ยนไฟล์หรือเปิดเอกสารใหม่อีกครั้ง</small></div>}
+      {!imageUrl && status === "error" && <div className="pdf-canvas-state error">
+        <Ico n="warn" s={28} />
+        <strong>เปิด PDF ไม่สำเร็จ</strong>
+        <small>ลองเปิดไฟล์ด้วยตัวอ่าน PDF ของโทรศัพท์</small>
+        {onOpenFallback && <button type="button" className="pdf-canvas-fallback" onClick={onOpenFallback}><Ico n="open" s={17} />เปิด PDF โดยตรง</button>}
+      </div>}
       {!imageUrl && status === "empty" && <div className="pdf-canvas-state"><Ico n="doc" s={30} /><strong>ยังไม่มีเอกสาร</strong></div>}
       {!imageUrl && status === "ready" && <div className="pdf-canvas-pages">
         {Array.from({ length: pageCount }, (_, index) => <PdfPage key={index + 1} pdf={pdf} pageNumber={index + 1} availableWidth={availableWidth} zoom={zoom} />)}
