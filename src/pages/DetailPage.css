@@ -319,4 +319,22 @@ body.dark .detail-page-actions .detail-action-invoice{
   .policy-detail-split > .detail-aside .pdf-preview-bar{min-height:56px;padding:9px 10px}
   .policy-detail-split > .detail-aside .pdf-preview-bar .pdf-fname{font-size:14px}
   .policy-detail-split > .detail-aside .pdf-zoom-btn{width:35px;height:35px}
+  .policy-detail-split > .detail-aside .pdf-canvas-viewer{
+    border:0;
+    border-radius:0 0 17px 17px;
+    box-shadow:none;
+  }
+  .policy-detail-split > .detail-aside .pdf-canvas-toolbar{
+    min-height:54px;
+    padding:8px 10px;
+    background:var(--sur);
+  }
+  .policy-detail-split > .detail-aside .pdf-canvas-title{display:none}
+  .policy-detail-split > .detail-aside .pdf-canvas-controls{justify-content:center}
+  .policy-detail-split > .detail-aside .pdf-canvas-stage{
+    min-height:0;
+    padding:10px 8px 18px;
+    overflow-x:auto;
+    background:var(--blue-bg);
+  }
 }

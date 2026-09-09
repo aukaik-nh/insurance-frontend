@@ -4,6 +4,7 @@ import api from "../api"
 import { Ico } from "../icons"
 import { getStatus, baht, fmtDate, policyTypeLabel } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
+import { PdfCanvasViewer } from "../components/PdfCanvasViewer"
 import { PolicyForm } from "../components/PolicyForm"
 import { AttachmentsCard } from "../components/AttachmentsCard"
 import { PremiumGrid } from "../components/PremiumGrid"
@@ -53,6 +54,14 @@ export function DetailPage() {
   const [deleteModal, setDeleteModal] = useState(false)  // confirm ลบ record
   const [deleting, setDeleting]       = useState(false)
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
+  const [useMobilePdfViewer, setUseMobilePdfViewer] = useState(() => window.matchMedia("(max-width: 700px)").matches)
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 700px)")
+    const syncViewer = event => setUseMobilePdfViewer(event.matches)
+    media.addEventListener("change", syncViewer)
+    return () => media.removeEventListener("change", syncViewer)
+  }, [])
 
   // 🔎 Quick-search modal — ค้นหาข้ามทั้งระบบจากหน้า detail (กัน user ต้องกลับไปหน้า list)
   const [searchOpen, setSearchOpen]       = useState(false)
@@ -1230,6 +1239,12 @@ export function DetailPage() {
                       <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
                       <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>
                     </div>
+                  ) : pdfBlobUrl && useMobilePdfViewer ? (
+                    <PdfCanvasViewer
+                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-mobile`}
+                      src={pdfBlobUrl}
+                      filename={activePolicy.pdf_filename || "PDF"}
+                    />
                   ) : pdfBlobUrl ? (
                     <iframe
                       key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
