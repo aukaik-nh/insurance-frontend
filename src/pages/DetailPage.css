@@ -412,6 +412,21 @@ body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*
   }
   .detail-document-card{margin-top:12px !important}
 }
+body.dark .policy-detail-split > .detail-aside .pdf-preview-wrap{
+  border-color:var(--brd);
+  box-shadow:none;
+}
+body.dark .policy-detail-split > .detail-aside .pdf-preview-bar{
+  background:var(--sur2);
+  border-bottom-color:var(--brd);
+  box-shadow:inset 3px 0 0 var(--accent);
+}
+body.dark .policy-detail-split > .detail-aside .pdf-preview-bar .pdf-size,
+body.dark .policy-detail-split > .detail-aside .pdf-zoom-btn{
+  color:var(--t2);
+  border-color:var(--brd2);
+  background:var(--sur);
+}
 
 /* Light theme: use the cream/gold palette for structure and reserve green for
    policy status. Stronger labels and dividers make long records easier to scan. */
