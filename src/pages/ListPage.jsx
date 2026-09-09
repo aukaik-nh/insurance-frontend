@@ -10,6 +10,11 @@ import { PreviewPanel } from "../components/PreviewPanel"
 import { prefetchPdf, getPdfUrl } from "../pdfUtils"
 
 const LIMIT = 10
+const LIST_MEMORY_TTL = 5 * 60 * 1000
+const LIST_MEMORY_MAX = 8
+const listMemoryCache = new Map()
+const listInflight = new Map()
+let lastListTab = null
 
 const STATUS_OPTS = [
   { val: "",         label: "ทั้งหมด" },
@@ -44,6 +49,7 @@ export function ListPage({ tab }) {
   // ── Expiring filter — เลือกช่วงเวลาหมดอายุ ──
   // val: number = วันข้างหน้า, -1 = หมดอายุแล้ว
   const [expiryRange, setExpiryRange] = useState(30)
+  const expiryRangeMounted = useRef(false)
   const EXPIRY_RANGES = [
     { val: 1,   label: "ภายใน 1 วัน",    shortLabel: "วันนี้",        ico: "warn", hint: "ควรติดต่อทันที" },
     { val: 7,   label: "ภายใน 7 วัน",    shortLabel: "7 วัน",         ico: "bell", hint: "ติดตามภายในสัปดาห์นี้" },
@@ -153,9 +159,21 @@ export function ListPage({ tab }) {
 
     const cacheKey = `policies-cache:${JSON.stringify(params)}`
     let hadCache = false
+    const memoryEntry = listMemoryCache.get(cacheKey)
+    if (memoryEntry && Date.now() - memoryEntry.ts < LIST_MEMORY_TTL) {
+      setRows(memoryEntry.rows)
+      setTotal(memoryEntry.total)
+      const expCnt = memoryEntry.rows.filter(r => {
+        if (!r.coverage_end) return false
+        const d = (new Date(r.coverage_end) - new Date()) / 86400000
+        return d >= 0 && d < 30
+      }).length
+      setExpiringCount(expCnt)
+      hadCache = true
+    }
     try {
       const raw = localStorage.getItem(cacheKey)
-      if (raw) {
+      if (raw && !hadCache) {
         const { rows: cRows, total: cTotal, ts } = JSON.parse(raw)
         // ใช้ cache ถ้าอายุไม่เกิน 7 วัน
         if (cRows && Date.now() - (ts || 0) < 7 * 24 * 60 * 60 * 1000) {
@@ -173,16 +191,32 @@ export function ListPage({ tab }) {
     } catch {}
     setLoading(!hadCache)
 
-    api.get("/policies", { params })
-      .then(res => {
+    let request = listInflight.get(cacheKey)
+    if (!request) {
+      request = api.get("/policies", { params })
+        .then(res => {
+          const result = { rows: res.data.data || [], total: res.data.total || 0, ts: Date.now() }
+          listMemoryCache.delete(cacheKey)
+          listMemoryCache.set(cacheKey, result)
+          while (listMemoryCache.size > LIST_MEMORY_MAX) {
+            listMemoryCache.delete(listMemoryCache.keys().next().value)
+          }
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(result))
+          } catch {}
+          return result
+        })
+        .finally(() => listInflight.delete(cacheKey))
+      listInflight.set(cacheKey, request)
+    }
+
+    request
+      .then(result => {
         if (cancelled) return
-        const data = res.data.data || []
-        const totalCount = res.data.total || 0
+        const data = result.rows
+        const totalCount = result.total
         setRows(data)
         setTotal(totalCount)
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify({ rows: data, total: totalCount, ts: Date.now() }))
-        } catch {}
         const expCnt = data.filter(r => {
           if (!r.coverage_end) return false
           const d = (new Date(r.coverage_end) - new Date()) / 86400000
@@ -199,8 +233,15 @@ export function ListPage({ tab }) {
 
     return () => { cancelled = true }
   }, [pageForFetch, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange])
-  useEffect(() => { setPreviewPolicy(null); setPage(1) }, [tab])  // reset preview + page เมื่อสลับ tab
-  useEffect(() => { setPage(1) }, [expiryRange])
+  useEffect(() => {
+    setPreviewPolicy(null)
+    if (lastListTab !== null && lastListTab !== tab) setPage(1)
+    lastListTab = tab
+  }, [tab])
+  useEffect(() => {
+    if (!expiryRangeMounted.current) { expiryRangeMounted.current = true; return }
+    setPage(1)
+  }, [expiryRange])
 
   // ⚡ Analytics fetch ทั้งหมด (limit=20000) แล้ว cache 30 นาที
   // ใช้สำหรับ dashboard charts + expiring page stat strip
