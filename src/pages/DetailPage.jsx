@@ -56,6 +56,10 @@ export function DetailPage() {
   const [deleting, setDeleting]       = useState(false)
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
   const [useMobilePdfViewer, setUseMobilePdfViewer] = useState(() => window.matchMedia("(max-width: 700px)").matches)
+  const [pdfTextOpen, setPdfTextOpen] = useState(false)
+  const [pdfText, setPdfText] = useState("")
+  const [pdfTextLoading, setPdfTextLoading] = useState(false)
+  const [pdfTextError, setPdfTextError] = useState("")
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 700px)")
@@ -104,6 +108,11 @@ export function DetailPage() {
 
   // reset doc tab เมื่อสลับ related policy
   useEffect(() => { setActiveDocId("main") }, [activePdfId])
+  useEffect(() => {
+    setPdfTextOpen(false)
+    setPdfText("")
+    setPdfTextError("")
+  }, [activePdfId, activeDocId])
 
   // fetch กรมธรรม์ทั้งหมดของลูกค้าคนเดียวกัน — ใช้ "ชื่อ" เป็น key (สอดคล้องกับ list dedup)
   // ครอบคลุมทั้งปีเก่า / หลายคันรถ / ทุก policy ของคนคนนี้
@@ -359,6 +368,35 @@ export function DetailPage() {
   const currentDocUrl      = viewingRelated ? pdfViewUrl : getDocUrl(activeDocId)
   const currentDocDlUrl    = `${currentDocUrl}?download=1`
   const showDocTabs        = !viewingRelated && docTabs.length > 1
+
+  const openPdfText = async () => {
+    if (pdfText) { setPdfTextOpen(value => !value); return }
+    if (!pdfBlobUrl || pdfTextLoading) return
+    setPdfTextOpen(true)
+    setPdfTextLoading(true)
+    setPdfTextError("")
+    try {
+      const response = await fetch(pdfBlobUrl)
+      if (!response.ok) throw new Error("โหลด PDF ไม่สำเร็จ")
+      const blob = await response.blob()
+      const form = new FormData()
+      form.append("file", new File([blob], activePolicy.pdf_filename || "document.pdf", { type: "application/pdf" }))
+      const result = await api.post("/preview-pdf-local", form)
+      const text = result.data?.parsed?.raw_text?.trim() || ""
+      if (!text) throw new Error("ไม่พบข้อความในเอกสารนี้")
+      setPdfText(text)
+    } catch (error) {
+      setPdfTextError(error.response?.data?.detail || error.message || "อ่านข้อความไม่สำเร็จ")
+    } finally {
+      setPdfTextLoading(false)
+    }
+  }
+
+  const copyPdfText = async () => {
+    if (!pdfText) return
+    await navigator.clipboard.writeText(pdfText)
+    alert("คัดลอกข้อความแล้ว")
+  }
 
   // hasActiveDoc = มีเอกสารที่ต้องโหลด (อ้างอิงตัวที่คำนวณไว้ก่อน early return)
   const hasActiveDoc = _hasActiveDoc
@@ -1026,6 +1064,12 @@ export function DetailPage() {
                         <button className="pdf-zoom-btn" onClick={() => openPdfTab(currentDocUrl)} title="เปิดแท็บใหม่">
                           <Ico n="open" s={17} />
                         </button>
+                        <button className={`pdf-zoom-btn${pdfTextOpen ? " is-active" : ""}`} onClick={openPdfText}
+                          disabled={!pdfBlobUrl || pdfTextLoading} title="อ่านข้อความเพื่อคัดลอก">
+                          {pdfTextLoading
+                            ? <div className="spin" style={{ width: 15, height: 15, borderWidth: 2 }} />
+                            : <Ico n="copy" s={17} />}
+                        </button>
                         <button className="pdf-zoom-btn" onClick={() => downloadPdf(currentDocDlUrl, activePolicy.pdf_filename || "policy.pdf")} title="ดาวน์โหลด">
                           <Ico n="download" s={17} />
                         </button>
@@ -1042,7 +1086,21 @@ export function DetailPage() {
                       </>
                     )}
                   </div>
-                  {pdfBlobLoading ? (
+                  {pdfTextOpen ? (
+                    <div className="pdf-text-reader">
+                      <div className="pdf-text-reader-hd">
+                        <div><strong>ข้อความจากเอกสาร</strong><small>ลากเลือกข้อความ หรือกดคัดลอกทั้งหมด</small></div>
+                        {pdfText && <button type="button" className="btn btn-w" onClick={copyPdfText}><Ico n="copy" s={16} />คัดลอกทั้งหมด</button>}
+                      </div>
+                      {pdfTextLoading ? (
+                        <div className="pdf-text-reader-state"><div className="spin" /><span>กำลังอ่านข้อความจาก PDF…</span></div>
+                      ) : pdfTextError ? (
+                        <div className="pdf-text-reader-state error"><Ico n="warn" s={24} /><span>{pdfTextError}</span><button className="btn btn-w" onClick={() => { setPdfTextOpen(false); setPdfTextError("") }}>กลับไปดู PDF</button></div>
+                      ) : (
+                        <textarea className="pdf-text-content" value={pdfText} readOnly aria-label="ข้อความจากเอกสาร PDF" />
+                      )}
+                    </div>
+                  ) : pdfBlobLoading ? (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 14, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)" }}>
                       <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
                       <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>

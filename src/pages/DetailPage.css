@@ -427,6 +427,14 @@ body.dark .policy-detail-split > .detail-aside .pdf-zoom-btn{
   border-color:var(--brd2);
   background:var(--sur);
 }
+.pdf-zoom-btn.is-active{color:var(--blue) !important;border-color:var(--accent) !important;background:var(--blue-bg) !important}
+.pdf-text-reader{display:flex;flex-direction:column;min-height:700px;height:calc(100vh - 180px);background:var(--sur)}
+.pdf-text-reader-hd{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 18px;border-bottom:1px solid var(--brd);background:var(--sur2)}
+.pdf-text-reader-hd>div{display:flex;flex-direction:column;gap:2px}.pdf-text-reader-hd strong{font-size:15px;color:var(--t1)}.pdf-text-reader-hd small{font-size:12px;color:var(--t3)}
+.pdf-text-reader-hd .btn{min-height:38px;padding:7px 13px;font-size:13px;border-radius:9px}
+.pdf-text-content{flex:1;width:100%;resize:none;border:0;outline:0;padding:22px 24px;background:var(--sur);color:var(--t1);font:400 15px/1.75 inherit;white-space:pre-wrap}
+.pdf-text-reader-state{display:flex;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:30px;color:var(--t2);text-align:center}.pdf-text-reader-state.error{color:var(--red)}
+@media(max-width:700px){.pdf-text-reader{min-height:480px;height:65vh}.pdf-text-reader-hd{align-items:flex-start;padding:12px}.pdf-text-reader-hd small{display:none}.pdf-text-content{padding:16px;font-size:14px}}
 
 /* Light theme: use the cream/gold palette for structure and reserve green for
    policy status. Stronger labels and dividers make long records easier to scan. */
