@@ -18,8 +18,6 @@ const _Loading = () => (
     <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
   </div>
 )
-const Lazy = (C) => <Suspense fallback={<_Loading />}><C /></Suspense>
-
 /* ── Layout shell (nav + outlet) ── */
 function Layout({ onLogout }) {
   const navigate  = useNavigate()
@@ -39,6 +37,8 @@ function Layout({ onLogout }) {
     localStorage.setItem("theme", darkMode ? "dark" : "light")
   }, [darkMode])
 
+  // Reading comfort is especially useful for policy numbers and dates.  Keep
+  // the preference on this device so it does not need to be set every visit.
   useEffect(() => {
     document.body.classList.toggle("text-large", largeText)
     localStorage.setItem("large_text", String(largeText))
@@ -107,6 +107,7 @@ function Layout({ onLogout }) {
   // เมนูแบ่งเป็น 2 กลุ่ม
   const NAV_VIEW = [
     { path: "/",         ico: "grid", label: "ภาพรวม",        desc: "Dashboard + สถิติ",       badge: 0 },
+    { path: "/policies", ico: "list", label: "กรมธรรม์ทั้งหมด", desc: "ค้นหาและจัดการกรมธรรม์", badge: 0 },
     { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ภายใน 30 วัน",            badge: expiringCount },
   ]
   const NAV_ACTION = [
@@ -144,8 +145,8 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         aria-current={active ? "page" : undefined}
         onMouseEnter={() => prefetch(it.path)}
       >
-        <Ico n={it.ico} s={19} />
-        <span>{it.label}</span>
+        <span className="sb-nav-icon"><Ico n={it.ico} s={18} /></span>
+        <span className="sb-nav-label">{it.label}</span>
         {it.badge > 0 && <span className="sb-nav-badge">{it.badge}</span>}
       </button>
     )
@@ -157,7 +158,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
       <div className="app">
 
         {/* ── TOPNAV ── */}
-        <header className="sb" style={{ position: "relative" }}>
+        <header className="sb">
           {/* โลโก้ */}
           <div className="sb-logo" style={{ cursor: "pointer" }} onClick={() => navTo("/")}>
             <img src="/logo_no_bg.png" alt="ประกันคุ้มภัย" style={{ height: 56, width: 56, objectFit: "contain" }} />
@@ -172,7 +173,6 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
           <nav className="sb-nav" aria-label="เมนูหลัก">
             <div className="sb-nav-group">
               {NAV_VIEW.map(navItem)}
-              <span className="sb-nav-sep" aria-hidden="true" />
               {NAV_ACTION.filter(it => it.path !== "/upload").map(navItem)}
             </div>
             {NAV_ACTION.filter(it => it.path === "/upload").map(it => {
@@ -185,7 +185,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                   aria-current={active ? "page" : undefined}
                   onMouseEnter={() => prefetch(it.path)}
                 >
-                  <Ico n={it.ico} s={19} />
+                  <span className="sb-nav-primary-icon"><Ico n={it.ico} s={18} /></span>
                   <span>{it.label}</span>
                 </button>
               )
@@ -209,6 +209,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
               title={darkMode ? "โหมดสว่าง" : "โหมดมืด"}>
               <Ico n={darkMode ? "sun" : "moon"} s={20} />
             </button>
+
             <button
               className={`theme-btn text-size-btn${largeText ? " on" : ""}`}
               onClick={() => setLargeText(v => !v)}
@@ -219,14 +220,14 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
               <span className="sr-only">{largeText ? "ใช้ขนาดตัวอักษรปกติ" : "ขยายตัวอักษรให้อ่านง่าย"}</span>
             </button>
             {/* ── Logout ── */}
-            <button
+            {onLogout && <button
               className="theme-btn sb-logout"
               onClick={onLogout}
               title="ออกจากระบบ"
             >
               <Ico n="logout" s={19} />
-            </button>
-            <button className="ham" onClick={() => setMobileMenu(m => !m)}>
+            </button>}
+            <button className="ham" aria-label="เปิดเมนู" aria-expanded={mobileMenu} onClick={() => setMobileMenu(m => !m)}>
               <Ico n="menu" s={22} />
             </button>
           </div>
@@ -322,6 +323,8 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                   )
                 })}
 
+
+
                 <div className="mobile-readable-row">
                   <div>
                     <div>ตัวอักษรอ่านง่าย</div>
@@ -338,7 +341,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                 </div>
 
                 {/* Logout row */}
-                <div style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid var(--brd)" }}>
+                <div hidden={!onLogout} style={{ marginTop: 8, paddingTop: 12, borderTop: "1px solid var(--brd)" }}>
                   <div
                     onClick={() => { setMobileMenu(false); onLogout() }}
                     style={{
@@ -438,6 +441,8 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
   )
 }
 
+const AUTH_DISABLED = import.meta.env.VITE_AUTH_DISABLED === "true"
+
 /* ── Root with BrowserRouter + Auth gate ── */
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token"))
@@ -465,7 +470,7 @@ export default function App() {
   //   2. ping + ตรวจ token ตอน tab visible อีกครั้ง (กรณีเปิดทิ้งไว้นานๆ)
   //   3. ถ้า JWT หมดอายุ → logout ทันที (เด้งไป login โดยไม่ต้องรอ API call)
   useEffect(() => {
-    if (!token) return
+    if (AUTH_DISABLED || !token) return
 
     const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
     const healthUrl = apiBase.replace(/\/api\/?$/, "") + "/health"
@@ -501,7 +506,7 @@ export default function App() {
   }, [token])
 
   // หน้า login — แสดงนอก BrowserRouter (ไม่มี nav)
-  if (!token) {
+  if (!AUTH_DISABLED && !token) {
     return (
       <>
         <style>{CSS}</style>
@@ -513,7 +518,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout onLogout={handleLogout} />}>
+        <Route element={<Layout onLogout={AUTH_DISABLED ? null : handleLogout} />}>
           <Route index              element={<ListPage tab="dashboard" />} />
           <Route path="policies"    element={<ListPage tab="policies" />} />
           <Route path="expiring"    element={<ListPage tab="expiring" />} />

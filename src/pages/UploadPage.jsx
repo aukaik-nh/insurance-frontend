@@ -4,26 +4,27 @@ import api from "../api"
 import { Ico } from "../icons"
 import { computeDisplayFilename } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
-import { PdfPreview } from "../components/PdfPreview"
 import { FormPanel } from "../components/FormPanel"
 import { PremiumGrid } from "../components/PremiumGrid"
+import { DocumentReader } from "../components/DocumentReader"
 
 export function UploadPage() {
   const navigate = useNavigate()
   const { notify } = useOutletContext()
+  const mainFileInput = useRef(null)
 
   const [file, setFile]         = useState(null)
   const [fileUrl, setFileUrl]   = useState(null)
   const [filename, setFilename] = useState("")
   // true = ใช้ชื่ออัตโนมัติจาก form (sync เมื่อ field เปลี่ยน), false = user แก้ชื่อเอง (ค้างไว้)
   const [filenameAuto, setFilenameAuto] = useState(true)
-  const [drag, setDrag]         = useState(false)
+  const [preview, setPreview] = useState({})
   const [loading, setLoading]   = useState(false)
   const [parsed, setParsed]     = useState({})
   const [hasData, setHasData]   = useState(false)
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState("")
-  const [aiWarn, setAiWarn]     = useState(null)
+  const [ocrWarn, setOcrWarn]   = useState(null)
   const [pdfFull, setPdfFull]   = useState(false)
   const [formOpen, setFormOpen]       = useState(true)
   const [premiumOpen, setPremiumOpen] = useState(true)
@@ -34,9 +35,25 @@ export function UploadPage() {
   const [prbFile, setPrbFile]     = useState(null)
   const [prbFileUrl, setPrbFileUrl] = useState(null)
   const [prbLoading, setPrbLoading] = useState(false)  // AI กำลังอ่าน PRB
+  const [prbPreview, setPrbPreview] = useState({})
+  const [prbRead, setPrbRead] = useState({})
   const [activePreview, setActivePreview] = useState("main") // "main" | "prb"
+  const showingPrb = Boolean(prbFile && (activePreview === "prb" || !file))
+  const readerFile = showingPrb ? prbFile : file
+  const readerPreview = showingPrb ? prbPreview : preview
+  const readerData = showingPrb ? prbRead : parsed
 
-  const ref = useRef()
+  const clearFile = () => {
+    setFile(null); setParsed({}); setPreview({}); setHasData(false)
+    setFilename(""); setOcrWarn(null); setErr(""); setManualMode(false)
+    setPrb(null); setPrbFile(null); setActivePreview("main")
+    setPrbPreview({}); setPrbRead({}); setPdfFull(false)
+  }
+
+  const clearPrbFile = () => {
+    setPrbFile(null); setPrbPreview({}); setPrbRead({}); setActivePreview("main")
+    setPrb(p => p ? { ...p, pdf_filename: "" } : p)
+  }
 
   useEffect(() => {
     if (!file) { setFileUrl(null); return }
@@ -62,6 +79,7 @@ export function UploadPage() {
       policy_type:     parsed.policy_type,
       insured_address: parsed.insured_address,
       insured_name:    parsed.insured_name,
+      coverage_start:  parsed.coverage_start,
       coverage_end:    parsed.coverage_end,
       doc_type:        "main",
     })
@@ -69,13 +87,16 @@ export function UploadPage() {
       setFilename(computed)
     }
   }, [file, filenameAuto, parsed.license_plate, parsed.policy_type,
-      parsed.insured_address, parsed.insured_name, parsed.coverage_end])
+      parsed.insured_address, parsed.insured_name, parsed.coverage_start, parsed.coverage_end])
 
   const pick = async f => {
-    if (!f) return
+    if (!f || loading || prbLoading || saving) return
     if (!(f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))) {
       setErr("กรุณาเลือกไฟล์ PDF เท่านั้น"); return
     }
+    if (f.size > 12 * 1024 * 1024) { setErr("กรุณาเลือก PDF ขนาดไม่เกิน 12 MB"); return }
+    setParsed({}); setPreview({}); setOcrWarn(null)
+    setActivePreview("main")
     // เก็บไฟล์ไว้ใน browser — ยังไม่อัปขึ้น R2 (จะอัปตอนกด "บันทึก")
     setFile(f); setErr(""); setHasData(false); setManualMode(true)
     setFilename(f.name)       // fallback name — useEffect จะ replace ทันทีที่ AI ดึงข้อมูลได้
@@ -84,31 +105,39 @@ export function UploadPage() {
     const form = new FormData()
     form.append("file", f)
     try {
-      // /preview-pdf — extract เฉพาะ ไม่ upload storage
-      const res = await api.post("/preview-pdf", form)
+      // Python OCR: PDF -> image -> Tesseract; ไม่เรียก AI และยังไม่ upload storage
+      const res = await api.post("/preview-pdf-local", form)
       const parsedData = res.data?.parsed || {}
-      const hasAny = Object.values(parsedData).some(v => v !== null && v !== "" && v !== undefined)
+      setPreview(res.data?.preview || {})
+      if (res.data?.success === false) throw new Error(parsedData.parse_error || "อ่านเอกสารไม่สำเร็จ กรุณาลองอีกครั้งหรือกรอกข้อมูลเอง")
+      const hasAny = ["policy_number", "insured_name", "license_plate", "coverage_start", "total_premium"]
+        .some(key => parsedData[key] !== null && parsedData[key] !== "" && parsedData[key] !== undefined)
       setParsed({ ...parsedData, pdf_filename: f.name })
       setHasData(hasAny)
-      setAiWarn(hasAny ? null : "AI อ่านข้อมูลได้ไม่ครบ — กรุณาตรวจและกรอกส่วนที่ขาด")
+      setOcrWarn(res.data?.requires_review ? (parsedData.parse_warnings?.join(" · ") || "กรุณาตรวจข้อมูลที่อ่านได้กับเอกสารก่อนบันทึก") : null)
     } catch (e) {
       setErr("อ่าน PDF ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally { setLoading(false) }
   }
 
   const pickPrb = async f => {
-    if (!f) return
+    if (!f || loading || prbLoading || saving) return
     if (!(f.type === "application/pdf" || f.name?.toLowerCase().endsWith(".pdf"))) {
       setErr("พ.ร.บ.: กรุณาเลือกไฟล์ PDF เท่านั้น"); return
     }
+    if (f.size > 12 * 1024 * 1024) { setErr("พ.ร.บ.: กรุณาเลือก PDF ขนาดไม่เกิน 12 MB"); return }
+    setPrbPreview({}); setPrbRead({}); setActivePreview("prb"); setErr("")
     setPrbFile(f)
-    setPrb(p => ({ ...(p || {}), pdf_filename: f.name }))
+    setPrb({ pdf_filename: f.name, net_premium: "", stamp_duty: "", vat: "", total_premium: "" })
     setPrbLoading(true)
     const form = new FormData()
     form.append("file", f)
     try {
-      const res = await api.post("/preview-pdf", form)
+      const res = await api.post("/preview-pdf-local", form)
       const p = res.data?.parsed || {}
+      setPrbPreview(res.data?.preview || {})
+      if (res.data?.success === false) throw new Error(p.parse_error || "อ่านเอกสารไม่สำเร็จ")
+      setPrbRead(p)
       setPrb(prev => ({
         ...(prev || {}),
         pdf_filename: f.name,
@@ -118,7 +147,7 @@ export function UploadPage() {
         total_premium: p.total_premium ?? prev?.total_premium ?? "",
       }))
     } catch (e) {
-      console.warn("preview พ.ร.บ. failed:", e.response?.data?.detail || e.message)
+      setErr("อ่าน พ.ร.บ. ไม่สำเร็จ กรุณากรอกข้อมูลเอง: " + (e.response?.data?.detail || e.message))
     } finally {
       setPrbLoading(false)
     }
@@ -126,7 +155,8 @@ export function UploadPage() {
 
   // toggle PRB column
   const togglePrb = () => {
-    if (prb) { setPrb(null); setPrbFile(null); setActivePreview("main") }
+    if (prbLoading || saving) return
+    if (prb) { setPrb(null); setPrbFile(null); setPrbPreview({}); setPrbRead({}); setActivePreview("main") }
     else     { setPrb({ net_premium: "", stamp_duty: "", vat: "", total_premium: "" }); setPremiumOpen(true) }
   }
 
@@ -157,6 +187,36 @@ export function UploadPage() {
     return { ...p, [k]: v }
   })
 
+  const useReadValue = (field, item) => {
+    const value = item?.value ?? item?.manual_value ?? item?.text?.trim()
+    if (!field || !value) return
+    setParsed(current => {
+      const existing = current[field]
+      if (existing !== null && existing !== undefined && String(existing).trim() !== "") {
+        notify(existing === value ? "ข้อมูลนี้อยู่ในช่องแล้ว" : "ช่องนี้มีข้อมูลอยู่แล้ว จึงไม่ได้เขียนทับ", "info")
+        return current
+      }
+      return { ...current, [field]: value }
+    })
+    setHasData(true)
+  }
+
+  const useAllReadValues = () => {
+    const items = Object.entries(parsed.field_evidence || {})
+    setParsed(current => {
+      const next = { ...current }
+      for (const [field, item] of items) {
+        const value = item?.value ?? item?.manual_value ?? item?.text?.trim()
+        if (value && (next[field] === null || next[field] === undefined || String(next[field]).trim() === "")) {
+          next[field] = value
+        }
+      }
+      return next
+    })
+    setHasData(true)
+    notify("ใส่ข้อมูลที่อ่านได้ลงช่องว่างแล้ว กรุณาตรวจเทียบภาพก่อนบันทึก")
+  }
+
   // ปุ่มบันทึก active เมื่อมีข้อมูลใดๆ
   const hasAnyInput = hasData || prb !== null
     || Object.values(parsed).some(v => v !== "" && v !== null && v !== undefined)
@@ -173,6 +233,7 @@ export function UploadPage() {
   })
 
   const doSave = async () => {
+    if (loading || prbLoading || saving) return
     setSaving(true); setErr("")
     try {
       // 1a) ถ้ามีไฟล์ PDF หลัก — upload ไป R2 ก่อน (ไม่ทำตอนเลือกไฟล์)
@@ -206,6 +267,8 @@ export function UploadPage() {
         const form = new FormData()
         form.append("file", prbFile)
         form.append("doc_type", "prb")
+        // Do not fall back to a paid parser when saving locally-read files.
+        form.append("auto_extract", "false")
         form.append("label", prb.label || `พ.ร.บ. ${prbFile.name}`)
         if (prb.net_premium   !== "") form.append("net_premium",   String(prb.net_premium))
         if (prb.stamp_duty    !== "") form.append("stamp_duty",    String(prb.stamp_duty))
@@ -238,9 +301,10 @@ export function UploadPage() {
     <>
       {pdfFull && (
         <PdfLightbox
-          src={activePreview === "prb" && prbFileUrl ? prbFileUrl : fileUrl}
-          filename={activePreview === "prb" && prbFile ? prbFile.name : file?.name}
-          sizeKB={activePreview === "prb" && prbFile ? (prbFile.size / 1024).toFixed(0) : file ? (file.size / 1024).toFixed(0) : null}
+          src={showingPrb ? prbFileUrl : fileUrl}
+          imageUrl={readerPreview.image_data_url}
+          filename={readerFile?.name}
+          sizeKB={readerFile ? (readerFile.size / 1024).toFixed(0) : null}
           onClose={() => setPdfFull(false)} />
       )}
 
@@ -253,9 +317,9 @@ export function UploadPage() {
           <div className="page-hd-info">
             <div className="page-title">เพิ่มกรมธรรม์</div>
             <div className="page-sub">
-              {loading ? "AI กำลังอ่านเอกสาร…"
+              {loading ? "กำลังอ่านเอกสาร…"
                 : hasData ? "ตรวจสอบและแก้ไขข้อมูลก่อนบันทึก"
-                : "เลือก PDF ให้ AI ช่วยกรอก หรือบันทึกข้อมูลเอง"}
+                : "เลือกไฟล์เพื่อเริ่มต้น หรือกรอกข้อมูลเอง"}
             </div>
           </div>
           <div className="page-hd-right">
@@ -263,7 +327,7 @@ export function UploadPage() {
               <Ico n="inbox" s={18} />
               <span>อัปโหลดหลายไฟล์</span>
             </button>
-            <button className="btn btn-b" onClick={doSave} disabled={!hasAnyInput || saving}>
+            <button className="btn btn-b" onClick={doSave} disabled={!hasAnyInput || saving || loading || prbLoading}>
               <Ico n="save" s={18} />
               {saving ? "กำลังบันทึก..." : "บันทึก"}
             </button>
@@ -282,24 +346,16 @@ export function UploadPage() {
             </div>
           )}
 
+          {!file && !prbFile && <div className="upload-reader-workspace">
+            <DocumentReader file={file} loading={loading || prbLoading || saving}
+              imageUrl={preview.image_data_url} pdfUrl={fileUrl} text={parsed.raw_text || ""}
+              evidence={parsed.field_evidence} textScope={parsed.text_scope}
+              pageCount={preview.page_count} onFile={pick} onClear={clearFile}
+              onManual={() => setManualMode(true)} notify={notify} />
+          </div>}
           <div className="upload-split">
             {/* left: drop zone + form */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-              {!file && !manualMode && (
-                <section className="upload-workflow-card" aria-label="ขั้นตอนเพิ่มกรมธรรม์">
-                  <div className="upload-workflow-copy">
-                    <span className="upload-eyebrow">เพิ่มข้อมูลกรมธรรม์</span>
-                    <h2>เริ่มจากไฟล์ PDF ของกรมธรรม์</h2>
-                    <p>AI จะอ่านข้อมูลจากเอกสารให้ก่อน แล้วคุณตรวจทานและบันทึกเมื่อพร้อม</p>
-                  </div>
-                  <div className="upload-steps" aria-label="3 ขั้นตอน">
-                    <div className="upload-step active"><span>1</span><div><strong>เลือกไฟล์</strong><small>PDF กรมธรรม์</small></div></div>
-                    <div className="upload-step"><span>2</span><div><strong>AI อ่านข้อมูล</strong><small>เติมฟอร์มอัตโนมัติ</small></div></div>
-                    <div className="upload-step"><span>3</span><div><strong>ตรวจและบันทึก</strong><small>เก็บ PDF ในระบบ</small></div></div>
-                  </div>
-                </section>
-              )}
+            <div className="upload-form-column" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
               {file && (
                 <div className="fname-row">
@@ -323,62 +379,12 @@ export function UploadPage() {
                 </div>
               )}
 
-              {/* drop zone: กรมธรรม์หลัก */}
-              <div className={`drop-wrap upload-drop-zone${file ? " has-file" : ""}`}>
-                {file ? (
-                  <div className="drop-bar" onClick={() => ref.current.click()} style={{ cursor: "pointer" }}>
-                    <div className="drop-bar-left">
-                      <div className="drop-h-ic" style={{ width: 44, height: 44, borderRadius: 11 }}>
-                        <Ico n="doc" s={22} />
-                      </div>
-                      <div>
-                        <div className="drop-h-name" style={{ fontSize: 18 }}>{filename || file.name}</div>
-                        <div className="drop-h-hint" style={{ fontSize: 15 }}>
-                          {loading ? "กำลังวิเคราะห์…" : `${(file.size / 1024).toFixed(0)} KB · คลิกเพื่อเปลี่ยนไฟล์`}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="drop-bar-right">
-                      {loading
-                        ? <div className="spin" style={{ width: 22, height: 22, borderWidth: 2 }} />
-                        : <span className="drop-h-badge ok">✓</span>}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="drop-body"
-                    onDragOver={e => { e.preventDefault(); setDrag(true) }}
-                    onDragLeave={() => setDrag(false)}
-                    onDrop={e => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]) }}
-                    onClick={() => !loading && ref.current.click()}
-                  >
-                    <div className={`drop-body-inner${drag ? " drag" : ""}`}>
-                      <div className="drop-h-ic" style={{ width: 80, height: 80, borderRadius: 20 }}>
-                        <Ico n="upload" s={36} />
-                      </div>
-                      <span className="drop-h-name" style={{ fontSize: 21 }}>ลากไฟล์ PDF กรมธรรม์มาวางที่นี่</span>
-                      <span className="drop-h-hint" style={{ fontSize: 16 }}>AI จะอ่านจากภาพเอกสาร · รองรับ PDF เท่านั้น</span>
-                      <button className="btn btn-b upload-pick-btn" type="button" onClick={() => ref.current.click()}>
-                        <Ico n="upload" s={18} /> เลือกไฟล์ PDF
-                      </button>
-                      <button className="upload-batch-link" type="button" onClick={() => navigate("/batch")}>
-                        มีหลายไฟล์? ไปที่อัปโหลดหลายไฟล์ เพื่อให้ AI อ่านและจับคู่เอกสารเป็นชุด
-                      </button>
-                      <button className="upload-manual-link" type="button" onClick={() => setManualMode(true)}>
-                        ไม่มีไฟล์? กรอกข้อมูลด้วยตัวเอง
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <input ref={ref} type="file" accept=".pdf" style={{ display: "none" }}
-                  onChange={e => pick(e.target.files[0])} />
-              </div>
-
-              {aiWarn && (
+              {ocrWarn && (
                 <div className="bnr am" style={{ marginBottom: 0 }}>
                   <Ico n="bell" s={22} />
                   <div className="bnr-body">
-                    <div className="bnr-t">AI อ่านข้อมูลได้ไม่ครบ</div>
-                    <div className="bnr-s">กรุณาตรวจสอบและแก้ไขข้อมูลก่อนบันทึก</div>
+                    <div className="bnr-t">ตรวจสอบข้อมูลก่อนบันทึก</div>
+                    <div className="bnr-s">{ocrWarn}</div>
                   </div>
                 </div>
               )}
@@ -387,7 +393,7 @@ export function UploadPage() {
                 {file && (
                   <div className={`upload-ai-status${loading ? " reading" : hasData ? " ready" : ""}`}>
                     <span className="upload-ai-icon">{loading ? <span className="spin" style={{ width: 18, height: 18, borderWidth: 2 }} /> : <Ico n={hasData ? "check" : "doc"} s={19} />}</span>
-                    <div><strong>{loading ? "AI กำลังอ่านข้อมูลจากเอกสาร" : hasData ? "AI เติมข้อมูลเบื้องต้นแล้ว" : "พร้อมให้กรอกข้อมูล"}</strong><small>{loading ? "รอสักครู่ ระบบกำลังวิเคราะห์ไฟล์" : "ตรวจข้อมูลสำคัญก่อนกดบันทึกทุกครั้ง"}</small></div>
+                    <div><strong>{loading ? "กำลังอ่านเอกสาร" : hasData ? "เติมข้อมูลเบื้องต้นแล้ว" : "พร้อมให้กรอกข้อมูล"}</strong><small>{loading ? "รอสักครู่ ระบบกำลังอ่านข้อความหน้าแรก" : "ตรวจข้อมูลสำคัญก่อนกดบันทึกทุกครั้ง"}</small></div>
                   </div>
                 )}
                 <FormPanel
@@ -415,13 +421,21 @@ export function UploadPage() {
               </>}
             </div>
 
-            {/* right: PDF preview + doc tabs — ซ่อนถ้ายังไม่มีไฟล์ */}
+            {/* right: one image/text reader for the selected document */}
             {(file || prbFile) && (
-            <div className="upload-aside">
+            <aside className="upload-aside upload-document-aside" aria-label="เอกสารสำหรับเทียบข้อมูล">
+              {prbFile && !file && <div style={{ marginBottom: 12 }}>
+                <input ref={mainFileInput} type="file" accept=".pdf,application/pdf" hidden
+                  aria-label="แนบไฟล์กรมธรรม์" disabled={loading || prbLoading || saving}
+                  onChange={e => { pick(e.target.files?.[0]); e.target.value = "" }} />
+                <button type="button" className="btn btn-w" disabled={loading || prbLoading || saving}
+                  onClick={() => mainFileInput.current?.click()}><Ico n="upload" s={17} />แนบไฟล์กรมธรรม์</button>
+              </div>}
               {/* tab bar — แสดงเมื่อมีไฟล์ พ.ร.บ. */}
               {prbFile && file && (
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
                   <button
+                    type="button" disabled={loading || prbLoading || saving} aria-pressed={!showingPrb}
                     onClick={() => setActivePreview("main")}
                     style={{
                       padding: "9px 16px", borderRadius: 99, cursor: "pointer",
@@ -438,6 +452,7 @@ export function UploadPage() {
                     {activePreview === "main" && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--blue)", marginLeft: 1 }} />}
                   </button>
                   <button
+                    type="button" disabled={loading || prbLoading || saving} aria-pressed={showingPrb}
                     onClick={() => setActivePreview("prb")}
                     style={{
                       padding: "9px 16px", borderRadius: 99, cursor: "pointer",
@@ -455,13 +470,18 @@ export function UploadPage() {
                   </button>
                 </div>
               )}
-              <PdfPreview
-                fileUrl={activePreview === "prb" && prbFileUrl ? prbFileUrl : fileUrl}
-                file={activePreview === "prb" && prbFile ? prbFile : file}
-                filename={activePreview === "prb" && prbFile ? prbFile.name : filename}
-                onFullscreen={() => setPdfFull(true)}
-              />
-            </div>
+              <DocumentReader key={showingPrb ? "prb" : "main"}
+                file={readerFile} loading={loading || prbLoading || saving}
+                imageUrl={readerPreview.image_data_url} pdfUrl={showingPrb ? prbFileUrl : fileUrl} text={readerData.raw_text || ""}
+                evidence={readerData.field_evidence} textScope={readerData.text_scope}
+                pageCount={readerPreview.page_count}
+                onFile={showingPrb ? pickPrb : pick} onClear={showingPrb ? clearPrbFile : clearFile}
+                onManual={() => setManualMode(true)} notify={notify}
+                fieldValues={showingPrb ? prb : parsed}
+                onUseEvidence={showingPrb ? undefined : useReadValue}
+                onUseAllEvidence={showingPrb ? undefined : useAllReadValues}
+                onFullscreen={() => setPdfFull(true)} />
+            </aside>
             )}
           </div>
         </div>

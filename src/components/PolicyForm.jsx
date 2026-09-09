@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { Ico } from "../icons"
 import { F_SECS, F_LBL } from "../helpers"
 
@@ -28,7 +29,8 @@ function calcPremium(net) {
   return { stamp_duty: stamp, vat, total_premium: total }
 }
 
-export function PolicyForm({ values, onChange, hideSections = [] }) {
+export function PolicyForm({ values, onChange, hideSections = [], embedded = false }) {
+  const formId = useId()
   function handleChange(k, val) {
     if (k === "net_premium") {
       const calc = calcPremium(val)
@@ -43,11 +45,11 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
   return (
     <div className="policy-form">
       {sections.map(sec => (
-        <section key={sec.label} className="policy-form-section">
-          <div className="shd">
+        <section key={sec.label} className="policy-form-section" aria-label={sec.label}>
+          {!(embedded && sec.label === "ข้อมูลกรมธรรม์") && <div className="shd">
             <Ico n={sec.ico} s={17} />
             <span className="shd-lbl">{sec.label}</span>
-          </div>
+          </div>}
           <div className="fg">
             {sec.keys.map(k => {
               const isDate  = DATE_KEYS.includes(k)
@@ -58,8 +60,8 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
               // value สำหรับ <input type=date> ต้องเป็น YYYY-MM-DD (ค.ศ.) เสมอ
               const dateVal = isDate ? normalizeDate(rawVal) : ""
               return (
-                <div key={k} className={`fi${isWide ? " fw" : ""}`}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div key={k} className={`fi${isWide ? " fw" : ""}${["insured_name", "broker_name"].includes(k) ? " fi-long" : ""}`}>
+                  <label htmlFor={`${formId}-${k}`} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
                     {F_LBL[k]}
                     {isCalc && (
                       <span style={{ fontSize: 12, color: "var(--blue)", background: "var(--blue-bg)", borderRadius: 6, padding: "3px 8px" }}>
@@ -68,6 +70,9 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
                     )}
                   </label>
                   <input
+                    id={`${formId}-${k}`}
+                    name={k}
+                    inputMode={k === "phone" ? "tel" : undefined}
                     type={isDate ? "date" : "text"}
                     readOnly={isCalc}
                     placeholder={
@@ -96,11 +101,12 @@ export function PolicyForm({ values, onChange, hideSections = [] }) {
       <div className="notes-card">
         <div className="notes-card-hd">
           <Ico n="doc" s={17} />
-          <span>หมายเหตุ</span>
+          <label htmlFor={`${formId}-notes`}>หมายเหตุ</label>
         </div>
         <textarea
           className="notes-ta"
-          rows={5}
+          id={`${formId}-notes`}
+          rows={3}
           placeholder="บันทึกข้อความเพิ่มเติม เช่น รายละเอียดพิเศษ, ข้อตกลง, หรือข้อมูลอื่น…"
           value={values.notes ?? ""}
           onChange={e => onChange({ ...values, notes: e.target.value })}

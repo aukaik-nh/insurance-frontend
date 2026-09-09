@@ -26,3 +26,9 @@ dist-ssr
 # Claude Code local state
 .claude/
 
+
+# Local recovery backups and configuration
+backups/
+.env
+.env.*
+!.env.example

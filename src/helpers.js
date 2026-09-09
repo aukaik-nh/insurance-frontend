@@ -61,12 +61,13 @@ export const policyTypeLabel = t => t ? (POLICY_TYPE_LABEL[t] || t) : null
 //   - ประกันรถยนต์ (M/STY)        → '{ทะเบียน} กธ.{YY}.pdf'
 //   - อัคคีภัย/ทรัพย์สิน (FIRE)   → '{ที่อยู่ 40 ตัวแรก} กธ.{YY}.pdf'
 //   - PA/TA/MISC                  → '{ชื่อ} กธ.{YY}.pdf'
-export function computeDisplayFilename({ plate, policy_type, insured_address, insured_name, coverage_end, doc_type = "main" } = {}) {
+export function computeDisplayFilename({ plate, policy_type, insured_address, insured_name, coverage_start, coverage_end, doc_type = "main" } = {}) {
   const typeThai = { prb: "พรบ", endorsement: "สลักหลัง", main: "กธ" }[doc_type] || "เอกสาร"
   // ปี (YY) — รองรับทั้ง ค.ศ. + พ.ศ.
   let yy = ""
-  const ce = (coverage_end || "").toString()
-  const m = ce.match(/(\d{4})/)
+  // ระบบเก่าใช้ปีเริ่มคุ้มครองในชื่อ เช่น "กธ.69"; fallback ปีหมดอายุสำหรับข้อมูลเก่า
+  const policyYear = (coverage_start || coverage_end || "").toString()
+  const m = policyYear.match(/(\d{4})/)
   if (m) {
     let y = parseInt(m[1], 10)
     if (y < 2500) y += 543

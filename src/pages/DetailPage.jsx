@@ -8,6 +8,7 @@ import { PolicyForm } from "../components/PolicyForm"
 import { AttachmentsCard } from "../components/AttachmentsCard"
 import { PremiumGrid } from "../components/PremiumGrid"
 import { usePdfBlob, downloadPdf, openPdfTab, getPdfUrl } from "../pdfUtils"
+import "./DetailPage.css"
 
 // คำนวณอากร/VAT/รวม จากเบี้ยสุทธิ — สูตรเดียวกับ PolicyForm
 // stamp = ceil(net*0.004),  vat = (net+stamp)*0.07,  total = net+stamp+vat
@@ -163,7 +164,12 @@ export function DetailPage() {
 
   // ⚠️ usePdfBlob ต้องถูกเรียก *ก่อน* early return — Rules of Hooks
   // คำนวณ input แบบ null-safe (รองรับช่วง p ยังไม่โหลด)
-  const _activePolicy   = relatedPdfs.find(r => r.id === activePdfId) || p
+  // The current policy must use the freshly fetched detail record.  A related
+  // list response can be older (or browser-cached) and may not yet contain a
+  // newly attached PDF, which made the preview incorrectly say "no PDF".
+  const _activePolicy   = activePdfId === p?.id
+    ? p
+    : relatedPdfs.find(r => r.id === activePdfId) || p
   const _hasPdfInDb     = !!_activePolicy?.pdf_filename || !!_activePolicy?.pdf_size
   const _isLegacyPdf    = !!(_activePolicy?.pdf_url && _activePolicy.pdf_url.includes("drive.google.com"))
   const _viewingRelated = !!p && activePdfId !== p.id
@@ -940,9 +946,9 @@ export function DetailPage() {
                 const totalDocs = relatedPdfs.length + attachItems.length
                 if (totalDocs === 0 && !p.pdf_filename) return null
                 return (
-                <div className="info-card" style={{ marginBottom: 12 }}>
+                <div className="info-card detail-document-card" style={{ marginBottom: 12 }}>
                   <div
-                    className="info-card-hd"
+                    className="info-card-hd detail-document-card-hd"
                     onClick={() => setPdfListOpen(o => !o)}
                     style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}
                   >
@@ -1036,12 +1042,12 @@ export function DetailPage() {
                       other:       { label: "อื่นๆ",       color: "var(--t3)",    bg: "var(--sur2)",      ico: "doc" },
                     }
                     return (
-                      <div className="info-card-bd" style={{ padding: "8px 12px 12px" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div className="info-card-bd detail-document-list-bd" style={{ padding: "8px 12px 12px" }}>
+                        <div className="detail-document-groups" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                           {years.map(year => (
-                            <div key={year}>
+                            <div className="detail-document-year" key={year}>
                               {/* year header */}
-                              <div style={{
+                              <div className="detail-document-year-hd" style={{
                                 fontSize: 12, fontWeight: 700, color: "var(--t3)",
                                 marginBottom: 6, paddingLeft: 4, letterSpacing: 0.3,
                                 display: "flex", alignItems: "center", gap: 6,
@@ -1049,7 +1055,7 @@ export function DetailPage() {
                                 <Ico n="cal" s={13} />
                                 ปี {year}
                               </div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                              <div className="detail-document-items" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                                 {groups.get(year).map(d => {
                                   const isActive = d.kind === "policy"
                                     ? (d.id === activePdfId && activeDocId === "main")
@@ -1061,6 +1067,7 @@ export function DetailPage() {
                                   return (
                                     <button
                                       key={d.id}
+                                      className={`detail-document-item${isActive ? " is-active" : ""}`}
                                       onClick={onClick}
                                       style={{
                                         display: "flex", alignItems: "center", gap: 10,
@@ -1073,8 +1080,8 @@ export function DetailPage() {
                                       }}
                                     >
                                       <Ico n={meta.ico} s={15} />
-                                      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                                        <span style={{
+                                      <div className="detail-document-item-copy" style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+                                        <span className="detail-document-type" style={{
                                           fontSize: 11.5, fontWeight: 700,
                                           padding: "2px 7px", borderRadius: 999,
                                           background: meta.bg, color: meta.color,
@@ -1082,7 +1089,7 @@ export function DetailPage() {
                                         }}>
                                           {meta.label}
                                         </span>
-                                        <span style={{
+                                        <span className="detail-document-name" style={{
                                           fontSize: 14, fontWeight: isActive ? 600 : 500, color: "var(--t1)",
                                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                                         }}>
@@ -1090,7 +1097,7 @@ export function DetailPage() {
                                         </span>
                                       </div>
                                       {isActive && (
-                                        <span style={{ fontSize: 11.5, color: meta.color, fontWeight: 700, whiteSpace: "nowrap" }}>
+                                        <span className="detail-document-active" style={{ fontSize: 11.5, color: meta.color, fontWeight: 700, whiteSpace: "nowrap" }}>
                                           กำลังดู
                                         </span>
                                       )}
@@ -1110,7 +1117,7 @@ export function DetailPage() {
 
               {/* ── doc-type tab bar (กรมธรรม์ / พ.ร.บ. / สลักหลัง) ── */}
               {showDocTabs && (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                <div className="detail-doc-tabs" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   {docTabs.map(tab => {
                     const isActive = tab.id === activeDocId
                     const c = DOC_TAB_META[tab.type] || DOC_TAB_META.main

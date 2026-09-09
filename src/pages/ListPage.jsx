@@ -1,3 +1,4 @@
+import { RenewalChart } from "../components/RenewalChart"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom"
 import { policyTypeCategory, dedupLatestByCustomer } from "../helpers"
@@ -672,61 +673,30 @@ export function ListPage({ tab }) {
             )
           })()}
 
-          {/* ── Search + Excel export ── */}
+          {/* ── Search ── */}
           <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}`} style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
             <div className="big-srch" style={{ flex: 1 }}>
               <Ico n="search" s={20} />
               <input
+                aria-label="ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน"
                 placeholder="เช่น 1กก 1234 หรือ สมชาย ใจดี"
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
               />
               {search && (
-                <button className="big-srch-clr" onClick={() => { setSearch(""); setPage(1) }}>
+                <button className="big-srch-clr" aria-label="ล้างคำค้นหา" onClick={() => { setSearch(""); setPage(1) }}>
                   <Ico n="x" s={18} />
                 </button>
               )}
             </div>
             <button
-              className="btn btn-w"
-              style={{ flexShrink: 0, padding: "0 20px", fontSize: 14.5, fontWeight: 600 }}
-              title="ดาวน์โหลด Excel (CSV รองรับภาษาไทย)"
-              onClick={() => {
-                const exportRows = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
-                const targetRows = tab === "expiring" ? expiring : exportRows
-                const HEADERS = [
-                  "เลขกรมธรรม์","ผู้เอาประกัน","เบอร์","ทะเบียน","จังหวัด",
-                  "ยี่ห้อ","รุ่น","ปีรถ","เลขตัวถัง",
-                  "เริ่มคุ้มครอง","สิ้นสุดคุ้มครอง","วันที่บันทึก",
-                  "ประเภท","ใหม่/ต่ออายุ","ตัวแทน",
-                  "เบี้ยสุทธิ","อากร","VAT","เบี้ยรวม","ทุนเอาประกัน"
-                ]
-                const csvEscape = v => {
-                  const s = v == null ? "" : String(v)
-                  return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s
-                }
-                const rowsCsv = targetRows.map(r => [
-                  r.policy_number, r.insured_name, r.phone, r.license_plate, r.license_province,
-                  r.car_make, r.car_model, r.car_year, r.chassis_no,
-                  r.coverage_start, r.coverage_end, r.created_at ? String(r.created_at).slice(0, 10) : "",
-                  r.policy_type, r.new_renew, r.broker_name,
-                  r.net_premium, r.stamp_duty, r.vat, r.total_premium, r.sum_insured
-                ].map(csvEscape).join(","))
-                const csv = "﻿" + [HEADERS.join(","), ...rowsCsv].join("\r\n")  // BOM for Excel UTF-8
-                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                const dt = new Date()
-                const stamp = `${dt.getFullYear()}${String(dt.getMonth()+1).padStart(2,"0")}${String(dt.getDate()).padStart(2,"0")}-${String(dt.getHours()).padStart(2,"0")}${String(dt.getMinutes()).padStart(2,"0")}`
-                a.href = url
-                a.download = `กรมธรรม์-${stamp}.csv`
-                document.body.appendChild(a); a.click(); document.body.removeChild(a)
-                URL.revokeObjectURL(url)
-                notify(`ดาวน์โหลด ${targetRows.length.toLocaleString()} รายการเป็น Excel/CSV เรียบร้อย`)
-              }}
+              className="btn btn-b"
+              style={{ flexShrink: 0, padding: "0 22px", fontSize: 14.5, fontWeight: 600 }}
+              title="ค้นหา"
+              onClick={() => setPage(1)}
             >
-              <Ico n="download" s={17} />
-              Export Excel
+              <Ico n="search" s={17} />
+              ค้นหา
             </button>
           </div>
 
@@ -759,53 +729,6 @@ export function ListPage({ tab }) {
               if (val === 90) return counts.m3
               return 0
             }
-            // ── 12-month forecast: นับจำนวนกรมธรรม์ที่จะหมดอายุแต่ละเดือน ──
-            const MONTH_TH = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."]
-            const futureMonths = Array.from({ length: 12 }, (_, i) => {
-              const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
-              return {
-                date: d,
-                key: `${d.getFullYear()}-${d.getMonth()}`,
-                label: `${MONTH_TH[d.getMonth()]} ${(d.getFullYear() + 543).toString().slice(-2)}`,
-                count: 0,
-                premium: 0,
-                isCurrent: i === 0,
-              }
-            })
-            const futureMap = new Map(futureMonths.map((m, i) => [m.key, i]))
-            statsRows.forEach(r => {
-              if (!r.coverage_end) return
-              const t = new Date(r.coverage_end)
-              if (isNaN(t) || t < today0) return
-              const idx = futureMap.get(`${t.getFullYear()}-${t.getMonth()}`)
-              if (idx != null) {
-                futureMonths[idx].count += 1
-                futureMonths[idx].premium += Number(r.total_premium) || 0
-              }
-            })
-            const lineMax    = Math.max(1, ...futureMonths.map(m => m.count))
-            const lineTotal  = futureMonths.reduce((a, b) => a + b.count, 0)
-            const linePremium = futureMonths.reduce((a, b) => a + b.premium, 0)
-            const lW = 1100, lH = 280, lPL = 50, lPR = 20, lPT = 28, lPB = 52
-            const iW = lW - lPL - lPR, iH = lH - lPT - lPB
-            const xAt = (i) => lPL + (i * iW) / (futureMonths.length - 1)
-            const yAt = (v) => lPT + iH - (v / lineMax) * iH
-            const pts = futureMonths.map((m, i) => ({ x: xAt(i), y: yAt(m.count), ...m }))
-            const smooth = (pts) => {
-              if (pts.length < 2) return ""
-              const out = [`M${pts[0].x},${pts[0].y}`]
-              for (let i = 0; i < pts.length - 1; i++) {
-                const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2
-                const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6
-                const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6
-                out.push(`C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`)
-              }
-              return out.join(" ")
-            }
-            const linePath = smooth(pts)
-            const areaPath = `${linePath} L${pts[pts.length-1].x},${lH-lPB} L${pts[0].x},${lH-lPB} Z`
-            const yTicks   = [0, 0.25, 0.5, 0.75, 1].map(t => ({ y: lPT + iH * t, v: Math.round(lineMax * (1 - t)) }))
-            const baht = (n) => "฿" + Math.round(n).toLocaleString()
             return (
               <>
                 <div className="expiring-range-heading">
@@ -839,65 +762,13 @@ export function ListPage({ tab }) {
                   <span>เรียงจากวันหมดอายุใกล้ที่สุด</span>
                 </div>
 
-                {/* ── 12-month forecast chart ── */}
-                <div className="card" style={{ marginBottom: 16, padding: "18px 20px 14px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 14, flexWrap: "wrap", gap: 12 }}>
-                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--t1)" }}>
-                        <Ico n="bell" s={16} /> การหมดอายุล่วงหน้า 12 เดือน
-                      </div>
-                      <div style={{ fontSize: 13.5, color: "var(--t3)", marginTop: 4 }}>
-                        รวม <b style={{ color: "var(--t1)" }}>{lineTotal.toLocaleString()}</b> กรมธรรม์
-                        {linePremium > 0 && <> · เบี้ยรวม <b style={{ color: "var(--t1)" }}>{baht(linePremium)}</b></>}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <svg viewBox={`0 0 ${lW} ${lH}`} width="100%" height={lH} preserveAspectRatio="xMidYMid meet" style={{ display: "block", minWidth: 600 }}>
-                      <defs>
-                        <linearGradient id="exp-line-area-2" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%"   stopColor="var(--blue)" stopOpacity="0.32" />
-                          <stop offset="100%" stopColor="var(--blue)" stopOpacity="0.02" />
-                        </linearGradient>
-                      </defs>
-                      {yTicks.map((t, i) => (
-                        <g key={i}>
-                          <line x1={lPL} x2={lW - lPR} y1={t.y} y2={t.y}
-                                stroke="var(--brd)" strokeWidth="1"
-                                strokeDasharray={i === yTicks.length - 1 ? "0" : "3 4"}
-                                opacity={i === yTicks.length - 1 ? 0.9 : 0.5} />
-                          <text x={lPL - 8} y={t.y + 4} textAnchor="end"
-                                fontSize="12" fill="var(--t3)" fontFamily="inherit">{t.v}</text>
-                        </g>
-                      ))}
-                      <path d={areaPath} fill="url(#exp-line-area-2)" />
-                      <path d={linePath} fill="none" stroke="var(--blue)"
-                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                      {pts.map((p, i) => (
-                        <g key={i}>
-                          <circle cx={p.x} cy={p.y} r={p.isCurrent ? 6 : 4}
-                                  fill="#fff" stroke="var(--blue)" strokeWidth="2.5" />
-                          {p.count > 0 && (
-                            <text x={p.x} y={p.y - 12} textAnchor="middle"
-                                  fontSize="12" fontWeight="700" fill="var(--t1)" fontFamily="inherit">
-                              {p.count}
-                            </text>
-                          )}
-                          <text x={p.x} y={lH - lPB + 22} textAnchor="middle"
-                                fontSize="12" fill={p.isCurrent ? "var(--blue)" : "var(--t3)"}
-                                fontWeight={p.isCurrent ? 700 : 500} fontFamily="inherit">
-                            {p.label}
-                          </text>
-                        </g>
-                      ))}
-                    </svg>
-                  </div>
-                </div>
+                <RenewalChart rows={statsRows} loading={loading} />
               </>
             )
           })()}
 
           <PolicyTable
+            groupedByCustomer={isPoliciesTab}
             rows={displayRows}
             loading={loading}
             total={displayTotal}

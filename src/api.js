@@ -7,7 +7,7 @@ const api = axios.create({
 // ── แนบ token ทุก request ──
 api.interceptors.request.use(config => {
   const token = localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (import.meta.env.VITE_AUTH_DISABLED !== "true" && token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
@@ -17,7 +17,7 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    if (import.meta.env.VITE_AUTH_DISABLED !== "true" && err.response?.status === 401) {
       const url = err.config?.url || ""
       const isLoginAttempt = url.includes("/auth/login")
       if (!isLoginAttempt) {

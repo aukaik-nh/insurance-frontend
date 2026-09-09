@@ -5,6 +5,9 @@ function SortHeader({ label, col, sortKey, sortDir, onSort, style }) {
   const isActive = sortKey === col
   return (
     <th
+      aria-sort={isActive ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+      tabIndex={onSort ? 0 : undefined}
+      onKeyDown={e => { if (onSort && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); onSort(col) } }}
       onClick={() => onSort?.(col)}
       style={{
         cursor: onSort ? "pointer" : "default",
@@ -66,7 +69,7 @@ function PolicyMobileCards({ rows, pageOffset, onRow }) {
   )
 }
 
-export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset, sortKey, sortDir, onSort, onRowHover }) {
+export function PolicyTable({ groupedByCustomer = false, rows, loading, total, page, pages, setPage, onRow, activeId, pageOffset, sortKey, sortDir, onSort, onRowHover }) {
   // ⚡ แสดง spinner เฉพาะตอนยังไม่มีข้อมูลเลย — refetch ครั้งถัดไปให้แสดงข้อมูลเดิมไปก่อน
   if (loading && !rows.length) return (
     <div className="card">
@@ -102,9 +105,9 @@ export function PolicyTable({ rows, loading, total, page, pages, setPage, onRow,
       <div className="card-hd policy-list-heading">
         <div>
           <div className="card-title">รายการกรมธรรม์</div>
-          <div className="card-sub">{total.toLocaleString()} รายการ · คลิกแถวเพื่อดูรายละเอียด</div>
+          <div className="card-sub">{total.toLocaleString()} {groupedByCustomer ? "ผู้เอาประกัน · แสดงฉบับล่าสุดของแต่ละชื่อ" : "กรมธรรม์"} · แตะเพื่อดูรายละเอียด</div>
         </div>
-        <span className="policy-list-order"><Ico n="clock" s={15} /> ใหม่ล่าสุดก่อน</span>
+        <span className="policy-list-order"><Ico n="clock" s={15} /> {{ created_at: "วันที่เพิ่ม", policy_number: "เลขกรมธรรม์", insured_name: "ชื่อผู้เอาประกัน", coverage_start: "วันเริ่ม", coverage_end: "วันหมดอายุ" }[sortKey] || "วันที่เพิ่ม"} · {sortDir === "asc" ? "น้อยไปมาก" : "มากไปน้อย"}</span>
       </div>
       <div className="policy-table-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         <table style={{ tableLayout: "fixed", width: "100%", minWidth: 1040 }}>

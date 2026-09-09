@@ -1,0 +1,304 @@
+/* Detail page visual hierarchy.  The data and actions stay unchanged; these
+   rules only make the record easier to scan at a glance. */
+.detail-page-hd{
+  padding:16px 30px;
+  background:linear-gradient(180deg,var(--sur) 0%,var(--sur2) 100%);
+}
+.detail-page-hd .page-back{
+  min-height:50px;
+  border:1px solid var(--green-brd);
+  background:var(--green-bg);
+  color:var(--blue-h);
+  box-shadow:none;
+}
+.detail-page-hd .page-back:hover{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+  box-shadow:0 8px 18px rgba(37,99,71,.18);
+}
+.detail-page-hd .page-title{
+  font-size:23px;
+  font-weight:800;
+  letter-spacing:-.45px;
+}
+.detail-page-hd .page-sub{
+  margin-top:4px;
+  font-size:15px;
+  color:var(--t2);
+}
+.detail-page-actions .btn{
+  min-height:46px;
+  padding:0 16px;
+  border-radius:12px;
+  transition:transform .16s var(--ez-out),box-shadow .16s,background .16s;
+}
+.detail-page-actions .btn:hover:not(:disabled){
+  transform:translateY(-1px);
+  box-shadow:0 7px 16px rgba(38,83,61,.12);
+}
+.detail-page-actions .btn-b{
+  box-shadow:0 5px 14px rgba(37,99,71,.18);
+}
+
+.policy-detail-split{
+  grid-template-columns:minmax(420px,.92fr) minmax(560px,1.08fr);
+  gap:28px;
+}
+.policy-detail-split > :first-child{min-width:0}
+.policy-detail-split > :first-child > .info-card,
+.policy-detail-split > :first-child > .info-card-bd > .info-card{
+  border-color:var(--brd);
+  border-radius:18px;
+  box-shadow:0 5px 18px rgba(38,83,61,.055);
+}
+.policy-detail-split > :first-child > .info-card:hover{
+  border-color:var(--green-brd);
+  box-shadow:0 8px 22px rgba(38,83,61,.08);
+}
+.policy-detail-split > :first-child .info-card-hd{
+  min-height:60px;
+  padding:13px 20px;
+  background:linear-gradient(180deg,#f8fcf9 0%,var(--sur) 100%);
+}
+.policy-detail-split > :first-child .info-card-hd > svg{
+  width:34px;
+  height:34px;
+  padding:8px;
+  border:1px solid var(--green-brd);
+  border-radius:10px;
+  background:var(--green-bg);
+  color:var(--green);
+}
+.policy-detail-split > :first-child .info-card-title{
+  font-size:17px;
+  letter-spacing:-.15px;
+}
+.policy-detail-split > :first-child .info-card-bd{
+  padding:22px;
+}
+.policy-detail-split > :first-child .info-row{
+  gap:12px;
+  margin-bottom:12px !important;
+}
+.policy-detail-split > :first-child .info-row:last-child{margin-bottom:0 !important}
+.policy-detail-split > :first-child .info-field:not([style]){
+  min-height:0;
+  padding:5px 0 10px;
+  border:0;
+  border-bottom:1px solid var(--brd);
+  border-radius:0;
+  background:transparent;
+  transition:border-color .16s,background .16s;
+}
+.policy-detail-split > :first-child .info-field:not([style]):hover{
+  border-bottom-color:var(--green-brd);
+  background:transparent;
+}
+.policy-detail-split > :first-child .info-label{
+  margin-bottom:4px;
+  font-size:13px;
+  color:var(--t3);
+  font-weight:600;
+}
+.policy-detail-split > :first-child .info-val{
+  font-size:17px;
+  line-height:1.42;
+  font-weight:600;
+}
+.policy-detail-split > :first-child .info-val.mono{
+  font-size:15px;
+  letter-spacing:.15px;
+}
+/* Make the policy number the page's clear anchor, while keeping the existing
+   inline style as a fallback for older rendered records. */
+.policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"]{
+  padding:17px 20px !important;
+  margin-bottom:16px !important;
+  border:1px solid var(--green-brd) !important;
+  border-radius:15px !important;
+  background:linear-gradient(135deg,var(--green-bg) 0%,#f5fbf7 100%) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
+}
+.policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-label{
+  color:var(--green);
+}
+.policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{
+  color:var(--blue-h);
+  font-size:27px !important;
+}
+.policy-detail-split > :first-child .plate{
+  padding:4px 10px;
+  border-color:var(--green-brd);
+  background:var(--sur);
+  color:var(--blue-h);
+}
+
+/* Keep the information cards spacious, but avoid turning every value into a
+   separate tile.  This preserves the visual grouping without the dashboard
+   “box inside a box” look on smaller windows. */
+.policy-detail-split > :first-child .info-card-bd > .info-row{
+  padding-bottom:4px;
+}
+.policy-detail-split > :first-child .info-card-bd > .info-row:last-child{
+  padding-bottom:0;
+}
+
+/* The document rail is intentionally quieter than the data cards so the PDF
+   preview remains the visual focus. */
+.policy-detail-split > .detail-aside{min-width:0}
+.policy-detail-split > .detail-aside > .info-card{
+  border-color:var(--green-brd);
+  border-radius:16px;
+  box-shadow:0 4px 16px rgba(38,83,61,.045);
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-hd{
+  min-height:52px;
+  padding:10px 14px;
+  background:linear-gradient(180deg,#f8fcf9 0%,var(--sur) 100%);
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-hd > div:first-child > svg{
+  width:30px;
+  height:30px;
+  padding:7px;
+  border-radius:9px;
+  background:var(--green-bg);
+  color:var(--green);
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-title{font-size:15px}
+.policy-detail-split > .detail-aside > .info-card .btn-b{
+  min-height:34px;
+  border-radius:9px;
+  box-shadow:none;
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-bd{
+  padding:12px 14px !important;
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-bd > div > div > div[style*="fontSize: 12"]{
+  padding:5px 6px;
+  color:var(--green);
+  border-radius:8px;
+  background:var(--green-bg);
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-bd button{
+  min-height:38px;
+  border-radius:10px !important;
+}
+.policy-detail-split > .detail-aside > .info-card .info-card-bd button:hover{
+  border-color:var(--green) !important;
+  background:var(--green-bg) !important;
+}
+.detail-document-groups{padding:2px 0}
+.detail-document-year{min-width:0}
+.detail-document-year-hd{
+  margin-bottom:7px !important;
+  padding:5px 7px !important;
+  border-radius:8px;
+  background:var(--sur2);
+  color:var(--t3) !important;
+}
+.detail-document-year-hd svg{color:var(--green);flex-shrink:0}
+.detail-document-items{gap:6px !important}
+.detail-document-item{
+  min-width:0;
+  min-height:44px;
+  padding:7px 10px !important;
+  border-radius:11px !important;
+  box-shadow:0 1px 2px rgba(38,83,61,.03);
+}
+.detail-document-item:not(.is-active):hover{
+  background:var(--sur2) !important;
+  border-color:var(--green-brd) !important;
+  transform:translateX(2px);
+  box-shadow:0 4px 10px rgba(38,83,61,.08);
+}
+.detail-document-item:focus-visible{
+  outline:3px solid var(--green-brd);
+  outline-offset:2px;
+}
+.detail-document-item > svg{color:var(--green);flex-shrink:0}
+.detail-document-item-copy{gap:7px !important}
+.detail-document-type{line-height:1.35}
+.detail-document-name{min-width:0;line-height:1.35}
+.detail-document-active{padding:3px 7px;border-radius:999px;background:var(--sur);line-height:1.2}
+.detail-doc-tabs{padding:2px 2px 0}
+.detail-doc-tabs button{
+  min-height:40px;
+  border-radius:999px !important;
+  transition:transform .16s var(--ez-out),box-shadow .16s,background .16s;
+}
+.detail-doc-tabs button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 4px 10px rgba(38,83,61,.08);
+}
+.policy-detail-split > .detail-aside > .info-card + [style*="display: flex"]{
+  margin-bottom:14px !important;
+}
+.policy-detail-split > .detail-aside > [style*="display: flex"] button{
+  min-height:40px;
+  padding:8px 14px !important;
+  border-radius:11px !important;
+  font-weight:600;
+}
+.policy-detail-split > .detail-aside .pdf-preview-wrap{
+  border:1px solid var(--green-brd);
+  border-radius:18px;
+  box-shadow:0 8px 24px rgba(38,83,61,.08);
+}
+.policy-detail-split > .detail-aside .pdf-preview-bar{
+  min-height:62px;
+  padding:11px 14px;
+  background:linear-gradient(135deg,var(--green-bg) 0%,#f4faf6 100%);
+  border-bottom:1px solid var(--green-brd);
+  gap:9px;
+}
+.policy-detail-split > .detail-aside .pdf-preview-bar .pdf-fname{
+  font-size:16px;
+}
+.policy-detail-split > .detail-aside .pdf-preview-bar .pdf-size{
+  color:var(--green);
+  border:1px solid var(--green-brd);
+  background:var(--sur);
+}
+.policy-detail-split > .detail-aside .pdf-zoom-btn{
+  width:40px;
+  height:40px;
+  border-radius:11px;
+  border-color:var(--green-brd);
+  background:var(--sur);
+}
+.policy-detail-split > .detail-aside .pdf-zoom-btn:hover{
+  color:var(--green);
+  border-color:var(--green);
+  background:var(--green-bg);
+}
+.policy-detail-split > .detail-aside .pdf-iframe{
+  min-height:680px;
+  background:#eef5f0;
+}
+
+@media(max-width:1280px){
+  .policy-detail-split{grid-template-columns:minmax(360px,.9fr) minmax(500px,1.1fr);gap:20px}
+  .detail-page-hd{padding-left:22px;padding-right:22px}
+  .detail-page-actions .btn{padding:0 12px}
+}
+@media(max-width:1023px){
+  .detail-page-hd{padding:12px 16px}
+  .detail-page-hd .page-title{font-size:20px}
+  .policy-detail-split{grid-template-columns:1fr;gap:18px}
+  .policy-detail-split > .detail-aside{position:static}
+  .policy-detail-split > :first-child .info-card-bd{padding:18px}
+  .policy-detail-split > .detail-aside .pdf-iframe{min-height:520px}
+}
+@media(max-width:639px){
+  .detail-page-hd{padding:10px 12px}
+  .detail-page-hd .page-title{font-size:18px}
+  .detail-page-hd .page-sub{font-size:13px}
+  .policy-detail-split > :first-child .info-card-bd{padding:14px !important}
+  .policy-detail-split > :first-child .info-field:not([style]){min-height:0;padding:4px 0 8px}
+  .policy-detail-split > :first-child .info-val{font-size:15px}
+  .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{font-size:21px !important}
+  .policy-detail-split > .detail-aside .pdf-preview-bar{min-height:56px;padding:9px 10px}
+  .policy-detail-split > .detail-aside .pdf-preview-bar .pdf-fname{font-size:14px}
+  .policy-detail-split > .detail-aside .pdf-zoom-btn{width:35px;height:35px}
+}

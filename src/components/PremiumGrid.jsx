@@ -160,7 +160,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           )}
 
           {/* ปุ่ม toggle PRB — ซ่อนในโหมด readOnly */}
-          {!readOnly && onTogglePrb && (
+          {!readOnly && hasPrb && onTogglePrb && (
             <button
               className={hasPrb ? "btn" : "btn btn-b btn-prb"}
               onClick={e => { e.stopPropagation(); onTogglePrb() }}
@@ -206,6 +206,18 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
         )}
       </div>
 
+      {!readOnly && !hasPrb && onTogglePrb && (
+        <div className="premium-prb-invite">
+          <div className="premium-prb-description">
+            <span className="premium-prb-symbol" aria-hidden="true"><Ico n="shield" s={24} /></span>
+            <div><strong>พ.ร.บ. รถยนต์</strong><p>เพิ่มเบี้ย พ.ร.บ. เพื่อคำนวณยอดรวมคู่กับกรมธรรม์</p></div>
+          </div>
+          <button type="button" className="btn btn-b btn-prb" onClick={onTogglePrb} disabled={prbLoading}>
+            <Ico n="plus" s={23} sw={2.5} />เพิ่ม พ.ร.บ.
+          </button>
+        </div>
+      )}
+
       {open && <div className="info-card-bd" style={{ padding: 12, position: "relative" }}>
         {/* แถบ banner บนสุดของ PremiumGrid — เห็นทันทีไม่ต้องมองข้าม */}
         {prbLoading && (
@@ -218,7 +230,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           }}>
             <div className="spin" style={{ width: 18, height: 18, borderWidth: 2, borderColor: "var(--green)", borderTopColor: "transparent" }} />
             <span style={{ fontSize: 14, fontWeight: 700, color: "var(--green)" }}>
-              AI กำลังอ่านเลขเบี้ย พ.ร.บ. — รอประมาณ 5-10 วินาที
+              กำลังอ่านข้อมูล พ.ร.บ. — กรุณารอสักครู่
             </span>
           </div>
         )}
@@ -313,7 +325,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                           displayFormat={readOnly}
                           bold={row.bold}
                           color="var(--green)"
-                          placeholder={prbLoading ? "⏳ AI กำลังอ่าน..." : ""}
+                          placeholder={prbLoading ? "กำลังอ่าน…" : ""}
                         />
                       </td>
                     )}
