@@ -884,9 +884,8 @@ export function DetailPage() {
                         </div>
                         <F label="จังหวัดทะเบียน" value={activePolicy.license_province} />
                       </div>
-                      <div className="info-row">
-                        <F label="เลขตัวถัง"        value={activePolicy.chassis_no} mono />
-                        <F label="ทุนเอาประกัน (฿)" value={activePolicy.sum_insured ? `${baht(activePolicy.sum_insured)} ฿` : null} />
+                      <div className="info-row fw">
+                        <F label="เลขตัวถัง" value={activePolicy.chassis_no} mono />
                       </div>
                     </div>
                   </div>
