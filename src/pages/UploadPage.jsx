@@ -328,16 +328,6 @@ export function UploadPage() {
                 : "เลือกไฟล์เพื่อเริ่มต้น หรือกรอกข้อมูลเอง"}
             </div>
           </div>
-          <div className="page-hd-right">
-            <button className="btn btn-w upload-batch-btn" type="button" onClick={() => navigate("/batch")} disabled={loading || saving}>
-              <Ico n="inbox" s={18} />
-              <span>อัปโหลดหลายไฟล์</span>
-            </button>
-            <button className="btn btn-b" onClick={doSave} disabled={!hasAnyInput || saving || loading || prbLoading}>
-              <Ico n="save" s={18} />
-              {saving ? "กำลังบันทึก..." : "บันทึก"}
-            </button>
-          </div>
         </div>
 
         <div className="page-body">

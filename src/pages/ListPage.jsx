@@ -648,10 +648,9 @@ export function ListPage({ tab }) {
               <div className="dashboard-search-heading">
                 <span className="dashboard-search-mark" aria-hidden="true"><Ico n="search" s={21} /></span>
                 <div className="dashboard-search-copy">
-                  <div className="dashboard-search-title">ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน</div>
-                  {/* <div className="dashboard-search-sub">พิมพ์ทะเบียนรถหรือชื่อผู้เอาประกัน ระบบค้นหา</div> */}
+                  <div className="dashboard-search-title">ค้นหากรมธรรม์</div>
+                  <div className="dashboard-search-sub">ค้นหาได้จากทะเบียนรถ ชื่อผู้เอาประกัน หรือเลขกรมธรรม์</div>
                 </div>
-                <span className="dashboard-search-note">ค้นหาได้ทันที</span>
               </div>
 
             </>
@@ -690,7 +689,7 @@ export function ListPage({ tab }) {
                 aria-label="ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน"
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
-                placeholder={tab === "expiring" ? "ค้นหาชื่อ เลขกรมธรรม์ ทะเบียนรถ หรือเบอร์โทร..." : ""}
+                placeholder={tab === "expiring" ? "ค้นหาชื่อ เลขกรมธรรม์ ทะเบียนรถ หรือเบอร์โทร..." : "เช่น กข 1234, คุณสมชาย หรือ D0-70-69/001234"}
               />
               {search && (
                 <button className="big-srch-clr" aria-label="ล้างคำค้นหา" onClick={() => { setSearch(""); setPage(1) }}>
