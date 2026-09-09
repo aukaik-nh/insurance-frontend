@@ -300,9 +300,9 @@ export function ListPage({ tab }) {
       return "other"
     }
     const CATS = [
-      { key: "policy", label: "กรมธรรม์",  c1: "#6366F1", c2: "#A855F7" },  // indigo→purple
-      { key: "prb",    label: "พ.ร.บ.",    c1: "#10B981", c2: "#06B6D4" },  // green→cyan
-      { key: "other",  label: "อื่นๆ",      c1: "#94A3B8", c2: "#CBD5E1" },  // gray
+      { key: "policy", label: "กรมธรรม์",  c1: "#CA8A04", c2: "#DAA520" },
+      { key: "prb",    label: "พ.ร.บ.",    c1: "#15803D", c2: "#22C55E" },
+      { key: "other",  label: "อื่นๆ",      c1: "#581C87", c2: "#7E22CE" },
     ]
     const days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today.getTime() - (6 - i) * dayMs)
@@ -341,11 +341,11 @@ export function ListPage({ tab }) {
     const now = new Date()
     const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const buckets = [
-      { key: "30",   label: "ภายใน 30 วัน",  min: 0,   max: 30,        c1: "#F59E0B", c2: "#FBBF24", count: 0, urgent: true },
-      { key: "60",   label: "31-60 วัน",     min: 31,  max: 60,        c1: "#FB923C", c2: "#F97316", count: 0 },
-      { key: "90",   label: "61-90 วัน",     min: 61,  max: 90,        c1: "#06B6D4", c2: "#22D3EE", count: 0 },
-      { key: "180",  label: "91-180 วัน",    min: 91,  max: 180,       c1: "#6366F1", c2: "#818CF8", count: 0 },
-      { key: "year", label: "> 180 วัน",     min: 181, max: Infinity,  c1: "#10B981", c2: "#34D399", count: 0 },
+      { key: "30",   label: "ภายใน 30 วัน",  min: 0,   max: 30,        c1: "#991B1B", c2: "#B91C1C", count: 0, urgent: true },
+      { key: "60",   label: "31-60 วัน",     min: 31,  max: 60,        c1: "#B8780A", c2: "#CA8A04", count: 0 },
+      { key: "90",   label: "61-90 วัน",     min: 61,  max: 90,        c1: "#CA8A04", c2: "#DAA520", count: 0 },
+      { key: "180",  label: "91-180 วัน",    min: 91,  max: 180,       c1: "#581C87", c2: "#7E22CE", count: 0 },
+      { key: "year", label: "> 180 วัน",     min: 181, max: Infinity,  c1: "#15803D", c2: "#22C55E", count: 0 },
     ]
     let expiredCount = 0
     let unknownCount = 0
@@ -495,7 +495,7 @@ export function ListPage({ tab }) {
 
     const labels = buckets.map(labelFmt)
     const allSeries = [
-      { name: "ไฟล์ที่อัปโหลด", color: "#319795", color2: "#4FD1C5", values: buckets.map(b => b.count) },
+      { name: "ไฟล์ที่อัปโหลด", color: "#8A5D03", color2: "#DAA520", values: buckets.map(b => b.count) },
     ]
     const series = allSeries.filter(s => s.values.reduce((a, b) => a + b, 0) > 0)
     return { months: labels, series, totalAll: buckets.reduce((a, b) => a + b.count, 0) }
@@ -659,7 +659,7 @@ export function ListPage({ tab }) {
           {/* ── Active type filter chip ── */}
           {typeFilter && (() => {
             const LABEL = { motor: "ประกันรถยนต์", prb: "ประกัน พ.ร.บ.", fire: "อัคคีภัย", pa: "PA / TA / อื่นๆ" }
-            const STYLE = { motor: { bg: "#E5EEF0", fg: "#245863" }, prb: { bg: "#E6EDE9", fg: "#2E5044" }, fire: { bg: "#F0EAE4", fg: "#6A3A24" }, pa: { bg: "#E7E9EF", fg: "#3A3E62" } }
+            const STYLE = { motor: { bg: "#F8E9C7", fg: "#8A5D03" }, prb: { bg: "#E5F4E9", fg: "#15803D" }, fire: { bg: "#F7E7E7", fg: "#991B1B" }, pa: { bg: "#F1E8F7", fg: "#581C87" } }
             const s = STYLE[typeFilter] || { bg: "var(--sur2)", fg: "var(--t1)" }
             return (
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>

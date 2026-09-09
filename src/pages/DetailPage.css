@@ -71,9 +71,9 @@
   background:var(--amber-bg);
 }
 .detail-page-actions .detail-invoice-action{
-  color:#581C87;
-  border-color:rgba(88,28,135,.30);
-  background:rgba(88,28,135,.08);
+  color:var(--purple);
+  border-color:var(--purple-brd);
+  background:var(--purple-bg);
 }
 .detail-page-actions .detail-search-action{
   color:var(--t2);
@@ -93,9 +93,9 @@
   box-shadow:0 5px 13px rgba(153,27,27,.20);
 }
 body.dark .detail-page-actions .detail-invoice-action{
-  color:#D8B4FE;
-  border-color:rgba(192,132,252,.35);
-  background:rgba(88,28,135,.22);
+  color:var(--purple);
+  border-color:var(--purple-brd);
+  background:var(--purple-bg);
 }
 
 .policy-detail-split{

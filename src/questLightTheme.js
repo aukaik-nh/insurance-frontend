@@ -7,6 +7,7 @@ export default `
  --g1:#991B1B;--g2:#CA8A04;--g3:#581C87;
  --green:#15803D;--green-bg:rgba(34,197,94,.11);--green-brd:rgba(21,128,61,.30);
  --amber:#8A5D03;--amber-bg:rgba(202,138,4,.12);--amber-brd:rgba(202,138,4,.34);
+ --purple:#581C87;--purple-bg:rgba(88,28,135,.08);--purple-brd:rgba(88,28,135,.30);
  --red:#991B1B;--red-bg:rgba(153,27,27,.10);--red-brd:rgba(153,27,27,.28);
  --t1:#2C1A10;--t2:#5C4636;--t3:#7B6A57;
  --sh0:0 1px 3px rgba(92,61,46,.08);--sh1:0 3px 10px rgba(92,61,46,.11);
@@ -20,6 +21,7 @@ body.dark{
  --g1:#991B1B;--g2:#CA8A04;--g3:#581C87;
  --green:#22C55E;--green-bg:rgba(34,197,94,.13);--green-brd:rgba(34,197,94,.36);
  --amber:#DAA520;--amber-bg:rgba(202,138,4,.14);--amber-brd:rgba(202,138,4,.40);
+ --purple:#D8B4FE;--purple-bg:rgba(88,28,135,.22);--purple-brd:rgba(192,132,252,.35);
  --red:#F87171;--red-bg:rgba(153,27,27,.20);--red-brd:rgba(248,113,113,.42);
  --t1:#F5E6D3;--t2:#D8C6AE;--t3:#BFA98A
 }
