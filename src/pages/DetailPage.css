@@ -2,20 +2,20 @@
    rules only make the record easier to scan at a glance. */
 .detail-page-hd{
   padding:16px 30px;
-  background:linear-gradient(180deg,var(--sur) 0%,var(--sur2) 100%);
+  background:var(--bg);
 }
 .detail-page-hd .page-back{
   min-height:50px;
-  border:1px solid var(--green-brd);
-  background:var(--green-bg);
-  color:var(--blue-h);
+  border:1px solid var(--blue-mid);
+  background:var(--blue-bg);
+  color:var(--blue);
   box-shadow:none;
 }
 .detail-page-hd .page-back:hover{
   background:var(--accent);
   border-color:var(--accent);
   color:#fff;
-  box-shadow:0 8px 18px rgba(37,99,71,.18);
+  box-shadow:0 8px 18px rgba(43,168,162,.18);
 }
 .detail-page-hd .page-title{
   font-size:23px;
@@ -38,7 +38,25 @@
   box-shadow:0 7px 16px rgba(38,83,61,.12);
 }
 .detail-page-actions .btn-b{
-  box-shadow:0 5px 14px rgba(37,99,71,.18);
+  box-shadow:0 5px 14px rgba(255,210,63,.24);
+}
+.detail-page-actions .detail-action-search{
+  color:var(--t1);border-color:var(--brd);background:var(--sur);
+}
+.detail-page-actions .detail-action-document{
+  color:var(--blue);border-color:var(--blue-mid);background:var(--blue-bg);
+}
+.detail-page-actions .detail-action-invoice{
+  color:#286F98;border-color:#B8DDF1;background:#EDF8FE;
+}
+.detail-page-actions .detail-action-delete{
+  color:var(--red);border-color:var(--red-brd);background:var(--red-bg);
+}
+.detail-page-actions .detail-action-edit{
+  color:#514000;border-color:#FFD23F;background:linear-gradient(135deg,#FFE47A,#FFD23F);
+}
+body.dark .detail-page-actions .detail-action-invoice{
+  color:#9CD7F6;border-color:#365E73;background:#1D3B4A;
 }
 
 .policy-detail-split{
@@ -50,25 +68,25 @@
 .policy-detail-split > :first-child > .info-card-bd > .info-card{
   border-color:var(--brd);
   border-radius:18px;
-  box-shadow:0 5px 18px rgba(38,83,61,.055);
+  box-shadow:0 5px 18px rgba(43,168,162,.055);
 }
 .policy-detail-split > :first-child > .info-card:hover{
-  border-color:var(--green-brd);
-  box-shadow:0 8px 22px rgba(38,83,61,.08);
+  border-color:var(--blue-mid);
+  box-shadow:0 8px 22px rgba(43,168,162,.08);
 }
 .policy-detail-split > :first-child .info-card-hd{
   min-height:60px;
   padding:13px 20px;
-  background:linear-gradient(180deg,#f8fcf9 0%,var(--sur) 100%);
+  background:linear-gradient(180deg,var(--blue-bg) 0%,var(--sur) 100%);
 }
 .policy-detail-split > :first-child .info-card-hd > svg{
   width:34px;
   height:34px;
   padding:8px;
-  border:1px solid var(--green-brd);
+  border:1px solid var(--blue-mid);
   border-radius:10px;
-  background:var(--green-bg);
-  color:var(--green);
+  background:var(--blue-bg);
+  color:var(--blue);
 }
 .policy-detail-split > :first-child .info-card-title{
   font-size:17px;
@@ -92,7 +110,7 @@
   transition:border-color .16s,background .16s;
 }
 .policy-detail-split > :first-child .info-field:not([style]):hover{
-  border-bottom-color:var(--green-brd);
+  border-bottom-color:var(--blue-mid);
   background:transparent;
 }
 .policy-detail-split > :first-child .info-label{
@@ -115,13 +133,13 @@
 .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"]{
   padding:17px 20px !important;
   margin-bottom:16px !important;
-  border:1px solid var(--green-brd) !important;
+  border:1px solid var(--blue-mid) !important;
   border-radius:15px !important;
-  background:linear-gradient(135deg,var(--green-bg) 0%,#f5fbf7 100%) !important;
+  background:linear-gradient(135deg,var(--blue-bg) 0%,var(--sur) 100%) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
 }
 .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-label{
-  color:var(--green);
+  color:var(--blue);
 }
 .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{
   color:var(--blue-h);
@@ -129,7 +147,7 @@
 }
 .policy-detail-split > :first-child .plate{
   padding:4px 10px;
-  border-color:var(--green-brd);
+  border-color:var(--blue-mid);
   background:var(--sur);
   color:var(--blue-h);
 }
@@ -148,22 +166,22 @@
    preview remains the visual focus. */
 .policy-detail-split > .detail-aside{min-width:0}
 .policy-detail-split > .detail-aside > .info-card{
-  border-color:var(--green-brd);
+  border-color:var(--blue-mid);
   border-radius:16px;
-  box-shadow:0 4px 16px rgba(38,83,61,.045);
+  box-shadow:0 4px 16px rgba(43,168,162,.045);
 }
 .policy-detail-split > .detail-aside > .info-card .info-card-hd{
   min-height:52px;
   padding:10px 14px;
-  background:linear-gradient(180deg,#f8fcf9 0%,var(--sur) 100%);
+  background:linear-gradient(180deg,var(--blue-bg) 0%,var(--sur) 100%);
 }
 .policy-detail-split > .detail-aside > .info-card .info-card-hd > div:first-child > svg{
   width:30px;
   height:30px;
   padding:7px;
   border-radius:9px;
-  background:var(--green-bg);
-  color:var(--green);
+  background:var(--blue-bg);
+  color:var(--blue);
 }
 .policy-detail-split > .detail-aside > .info-card .info-card-title{font-size:15px}
 .policy-detail-split > .detail-aside > .info-card .btn-b{
@@ -176,17 +194,17 @@
 }
 .policy-detail-split > .detail-aside > .info-card .info-card-bd > div > div > div[style*="fontSize: 12"]{
   padding:5px 6px;
-  color:var(--green);
+  color:var(--blue);
   border-radius:8px;
-  background:var(--green-bg);
+  background:var(--blue-bg);
 }
 .policy-detail-split > .detail-aside > .info-card .info-card-bd button{
   min-height:38px;
   border-radius:10px !important;
 }
 .policy-detail-split > .detail-aside > .info-card .info-card-bd button:hover{
-  border-color:var(--green) !important;
-  background:var(--green-bg) !important;
+  border-color:var(--blue) !important;
+  background:var(--blue-bg) !important;
 }
 .detail-document-groups{padding:2px 0}
 .detail-document-year{min-width:0}
@@ -197,7 +215,7 @@
   background:var(--sur2);
   color:var(--t3) !important;
 }
-.detail-document-year-hd svg{color:var(--green);flex-shrink:0}
+.detail-document-year-hd svg{color:var(--blue);flex-shrink:0}
 .detail-document-items{gap:6px !important}
 .detail-document-item{
   min-width:0;
@@ -208,15 +226,15 @@
 }
 .detail-document-item:not(.is-active):hover{
   background:var(--sur2) !important;
-  border-color:var(--green-brd) !important;
+  border-color:var(--blue-mid) !important;
   transform:translateX(2px);
-  box-shadow:0 4px 10px rgba(38,83,61,.08);
+  box-shadow:0 4px 10px rgba(43,168,162,.08);
 }
 .detail-document-item:focus-visible{
-  outline:3px solid var(--green-brd);
+  outline:3px solid var(--blue-mid);
   outline-offset:2px;
 }
-.detail-document-item > svg{color:var(--green);flex-shrink:0}
+.detail-document-item > svg{color:var(--blue);flex-shrink:0}
 .detail-document-item-copy{gap:7px !important}
 .detail-document-type{line-height:1.35}
 .detail-document-name{min-width:0;line-height:1.35}
@@ -229,7 +247,7 @@
 }
 .detail-doc-tabs button:hover{
   transform:translateY(-1px);
-  box-shadow:0 4px 10px rgba(38,83,61,.08);
+  box-shadow:0 4px 10px rgba(43,168,162,.08);
 }
 .policy-detail-split > .detail-aside > .info-card + [style*="display: flex"]{
   margin-bottom:14px !important;
@@ -241,40 +259,40 @@
   font-weight:600;
 }
 .policy-detail-split > .detail-aside .pdf-preview-wrap{
-  border:1px solid var(--green-brd);
+  border:1px solid var(--blue-mid);
   border-radius:18px;
-  box-shadow:0 8px 24px rgba(38,83,61,.08);
+  box-shadow:0 8px 24px rgba(43,168,162,.08);
 }
 .policy-detail-split > .detail-aside .pdf-preview-bar{
   min-height:62px;
   padding:11px 14px;
-  background:linear-gradient(135deg,var(--green-bg) 0%,#f4faf6 100%);
-  border-bottom:1px solid var(--green-brd);
+  background:linear-gradient(135deg,var(--blue-bg) 0%,var(--sur) 100%);
+  border-bottom:1px solid var(--blue-mid);
   gap:9px;
 }
 .policy-detail-split > .detail-aside .pdf-preview-bar .pdf-fname{
   font-size:16px;
 }
 .policy-detail-split > .detail-aside .pdf-preview-bar .pdf-size{
-  color:var(--green);
-  border:1px solid var(--green-brd);
+  color:var(--blue);
+  border:1px solid var(--blue-mid);
   background:var(--sur);
 }
 .policy-detail-split > .detail-aside .pdf-zoom-btn{
   width:40px;
   height:40px;
   border-radius:11px;
-  border-color:var(--green-brd);
+  border-color:var(--blue-mid);
   background:var(--sur);
 }
 .policy-detail-split > .detail-aside .pdf-zoom-btn:hover{
-  color:var(--green);
-  border-color:var(--green);
-  background:var(--green-bg);
+  color:var(--blue);
+  border-color:var(--blue);
+  background:var(--blue-bg);
 }
 .policy-detail-split > .detail-aside .pdf-iframe{
   min-height:680px;
-  background:#eef5f0;
+  background:var(--blue-bg);
 }
 
 @media(max-width:1280px){
