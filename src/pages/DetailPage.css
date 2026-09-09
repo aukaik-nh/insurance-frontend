@@ -65,22 +65,37 @@
   border-color:var(--brd);
   background:var(--sur);
 }
-.detail-page-actions .detail-document-action,
-.detail-page-actions .detail-invoice-action{
+.detail-page-actions .detail-document-action{
   color:var(--blue);
   border-color:var(--amber-brd);
   background:var(--amber-bg);
 }
+.detail-page-actions .detail-invoice-action{
+  color:#581C87;
+  border-color:rgba(88,28,135,.30);
+  background:rgba(88,28,135,.08);
+}
+.detail-page-actions .detail-search-action{
+  color:var(--t2);
+  background:transparent;
+}
 .detail-page-actions .detail-delete-action{
   margin-left:5px;
-  color:var(--red);
-  border-color:var(--red-brd);
-  background:transparent;
+  color:#F5E6D3;
+  border-color:#B91C1C;
+  background:#991B1B;
   box-shadow:none;
 }
 .detail-page-actions .detail-delete-action:hover:not(:disabled){
-  background:var(--red-bg);
-  box-shadow:none;
+  color:#F5E6D3;
+  border-color:#991B1B;
+  background:#7F1D1D;
+  box-shadow:0 5px 13px rgba(153,27,27,.20);
+}
+body.dark .detail-page-actions .detail-invoice-action{
+  color:#D8B4FE;
+  border-color:rgba(192,132,252,.35);
+  background:rgba(88,28,135,.22);
 }
 
 .policy-detail-split{
