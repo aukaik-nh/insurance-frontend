@@ -157,7 +157,6 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
       >
         <span className="sb-nav-icon"><Ico n={it.ico} s={18} /></span>
         <span className="sb-nav-label">{it.label}</span>
-        {it.disabled && <span className="sb-nav-soon">ปิดชั่วคราว</span>}
         {!it.disabled && it.badge > 0 && <span className="sb-nav-badge">{it.badge}</span>}
       </button>
     )

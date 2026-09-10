@@ -2927,7 +2927,7 @@ body:not(.dark) .upload-page-hd .upload-back-to-home:hover{color:#1a0f0a;backgro
 
 /* Batch import starts with a short, explicit workflow instead of a large empty drop area. */
 .pdf-menu-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px;padding:6px;border:1px solid var(--brd);border-radius:16px;background:var(--sur2)}
-.sb-nav-link:disabled{cursor:not-allowed;opacity:.48;background:var(--sur2);color:var(--t3);box-shadow:none}.sb-nav-link:disabled:hover{transform:none;background:var(--sur2);color:var(--t3)}.sb-nav-soon{margin-left:auto;padding:3px 6px;border:1px solid var(--brd2);border-radius:6px;font-size:9px;font-weight:700;white-space:nowrap}
+.sb-nav-link:disabled{cursor:not-allowed;opacity:.48;background:var(--sur2);color:var(--t3);box-shadow:none}.sb-nav-link:disabled:hover{transform:none;background:var(--sur2);color:var(--t3)}
 .pdf-menu-tabs>button{min-width:0;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--t3);font:inherit;text-align:left;cursor:pointer;transition:.15s}
 .pdf-menu-tabs>button:hover:not(:disabled){background:var(--sur);color:var(--t1)}
 .pdf-menu-tabs>button.active{border-color:var(--blue-mid);background:var(--sur);color:var(--blue);box-shadow:0 2px 8px rgba(25,53,61,.07)}
