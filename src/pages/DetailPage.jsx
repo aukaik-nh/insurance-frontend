@@ -960,23 +960,6 @@ export function DetailPage() {
                     )
                   })()}
 
-                  {/* ความคุ้มครองเพิ่มเติม (ทุนเอาประกัน — เฉพาะกรมธรรม์รถยนต์) */}
-                  {(activePolicy.third_party_per_person || activePolicy.third_party_per_accident || activePolicy.own_damage) && (
-                    <div className="info-card">
-                      <div className="info-card-hd">
-                        <Ico n="shield" s={20} />
-                        <span className="info-card-title">ความคุ้มครองเพิ่มเติม</span>
-                      </div>
-                      <div className="info-card-bd">
-                        <div className="info-row">
-                          <F label="บุคคลภายนอก/คน"   value={activePolicy.third_party_per_person  ? `${baht(activePolicy.third_party_per_person)} ฿`  : null} />
-                          <F label="บุคคลภายนอก/ครั้ง" value={activePolicy.third_party_per_accident ? `${baht(activePolicy.third_party_per_accident)} ฿` : null} />
-                          <F label="ความเสียหายต่อรถ"  value={activePolicy.own_damage               ? `${baht(activePolicy.own_damage)} ฿`               : null} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* หมายเหตุ */}
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">หมายเหตุ</span></div>
