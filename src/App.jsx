@@ -122,7 +122,7 @@ function Layout({ onLogout }) {
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF เพื่อเพิ่มกรมธรรม์ใหม่" },
-    { path: "/batch",     ico: "inbox",    label: "จัดการ PDF", desc: "กำลังปรับปรุงระบบอ่านหลายไฟล์", disabled: true },
+    { path: "/batch",     ico: "inbox",    label: "จัดการ PDF", desc: "นำเข้า ตรวจข้อมูล และจับคู่เอกสาร", disabled: false },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "ปิดใช้งานชั่วคราว", disabled: true },
   ]
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
@@ -421,7 +421,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
             { path: "/",         ico: "grid",   label: "ภาพรวม" },
             { path: "/expiring", ico: "bell",   label: "ใกล้หมด", disabled: true },
             { path: "/upload",   ico: "upload", label: "เพิ่ม" },
-            { path: "/batch",    ico: "inbox",  label: "PDF", disabled: true },
+            { path: "/batch",    ico: "inbox",  label: "PDF", disabled: false },
           ].map(it => {
             const active = !it.disabled && isActive(it.path)
             return (

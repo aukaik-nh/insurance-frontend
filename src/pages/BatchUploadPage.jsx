@@ -123,7 +123,7 @@ export function BatchUploadPage() {
       setActiveMenu("review")
       // เลือกบันทึกเฉพาะคู่ที่หลักฐานชัดเจนก่อน รายการกำกวมให้คนเปิดตรวจและติ๊กเอง
       setChecked(new Set(buildItems(result)
-        .filter(it => it.kind === "pair" && it.status === "auto" && !it.main?.parse_error && !it.prb?.parse_error)
+        .filter(it => it.kind === "pair" && it.status === "auto" && !it.main?.parse_error && !it.prb?.parse_error && !it.main?.requires_review && !it.prb?.requires_review)
         .map(it => it.key)))
     } catch (e) {
       setErr("อ่านไฟล์ไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
@@ -191,7 +191,7 @@ export function BatchUploadPage() {
 
   const S = data?.summary || {}
   const dups = data?.duplicates || []
-  const pdfFlowPaused = true
+  const pdfFlowPaused = false
 
   return (
     <div className="page-wrap">
