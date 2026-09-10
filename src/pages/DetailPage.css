@@ -498,3 +498,41 @@ body:not(.dark) .policy-detail-split > .detail-aside .pdf-preview-bar{
   background:linear-gradient(135deg,var(--blue-bg) 0%,#fffaf0 100%);
   border-bottom-color:var(--blue-mid);
 }
+
+/* Keep navigation comfortably separated from record actions on touch screens. */
+@media (max-width: 900px) {
+  .page-wrap .detail-page-hd {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 18px;
+    gap: 18px;
+  }
+  .page-wrap .detail-page-hd .detail-back-to-list {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    width: auto;
+    min-width: 164px;
+    min-height: 56px;
+    height: 56px;
+    padding: 0 20px 0 12px !important;
+    touch-action: manipulation;
+  }
+  .page-wrap .detail-page-hd .page-back-destination { display: inline; }
+  .page-wrap .detail-page-hd .page-hd-div { display: none; }
+  .page-wrap .detail-page-hd .page-hd-info {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+  }
+  .page-wrap .detail-page-hd .detail-page-actions {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--brd);
+    gap: 12px;
+  }
+}
