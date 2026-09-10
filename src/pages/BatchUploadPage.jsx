@@ -6,7 +6,7 @@ import { fmtDate, POLICY_TYPE_LABEL } from "../helpers"
 import { usePdfBlob } from "../pdfUtils"
 import { PdfLightbox } from "../components/PdfLightbox"
 
-// สรุปข้อมูลย่อของ record ที่ AI อ่านได้ — ใช้โชว์ในรายการรีวิว
+// สรุปข้อมูลย่อของ record ที่ตัวอ่าน PDF อ่านได้ — ใช้โชว์ในรายการรีวิว
 function recLine(r) {
   const typeLabel = POLICY_TYPE_LABEL?.[r?.policy_type] || r?.policy_type || "—"
   return {
@@ -32,7 +32,7 @@ export function BatchUploadPage() {
   const [committing, setCommitting] = useState(false)
   const [done, setDone]         = useState(null)     // ผลจาก /commit
   const [err, setErr]           = useState("")
-  const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่าง AI อ่าน
+  const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่างอ่าน PDF
   const [progress, setProgress] = useState(null)     // {done, total, current, chunk, chunk_total} ระหว่างอ่าน
   const [expandedKey, setExpandedKey] = useState(null)
   const [activeMenu, setActiveMenu] = useState("import")
@@ -111,10 +111,20 @@ export function BatchUploadPage() {
       const bid = res.data.batch_id
       // 2) poll ความคืบหน้าทีละไฟล์ จน status = done
       let result = null
+      let consecutivePollErrors = 0
       while (!result) {                         // งานกองใหญ่ใช้เวลานานได้ ไม่ตัดกลางคันตามจำนวนไฟล์
         await new Promise(r => setTimeout(r, 1500))
         let pr
-        try { pr = (await api.get(`/batch/${bid}/progress`)).data } catch { continue }
+        try {
+          pr = (await api.get(`/batch/${bid}/progress`, { timeout: 30000 })).data
+          consecutivePollErrors = 0
+        } catch {
+          consecutivePollErrors += 1
+          if (consecutivePollErrors >= 5) {
+            throw new Error("ติดต่อเซิร์ฟเวอร์ไม่ได้ กรุณากดอ่านใหม่เมื่อเซิร์ฟเวอร์พร้อม")
+          }
+          continue
+        }
         setProgress({ done: pr.done || 0, total: pr.total || files.length, current: pr.current, chunk: pr.chunk || 0, chunk_total: pr.chunk_total || Math.ceil(files.length / 10) })
         if (pr.status === "done")  { result = (await api.get(`/batch/${bid}`)).data; break }
         if (pr.status === "error") throw new Error(pr.error || "ประมวลผลไม่สำเร็จ")
