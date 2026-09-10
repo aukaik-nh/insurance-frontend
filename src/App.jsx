@@ -411,7 +411,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
               </div>
             </div>
           </div>
-          <Outlet context={{ search, setSearch: handleSearch, page, setPage, notify, setExpiringCount }} />
+          <Outlet context={{ search, setSearch: handleSearch, page, setPage, notify, setExpiringCount, serverStatus }} />
         </main>
 
         {/* Mobile: keep the five most-used actions within thumb reach.  The

@@ -28,13 +28,16 @@ export function ListPage({ tab }) {
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const typeFilter = searchParams.get("type")  // motor | prb | fire | pa | null
-  const { search, setSearch, page, setPage, notify, setExpiringCount } = useOutletContext()
+  const { search, setSearch, page, setPage, notify, setExpiringCount, serverStatus } = useOutletContext()
 
   const [rows, setRows]               = useState([])
   const [allRows, setAllRows]         = useState([])  // ⚡ สำหรับ dashboard analytics (ทั้งหมด ไม่ใช่หน้านี้)
   const [todayAttachments, setTodayAttachments] = useState({}) // { policyId: [att, ...] } สำหรับนับ พ.ร.บ.
   const [total, setTotal]             = useState(0)
-  const [loading, setLoading]         = useState(false)
+  const [loading, setLoading]         = useState(true)
+  const [loadError, setLoadError] = useState("")
+  const [retryCount, setRetryCount] = useState(0)
+  const [hasLoaded, setHasLoaded] = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
   // ค่าเริ่มต้นต้องเป็นวันที่บันทึกจริง ไม่ใช่วันเริ่มคุ้มครองในเอกสาร
   const [sortKey, setSortKey]         = useState("created_at")
@@ -190,10 +193,12 @@ export function ListPage({ tab }) {
       }
     } catch {}
     setLoading(!hadCache)
+    setLoadError("")
+    if (hadCache) setHasLoaded(true)
 
     let request = listInflight.get(cacheKey)
     if (!request) {
-      request = api.get("/policies", { params })
+      request = api.get("/policies", { params, timeout: 15000 })
         .then(res => {
           const result = { rows: res.data.data || [], total: res.data.total || 0, ts: Date.now() }
           listMemoryCache.delete(cacheKey)
@@ -216,6 +221,8 @@ export function ListPage({ tab }) {
         const data = result.rows
         const totalCount = result.total
         setRows(data)
+        setHasLoaded(true)
+        setLoadError("")
         setTotal(totalCount)
         if (tab === "dashboard") setAllRows(data)
         const expCnt = data.filter(r => {
@@ -227,13 +234,14 @@ export function ListPage({ tab }) {
       })
       .catch(e => {
         if (cancelled) return
+        setLoadError("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ จึงยังโหลดข้อมูลไม่สำเร็จ")
         // ถ้ามี cache อยู่แล้ว ไม่ต้อง notify error รบกวน — user ยังเห็นข้อมูลได้
         if (!hadCache) notify("โหลดข้อมูลไม่สำเร็จ: " + (e.response?.data?.detail || e.message), "error")
       })
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [pageForFetch, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange])
+  }, [pageForFetch, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange, serverStatus, retryCount])
   useEffect(() => {
     setPreviewPolicy(null)
     if (lastListTab !== null && lastListTab !== tab) setPage(1)
@@ -675,7 +683,7 @@ export function ListPage({ tab }) {
                     <span className="overview-stat-icon"><Ico n={m.ico} s={22} /></span>
                     <span className="overview-stat-copy">
                       <span className="overview-stat-label">{m.lbl}</span>
-                      <strong>{m.value}</strong>
+                      <strong>{hasLoaded ? m.value : "—"}</strong>
                       <span className="overview-stat-detail">{m.detail}</span>
                     </span>
                     <span className="overview-stat-end">
@@ -827,10 +835,15 @@ export function ListPage({ tab }) {
             )
           })()}
 
+          {loadError && <div role="alert" style={{ padding: 24, marginBottom: 16, border: "1px solid var(--amber)", borderRadius: 14, background: "var(--sur)" }}>
+            <strong>{loadError}</strong>
+            <p>{hasLoaded ? "กำลังแสดงข้อมูลที่โหลดไว้ก่อนหน้า" : "ยังยืนยันจำนวนรายการไม่ได้ กรุณาลองโหลดอีกครั้ง"}</p>
+            <button className="btn btn-b" onClick={() => setRetryCount(value => value + 1)}>ลองโหลดใหม่</button>
+          </div>}
           <PolicyTable
             groupedByCustomer={isPoliciesTab}
             rows={displayRows}
-            loading={loading}
+            loading={loading || (!hasLoaded && !!loadError)}
             total={displayTotal}
             page={page}
             pages={displayPages}
