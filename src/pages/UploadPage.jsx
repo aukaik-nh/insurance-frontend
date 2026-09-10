@@ -77,17 +77,17 @@ export function UploadPage() {
     const computed = computeDisplayFilename({
       plate:           parsed.license_plate,
       policy_type:     parsed.policy_type,
-      insured_address: parsed.insured_address,
+      risk_address: parsed.risk_address,
       insured_name:    parsed.insured_name,
       coverage_start:  parsed.coverage_start,
       coverage_end:    parsed.coverage_end,
       doc_type:        "main",
     })
-    if (computed && !computed.startsWith("ไม่ทราบ")) {
+    if (computed) {
       setFilename(computed)
     }
   }, [file, filenameAuto, parsed.license_plate, parsed.policy_type,
-      parsed.insured_address, parsed.insured_name, parsed.coverage_start, parsed.coverage_end])
+      parsed.risk_address, parsed.insured_name, parsed.coverage_start, parsed.coverage_end])
 
   const pick = async f => {
     if (!f || loading || prbLoading || saving) return
@@ -105,8 +105,8 @@ export function UploadPage() {
     const form = new FormData()
     form.append("file", f)
     try {
-      // Python OCR: PDF -> image -> Tesseract; ไม่เรียก AI และยังไม่ upload storage
-      const res = await api.post("/preview-pdf-local", form)
+      // อ่านสองชั้น: OCR เก็บหลักฐานตำแหน่ง + document vision เติมฟอร์มให้ครบขึ้น
+      const res = await api.post("/preview-pdf-verified", form, { timeout: 180000 })
       const parsedData = res.data?.parsed || {}
       setPreview(res.data?.preview || {})
       if (res.data?.success === false) throw new Error(parsedData.parse_error || "อ่านเอกสารไม่สำเร็จ กรุณาลองอีกครั้งหรือกรอกข้อมูลเอง")
@@ -133,7 +133,7 @@ export function UploadPage() {
     const form = new FormData()
     form.append("file", f)
     try {
-      const res = await api.post("/preview-pdf-local", form)
+      const res = await api.post("/preview-pdf-verified", form, { timeout: 180000 })
       const p = res.data?.parsed || {}
       setPrbPreview(res.data?.preview || {})
       if (res.data?.success === false) throw new Error(p.parse_error || "อ่านเอกสารไม่สำเร็จ")
@@ -233,6 +233,9 @@ export function UploadPage() {
   })
 
   const doSave = async () => {
+    if (file && filename === "รอตรวจข้อมูล.pdf") {
+      setErr("กรุณาตรวจข้อมูลสำหรับตั้งชื่อไฟล์ให้ครบก่อนบันทึก"); return
+    }
     if (loading || prbLoading || saving) return
     setSaving(true); setErr("")
     try {
@@ -257,6 +260,7 @@ export function UploadPage() {
       const res = await api.post("/save-policy", {
         ...parsed,
         ...pdfMeta,
+        original_filename: file?.name || parsed.original_filename,
         pdf_filename: pdfMeta.pdf_filename || filename || parsed.pdf_filename,
       })
       const newId = res.data?.id
@@ -353,6 +357,13 @@ export function UploadPage() {
             {/* left: drop zone + form */}
             <div className="upload-form-column" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
+              {file && ["FIRE", "ASSET", "IAR", "BURGLAR"].includes(parsed.policy_type) && (
+                <label>ที่อยู่สถานที่เอาประกัน (ใช้ตั้งชื่อไฟล์)
+                  <input value={parsed.risk_address || ""}
+                    onChange={e => setParsed(p => ({ ...p, risk_address: e.target.value }))}
+                    placeholder="ตรวจจากสถานที่เอาประกันใน PDF" />
+                </label>
+              )}
               {file && (
                 <div className="fname-row">
                   <Ico n="pen" s={17} />

@@ -915,6 +915,8 @@ export function DetailPage() {
                   {(() => {
                     const yearFromFn = (fn) => {
                       if (!fn) return null
+                      const full = String(fn).match(/-(\d{4})(?: \(\d+\))?\.pdf$/i)
+                      if (full) return Number(full[1])
                       const m = String(fn).match(/\.(\d{2})\.pdf$/i)
                       return m ? 2500 + parseInt(m[1], 10) : null
                     }
@@ -1215,6 +1217,8 @@ export function DetailPage() {
                     const yearFromFilename = (fn) => {
                       if (!fn) return null
                       // จับ ".XX." ก่อน .pdf (XX = 2 หลัก BE สั้น เช่น 69, 70)
+                      const full = String(fn).match(/-(\d{4})(?: \(\d+\))?\.pdf$/i)
+                      if (full) return Number(full[1])
                       const m = String(fn).match(/\.(\d{2})\.pdf$/i)
                       if (!m) return null
                       const yy = parseInt(m[1], 10)

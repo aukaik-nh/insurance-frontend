@@ -35,6 +35,9 @@ export function BatchUploadPage() {
   const [elapsed, setElapsed]   = useState(0)        // นับวินาทีระหว่าง AI อ่าน
   const [progress, setProgress] = useState(null)     // {done, total, current, chunk, chunk_total} ระหว่างอ่าน
   const [expandedKey, setExpandedKey] = useState(null)
+  const [activeMenu, setActiveMenu] = useState("import")
+  const [history, setHistory] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   // จับเวลาระหว่าง extracting — ให้ผู้ใช้เห็นว่ากำลังทำงาน ไม่ได้ค้าง
   useEffect(() => {
@@ -52,12 +55,33 @@ export function BatchUploadPage() {
     setErr("")
     setFiles(prev => {
       const seen = new Set(prev.map(f => f.name + f.size))
-      return [...prev, ...pdfs.filter(f => !seen.has(f.name + f.size))]
+      const next = [...prev, ...pdfs.filter(f => !seen.has(f.name + f.size))]
+      if (next.length > 20) {
+        setErr("นำเข้าได้สูงสุด 20 ไฟล์ต่อชุด ระบบเลือกไว้เฉพาะ 20 ไฟล์แรก")
+      }
+      return next.slice(0, 20)
     })
   }
 
   const removeFile = i => setFiles(prev => prev.filter((_, idx) => idx !== i))
-  const resetAll = () => { setFiles([]); setData(null); setChecked(new Set()); setDone(null); setErr(""); setExpandedKey(null) }
+  const resetAll = () => { setFiles([]); setData(null); setChecked(new Set()); setDone(null); setErr(""); setExpandedKey(null); setActiveMenu("import") }
+
+  const loadHistory = async () => {
+    setHistoryLoading(true); setErr("")
+    try {
+      const res = await api.get("/batch/history")
+      setHistory(res.data?.items || [])
+    } catch (e) {
+      setErr("โหลดประวัติไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  const selectMenu = menu => {
+    setActiveMenu(menu)
+    if (menu === "history") loadHistory()
+  }
 
   // ── รวมรายการที่ "บันทึกได้" เป็น key เดียวกัน เพื่อทำ checkbox ──
   const buildItems = (d) => {
@@ -96,6 +120,7 @@ export function BatchUploadPage() {
         if (pr.status === "error") throw new Error(pr.error || "ประมวลผลไม่สำเร็จ")
       }
       setData(result)
+      setActiveMenu("review")
       // เลือกบันทึกเฉพาะคู่ที่หลักฐานชัดเจนก่อน รายการกำกวมให้คนเปิดตรวจและติ๊กเอง
       setChecked(new Set(buildItems(result)
         .filter(it => it.kind === "pair" && it.status === "auto" && !it.main?.parse_error && !it.prb?.parse_error)
@@ -150,6 +175,7 @@ export function BatchUploadPage() {
       }
       const res = await api.post(`/batch/${data.batch_id}/commit`, payload)
       setDone(res.data)
+      setActiveMenu("review")
       notify(`บันทึกสำเร็จ ${res.data.summary?.created || 0} รายการ`, "success")
     } catch (e) {
       setErr("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
@@ -165,6 +191,7 @@ export function BatchUploadPage() {
 
   const S = data?.summary || {}
   const dups = data?.duplicates || []
+  const pdfFlowPaused = true
 
   return (
     <div className="page-wrap">
@@ -190,6 +217,30 @@ export function BatchUploadPage() {
       </div>
 
       <div className="page-body">
+        <nav className={`pdf-menu-tabs${pdfFlowPaused ? " is-paused" : ""}`} aria-label="เมนูจัดการ PDF">
+          <button type="button" className={activeMenu === "import" ? "active" : ""}
+            onClick={() => selectMenu("import")} disabled={pdfFlowPaused || (!!data && !done)}>
+            <span>1</span><div><strong>นำเข้า PDF</strong><small>เลือกพร้อมกัน 1–20 ไฟล์</small></div>
+          </button>
+          <button type="button" className={activeMenu === "review" ? "active" : ""}
+            onClick={() => selectMenu("review")} disabled={pdfFlowPaused || (!data && !done)}>
+            <span>2</span><div><strong>ตรวจสอบและจับคู่</strong><small>เทียบ PDF ก่อนบันทึก</small></div>
+          </button>
+          <button type="button" className={activeMenu === "history" ? "active" : ""}
+            onClick={() => selectMenu("history")} disabled={pdfFlowPaused}>
+            <span>3</span><div><strong>ประวัติการนำเข้า</strong><small>งานค้าง สำเร็จ และผิดพลาด</small></div>
+          </button>
+        </nav>
+
+        {pdfFlowPaused ? (
+          <div className="pdf-flow-paused" role="status">
+            <span><Ico n="lock" s={28} /></span>
+            <strong>ปิดใช้งานจัดการ PDF ชั่วคราว</strong>
+            <p>ทั้ง 3 เมนูกำลังปรับปรุงระบบอ่านข้อมูลให้เสถียร กรุณาใช้เมนู “เพิ่มกรมธรรม์” สำหรับไฟล์เดี่ยวก่อน</p>
+            <button type="button" className="btn btn-b" onClick={() => navigate("/upload")}><Ico n="upload" s={18} />ไปหน้าเพิ่มกรมธรรม์</button>
+          </div>
+        ) : <>
+
         {err && (
           <div className="bnr er" style={{ marginBottom: 16 }}>
             <Ico n="warn" s={20} />
@@ -197,8 +248,20 @@ export function BatchUploadPage() {
           </div>
         )}
 
-        {/* ── ผลลัพธ์หลัง commit ── */}
-        {done ? (
+        {/* ── เนื้อหาตามเมนู ── */}
+        {activeMenu === "history" ? (
+          <BatchHistory items={history} loading={historyLoading} onRefresh={loadHistory}
+            onOpen={async batchId => {
+              try {
+                const result = (await api.get(`/batch/${batchId}`)).data
+                setData(result); setDone(null); setChecked(new Set()); setActiveMenu("review")
+              } catch (e) {
+                setErr("เปิดชุดนำเข้าไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
+              }
+            }} />
+        ) : activeMenu === "review" && !data && !done ? (
+          <div className="pdf-menu-empty"><Ico n="inbox" s={34} /><strong>ยังไม่มีเอกสารให้ตรวจ</strong><span>เริ่มจากเมนูนำเข้า PDF ก่อน</span></div>
+        ) : done ? (
           <div className="info-card" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "34px 24px" }}>
             <div style={{ fontSize: 48, color: "var(--green)", marginBottom: 8 }}>✓</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: "var(--t1)" }}>
@@ -221,19 +284,6 @@ export function BatchUploadPage() {
         ) : !data ? (
           /* ── STEP 1: drop zone เต็มหน้า + รายการไฟล์ที่เลือก ── */
           <>
-            <section className="batch-workflow" aria-label="ขั้นตอนการนำเข้าเอกสาร">
-              <div className="batch-workflow-step active">
-                <span>1</span><div><strong>รวบรวมไฟล์ PDF</strong><small>เพิ่มไฟล์ได้เรื่อย ๆ ก่อนเริ่มอ่าน</small></div>
-              </div>
-              <div className="batch-workflow-line" aria-hidden="true" />
-              <div className="batch-workflow-step">
-                <span>2</span><div><strong>ระบบอ่านและจับคู่</strong><small>AI แยก กธ. และ พ.ร.บ.</small></div>
-              </div>
-              <div className="batch-workflow-line" aria-hidden="true" />
-              <div className="batch-workflow-step">
-                <span>3</span><div><strong>ตรวจทานก่อนบันทึก</strong><small>ยืนยันเฉพาะข้อมูลที่ถูกต้อง</small></div>
-              </div>
-            </section>
             <div
               className={`batch-dropzone${drag ? " is-dragging" : ""}${files.length ? " has-files" : ""}`}
               onClick={() => ref.current?.click()}
@@ -252,7 +302,7 @@ export function BatchUploadPage() {
               </button>
               <div className="batch-drop-notes">
                 <span><Ico n="doc" s={15} /> รองรับ PDF เท่านั้น</span>
-                <span><Ico n="inbox" s={15} /> รวมได้ทุกจำนวน</span>
+                <span><Ico n="inbox" s={15} /> สูงสุด 20 ไฟล์ต่อชุด</span>
                 <span><Ico n="shield" s={15} /> ยังไม่บันทึกจนกดยืนยัน</span>
               </div>
             </div>
@@ -376,8 +426,39 @@ export function BatchUploadPage() {
             </div>
           </>
         )}
+        </>}
       </div>
     </div>
+  )
+}
+
+function BatchHistory({ items, loading, onRefresh, onOpen }) {
+  const labels = {
+    processing: ["กำลังอ่าน", "processing"], review: ["รอตรวจสอบ", "review"],
+    committed: ["บันทึกแล้ว", "committed"], error: ["ผิดพลาด", "error"],
+  }
+  return (
+    <section className="batch-history">
+      <div className="batch-history-head">
+        <div><strong>ประวัติการนำเข้า PDF</strong><span>แสดงสูงสุด 50 ชุดล่าสุด</span></div>
+        <button className="btn btn-w" type="button" onClick={onRefresh} disabled={loading}>
+          {loading ? <span className="spin" /> : <Ico n="refresh" s={17} />} โหลดใหม่
+        </button>
+      </div>
+      {loading && !items.length ? <div className="pdf-menu-empty"><span className="spin" /><span>กำลังโหลดประวัติ…</span></div>
+        : !items.length ? <div className="pdf-menu-empty"><Ico n="inbox" s={34} /><strong>ยังไม่มีประวัติ</strong><span>ชุดที่นำเข้าจะปรากฏที่นี่</span></div>
+        : <div className="batch-history-list">{items.map(item => {
+          const meta = labels[item.status] || [item.status || "ไม่ทราบสถานะ", "unknown"]
+          const date = item.updated_at ? new Date(item.updated_at).toLocaleString("th-TH") : "—"
+          return <article key={item.batch_id}>
+            <div className="batch-history-main"><strong>ชุด {item.batch_id}</strong><span>{date}</span></div>
+            <div className="batch-history-count"><strong>{item.total || 0}</strong><span>ไฟล์</span></div>
+            <span className={`batch-history-status ${meta[1]}`}>{meta[0]}</span>
+            {item.status === "processing" && <span className="batch-history-progress">{item.progress?.done || 0}/{item.progress?.total || item.total || 0}</span>}
+            {item.status === "review" && <button className="btn btn-w" type="button" onClick={() => onOpen(item.batch_id)}>เปิดตรวจ</button>}
+          </article>
+        })}</div>}
+    </section>
   )
 }
 
@@ -489,6 +570,7 @@ function RecordEditor({ title, record = {}, onChange }) {
     ["policy_number", "เลขกรมธรรม์"], ["company_code", "รหัสบริษัท"], ["app_number", "เลขใบคำขอ"],
     ["policy_type", "ประเภทกรมธรรม์"], ["new_renew", "ใหม่ / ต่ออายุ"], ["insured_name", "ผู้เอาประกัน"],
     ["phone", "เบอร์โทรศัพท์"], ["insured_address", "ที่อยู่", "wide"],
+    ["risk_address", "สถานที่เอาประกัน (อัคคีภัย)", "wide"],
     ["agent_code", "รหัสตัวแทน"], ["broker_name", "ตัวแทน / นายหน้า"], ["broker_license", "เลขที่ใบอนุญาต"],
     ["license_plate", "ทะเบียนรถ"], ["license_province", "จังหวัดทะเบียน"], ["chassis_no", "เลขตัวถัง"],
     ["car_make", "ยี่ห้อรถ"], ["car_model", "รุ่นรถ"], ["car_year", "ปีรถ", "number"],

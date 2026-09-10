@@ -1,12 +1,23 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Ico } from "../icons"
 import { PdfCanvasViewer } from "./PdfCanvasViewer"
 import "./DocumentReader.css"
 
 export function DocumentReader({ file, loading, pdfUrl, imageUrl, text = "", pageCount, onFile, onClear, onManual, notify, evidence = {}, textScope, onFullscreen, onUseEvidence, onUseAllEvidence, fieldValues = {} }) {
   const input = useRef(null)
+  const wasLoading = useRef(false)
   const [view, setView] = useState("pdf")
   const [drag, setDrag] = useState(false)
+  const evidenceItems = Object.entries(evidence || {}).filter(([, item]) => item?.text)
+  const filledCount = evidenceItems.filter(([key]) => fieldValues?.[key] !== null && fieldValues?.[key] !== undefined && String(fieldValues[key]).trim() !== "").length
+  const reviewCount = evidenceItems.filter(([, item]) => item?.status === "review").length
+
+  useEffect(() => {
+    if (wasLoading.current && !loading && file && (text || evidenceItems.length)) {
+      setView("text")
+    }
+    wasLoading.current = loading
+  }, [loading, file, text, evidenceItems.length])
   const pick = files => {
     if (loading) return
     if (files.length !== 1) { notify("กรุณาเลือกครั้งละ 1 ไฟล์", "info"); return }
@@ -32,8 +43,8 @@ export function DocumentReader({ file, loading, pdfUrl, imageUrl, text = "", pag
     </header>}
     {file && <div className="reader-tabs" role="group" aria-label="มุมมองเอกสาร">
       <button type="button" className={view === "pdf" ? "selected" : ""} aria-pressed={view === "pdf"} onClick={() => setView("pdf")}><Ico n="doc" s={18} />PDF ต้นฉบับ</button>
-      <button type="button" className={view === "text" ? "selected" : ""} aria-pressed={view === "text"} onClick={() => setView("text")}><Ico n="list" s={18} />ข้อความ</button>
-      <span className="reader-caption">แสดง PDF ต้นฉบับทุกหน้า · ระบบอ่านภาพอยู่เบื้องหลัง</span>
+      <button type="button" className={view === "text" ? "selected" : ""} aria-pressed={view === "text"} onClick={() => setView("text")}><Ico n="list" s={18} />ผลสแกน</button>
+      <span className="reader-caption">{loading ? "กำลังอ่านและตรวจข้อมูล…" : view === "text" ? "ผลสแกนแสดงอัตโนมัติแล้ว · ตรวจช่องสีเหลือง" : "PDF ต้นฉบับทุกหน้า"}</span>
     </div>}
     {!file ? <div className={`reader-empty${drag ? " dragging" : ""}`}
       onDragOver={e => { e.preventDefault(); setDrag(true) }}
@@ -67,25 +78,29 @@ export function DocumentReader({ file, loading, pdfUrl, imageUrl, text = "", pag
         </div>
       </div>
       {loading && view === "pdf" && pdfUrl ? <>
-          <div className="reader-live-status" role="status"><span className="spin" /><span><strong>แสดงต้นฉบับแล้ว</strong><small>Python กำลังอ่านช่องสำคัญอยู่เบื้องหลัง</small></span></div>
+          <div className="reader-live-status" role="status"><span className="spin" /><span><strong>แสดงต้นฉบับแล้ว</strong><small>ระบบกำลังอ่านและตรวจข้อมูลทุกช่องอยู่เบื้องหลัง</small></span></div>
           <PdfCanvasViewer key={pdfUrl} src={pdfUrl} imageUrl={imageUrl} filename={file.name} initialPageCount={pageCount} />
         </>
         : loading ? <div className="reader-loading" role="status"><span className="spin" /><strong>กำลังอ่านเอกสาร…</strong><p>ระบบกำลังเตรียม PDF ต้นฉบับให้แสดง</p></div>
         : view === "pdf" ? pdfUrl
           ? <PdfCanvasViewer key={pdfUrl} src={pdfUrl} imageUrl={imageUrl} filename={file.name} initialPageCount={pageCount} />
           : <p className="reader-message">ไม่สามารถแสดง PDF ได้ กรุณาลองเลือกไฟล์อีกครั้ง</p>
-        : <div className="reader-text">
+        : <div className="reader-text reader-scan-result">
+          <div className="reader-scan-summary" role="status">
+            <div><Ico n="checkc" s={22} /><span><strong>สแกนเอกสารเสร็จแล้ว</strong><small>นำข้อมูลที่อ่านได้ใส่แบบฟอร์มด้านซ้ายแล้ว</small></span></div>
+            <div className="reader-scan-counts"><span className="filled">กรอกแล้ว {filledCount}</span>{reviewCount > 0 && <span className="review">ต้องตรวจ {reviewCount}</span>}</div>
+          </div>
           <div className="reader-text-heading">
-            <label htmlFor="document-text">{textScope === "key_fields" ? "ข้อความแยกตามช่องสำคัญ · ช่องรอตรวจยังไม่ถูกกรอกในฟอร์ม" : "ข้อความที่อ่านได้เต็มหน้า · เรียงตามตำแหน่งบนเอกสาร"}</label>
-            {onUseAllEvidence && Object.values(evidence).some(item => item?.text) && <button type="button" onClick={onUseAllEvidence}>
+            <label htmlFor="document-text">{textScope === "key_fields" ? "ข้อมูลสำคัญที่อ่านจากเอกสาร" : "ข้อความที่อ่านได้จากเอกสาร"}</label>
+            {onUseAllEvidence && evidenceItems.some(([key]) => fieldValues?.[key] === null || fieldValues?.[key] === undefined || String(fieldValues[key]).trim() === "") && <button type="button" onClick={onUseAllEvidence}>
               <Ico n="arrowL" s={17} />ใส่ข้อมูลที่อ่านได้ลงช่องว่าง
             </button>}
           </div>
-          {Object.values(evidence).some(item => item.source_image_url) && <details className="reader-evidence">
-            <summary>ดูภาพต้นฉบับแยกช่อง เพื่อตรวจข้อมูล</summary>
-            <div className="reader-evidence-grid">{Object.entries(evidence).map(([key, item]) => item.source_image_url && <div key={key} className="reader-evidence-item">
-              <div><strong>{item.label || key}</strong><span>{item.status === "review" ? "รอตรวจ · ยังไม่กรอก" : "กรอกเบื้องต้น · โปรดตรวจ"}</span></div>
-              <img src={item.source_image_url} alt={`ต้นฉบับช่อง ${item.label || key}`} loading="lazy" />
+          {evidenceItems.length > 0 && <details className="reader-evidence" open>
+            <summary>ผลแยกตามช่อง {evidenceItems.length} รายการ</summary>
+            <div className="reader-evidence-grid">{evidenceItems.map(([key, item]) => <div key={key} className={`reader-evidence-item${item.status === "review" ? " needs-review" : " is-filled"}`}>
+              <div><strong>{item.label || key}</strong><span>{fieldValues?.[key] ? "✓ ใส่ในแบบฟอร์มแล้ว" : item.status === "review" ? "ต้องตรวจจากต้นฉบับ" : "พร้อมใส่แบบฟอร์ม"}</span></div>
+              {item.source_image_url && <img src={item.source_image_url} alt={`ต้นฉบับช่อง ${item.label || key}`} loading="lazy" />}
               <p>อ่านได้: {item.text || "อ่านไม่ได้"}</p>
               {onUseEvidence && item.text && <button type="button" className="reader-use-value"
                 disabled={fieldValues?.[key] !== null && fieldValues?.[key] !== undefined && String(fieldValues[key]).trim() !== ""}

@@ -122,7 +122,7 @@ function Layout({ onLogout }) {
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF เพื่อเพิ่มกรมธรรม์ใหม่" },
-    { path: "/batch",     ico: "inbox",    label: "นำเข้าเป็นชุด", desc: "เลือกหลายไฟล์ · AI ช่วยจัดคู่เอกสาร" },
+    { path: "/batch",     ico: "inbox",    label: "จัดการ PDF", desc: "กำลังปรับปรุงระบบอ่านหลายไฟล์", disabled: true },
     { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
   ]
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
@@ -145,17 +145,19 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
   }
 
   const navItem = (it) => {
-    const active = isActive(it.path)
+    const active = !it.disabled && isActive(it.path)
     return (
       <button key={it.path} type="button"
         className={`sb-nav-link${active ? " on" : ""}`}
-        onClick={() => navTo(it.path)}
+        onClick={() => !it.disabled && navTo(it.path)}
+        disabled={it.disabled}
         title={it.desc}
         aria-current={active ? "page" : undefined}
         onMouseEnter={() => prefetch(it.path)}
       >
         <span className="sb-nav-icon"><Ico n={it.ico} s={18} /></span>
         <span className="sb-nav-label">{it.label}</span>
+        {it.disabled && <span className="sb-nav-soon">ปิดชั่วคราว</span>}
         {it.badge > 0 && <span className="sb-nav-badge">{it.badge}</span>}
       </button>
     )
@@ -307,10 +309,11 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                   จัดการ
                 </div>
                 {NAV_ACTION.map(it => {
-                  const active = isActive(it.path)
+                  const active = !it.disabled && isActive(it.path)
                   return (
                     <div key={it.path}
-                      onClick={() => navTo(it.path)}
+                      onClick={() => !it.disabled && navTo(it.path)}
+                      aria-disabled={it.disabled || undefined}
                       style={{
                         display: "flex", alignItems: "center", gap: 14,
                         padding: "14px 14px",
@@ -318,7 +321,8 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                         marginBottom: 6,
                         background: active ? "var(--blue-bg)" : "transparent",
                         border: active ? "1px solid var(--blue-mid)" : "1px solid transparent",
-                        cursor: "pointer"
+                        cursor: it.disabled ? "not-allowed" : "pointer",
+                        opacity: it.disabled ? .48 : 1
                       }}>
                       <div style={{
                         width: 44, height: 44, borderRadius: 11,
@@ -416,15 +420,16 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
             { path: "/",         ico: "grid",   label: "ภาพรวม" },
             { path: "/expiring", ico: "bell",   label: "ใกล้หมด" },
             { path: "/upload",   ico: "upload", label: "เพิ่ม" },
-            { path: "/batch",    ico: "inbox",  label: "หลายไฟล์" },
+            { path: "/batch",    ico: "inbox",  label: "PDF", disabled: true },
           ].map(it => {
-            const active = isActive(it.path)
+            const active = !it.disabled && isActive(it.path)
             return (
               <button
                 key={it.path}
                 type="button"
                 className={`mobile-bottom-item${active ? " on" : ""}${it.path === "/upload" ? " mobile-bottom-primary" : ""}`}
-                onClick={() => navTo(it.path)}
+                onClick={() => !it.disabled && navTo(it.path)}
+                disabled={it.disabled}
                 aria-current={active ? "page" : undefined}
               >
                 <span className="mobile-bottom-icon"><Ico n={it.ico} s={21} /></span>

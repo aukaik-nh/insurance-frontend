@@ -56,39 +56,31 @@ export const POLICY_TYPE_LABEL = {
 }
 export const policyTypeLabel = t => t ? (POLICY_TYPE_LABEL[t] || t) : null
 
-// คำนวณชื่อไฟล์ PDF ตามประเภทกรมธรรม์ (mirror backend _make_display_filename)
-//   - พ.ร.บ. (docType=prb)       → '{ทะเบียน} พรบ.{YY}.pdf'
-//   - ประกันรถยนต์ (M/STY)        → '{ทะเบียน} กธ.{YY}.pdf'
-//   - อัคคีภัย/ทรัพย์สิน (FIRE)   → '{ที่อยู่ 40 ตัวแรก} กธ.{YY}.pdf'
-//   - PA/TA/MISC                  → '{ชื่อ} กธ.{YY}.pdf'
-export function computeDisplayFilename({ plate, policy_type, insured_address, insured_name, coverage_start, coverage_end, doc_type = "main" } = {}) {
-  const typeThai = { prb: "พรบ", endorsement: "สลักหลัง", main: "กธ" }[doc_type] || "เอกสาร"
-  // ปี (YY) — รองรับทั้ง ค.ศ. + พ.ศ.
-  let yy = ""
-  // ระบบเก่าใช้ปีเริ่มคุ้มครองในชื่อ เช่น "กธ.69"; fallback ปีหมดอายุสำหรับข้อมูลเก่า
-  const policyYear = (coverage_start || coverage_end || "").toString()
-  const m = policyYear.match(/(\d{4})/)
-  if (m) {
-    let y = parseInt(m[1], 10)
-    if (y < 2500) y += 543
-    yy = String(y).slice(-2)
+// Display naming contract mirrors services/document_naming.py.
+export function computeDisplayFilename({ plate, policy_type, risk_address, insured_name, coverage_start, doc_type = "main" } = {}) {
+  const clean = value => String(value || "").replace(/[<>:"/\\|?*\x00-\x1f]/g, "-").replace(/\s+/g, " ").replace(/^[ .-]+|[ .-]+$/g, "")
+  const pt = String(policy_type || "").trim().toUpperCase()
+  const prb = ["prb", "motor_prb"].includes(doc_type) || (doc_type === "main" && pt === "P")
+  let ident, stem
+  if (!prb && (["FIRE", "ASSET", "IAR", "BURGLAR"].includes(pt) || doc_type === "fire")) {
+    ident = clean(risk_address); stem = ident
+  } else if (!prb && ["PA", "TA", "3RD", "PUBLIC", "MISC", "GOLF", "MARINE"].includes(pt)) {
+    ident = clean(insured_name); stem = ident
+  } else {
+    ident = clean(String(plate || "").replace(/\s+/g, ""))
+    const text = String(coverage_start || "").replace(/[๐-๙]/g, c => "๐๑๒๓๔๕๖๗๘๙".indexOf(c))
+    const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    const local = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+    if (!ident || (!iso && !local)) return "รอตรวจข้อมูล.pdf"
+    let [y, m, d] = iso ? iso.slice(1).map(Number) : [Number(local[3]), Number(local[2]), Number(local[1])]
+    if (y >= 2400) y -= 543
+    const date = new Date(Date.UTC(y, m - 1, d))
+    if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return "รอตรวจข้อมูล.pdf"
+    stem = `${ident}-${prb ? "พรบ." : "กธ"}-${y + 543}`
   }
-  const plateClean   = (plate || "").replace(/\s+/g, "").trim()
-  const nameClean    = (insured_name || "").trim()
-  const addressShort = (insured_address || "").split("\n", 1)[0].slice(0, 40).trim()
-
-  const pt = (policy_type || "").toUpperCase().trim()
-  const FIRE = new Set(["FIRE", "ASSET", "IAR", "BURGLAR"])
-  const NAMES = new Set(["PA", "TA", "3RD", "PUBLIC", "MISC", "GOLF", "MARINE"])
-
-  let ident
-  if (doc_type === "prb")       ident = plateClean
-  else if (FIRE.has(pt))        ident = addressShort || plateClean || nameClean
-  else if (NAMES.has(pt))       ident = nameClean    || plateClean
-  else                          ident = plateClean   || nameClean || addressShort  // M/STY/default
-  if (!ident) ident = "ไม่ทราบ"
-
-  return yy ? `${ident} ${typeThai}.${yy}.pdf` : `${ident} ${typeThai}.pdf`
+  if (!ident) return "รอตรวจข้อมูล.pdf"
+  if (doc_type === "endorsement") stem += "-สลักหลัง"
+  return `${stem}.pdf`
 }
 
 // จัดกลุ่มกรมธรรม์ตามชื่อลูกค้า (1 ชื่อ = 1 แถว) แสดง "ฉบับปีล่าสุด" ของลูกค้ารายนั้น
