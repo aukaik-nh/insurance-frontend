@@ -413,7 +413,7 @@ export function UploadPage() {
           </button>
           <div className="page-hd-div" />
           <div className="page-hd-info">
-            <div className="page-title">เพิ่มกรมธรรม์</div>
+            <div className="page-title">เพิ่มเอกสาร</div>
             <div className="page-sub">
               {loading ? "กำลังอ่านเอกสาร…"
                 : hasData ? "ตรวจสอบและแก้ไขข้อมูลก่อนบันทึก"

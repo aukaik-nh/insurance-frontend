@@ -2666,7 +2666,7 @@ body.text-large .policy-form .fi input{height:auto;min-height:44px}
   .mobile-bottom-nav{
     position:fixed;left:0;right:0;bottom:0;z-index:180;
     min-height:68px;padding:7px max(8px,env(safe-area-inset-left,0)) calc(7px + env(safe-area-inset-bottom,0)) max(8px,env(safe-area-inset-right,0));
-    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;
     background:var(--sur); /* fallback for older mobile Safari */
     background:var(--sur); /* fallback for older mobile Safari */
     background:color-mix(in srgb,var(--sur) 94%,transparent);

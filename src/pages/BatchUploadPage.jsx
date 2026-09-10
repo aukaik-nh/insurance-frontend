@@ -232,8 +232,8 @@ export function BatchUploadPage() {
         </button>
         <div className="page-hd-div" />
         <div className="page-hd-info">
-          <div className="page-title">นำเข้าเอกสารเป็นชุด</div>
-          <div className="page-sub">เลือก PDF หลายไฟล์ · ระบบอ่านข้อมูลและช่วยจับคู่ กธ. กับ พ.ร.บ.</div>
+          <div className="page-title">จัดการเอกสาร PDF</div>
+          <div className="page-sub">เพิ่มเอกสาร ตรวจข้อมูล และจัดคู่กับกรมธรรม์ในหน้าเดียว</div>
         </div>
         <div className="page-hd-right">
           {data && !done && (
@@ -251,15 +251,15 @@ export function BatchUploadPage() {
         <nav className={`pdf-menu-tabs${pdfFlowPaused ? " is-paused" : ""}`} aria-label="เมนูจัดการ PDF">
           <button type="button" className={activeMenu === "import" ? "active" : ""}
             onClick={() => selectMenu("import")} disabled={pdfFlowPaused || (!!data && !done)}>
-            <span>1</span><div><strong>นำเข้า PDF</strong><small>เลือกพร้อมกัน 1–20 ไฟล์</small></div>
+            <span>1</span><div><strong>เพิ่ม PDF</strong><small>เลือกพร้อมกันได้ 1–20 ไฟล์</small></div>
           </button>
           <button type="button" className={activeMenu === "review" ? "active" : ""}
             onClick={() => selectMenu("review")} disabled={pdfFlowPaused || (!data && !done)}>
-            <span>2</span><div><strong>ตรวจสอบและจับคู่</strong><small>เทียบ PDF ก่อนบันทึก</small></div>
+            <span>2</span><div><strong>ตรวจข้อมูล</strong><small>เทียบเอกสารและแก้ไขก่อนบันทึก</small></div>
           </button>
           <button type="button" className={activeMenu === "history" ? "active" : ""}
             onClick={() => selectMenu("history")} disabled={pdfFlowPaused}>
-            <span>3</span><div><strong>เอกสารรอตรวจ / ประวัติ</strong><small>เอกสารที่ยังจับคู่ไม่ได้และงานที่ผ่านมา</small></div>
+            <span>3</span><div><strong>รอตรวจ</strong><small>เอกสารที่ยังจับคู่ไม่ได้และประวัติ</small></div>
           </button>
         </nav>
 
@@ -330,8 +330,8 @@ export function BatchUploadPage() {
               <div className="batch-drop-icon">
                 <Ico n="upload" s={34} />
               </div>
-              <div className="batch-drop-kicker">ขั้นตอนที่ 1</div>
-              <div className="batch-drop-title">{files.length ? "เพิ่มไฟล์ PDF อีก" : "เลือกไฟล์ PDF ที่ต้องการนำเข้า"}</div>
+              <div className="batch-drop-kicker">เพิ่มเอกสาร</div>
+              <div className="batch-drop-title">{files.length ? "เพิ่มไฟล์ PDF อีก" : "วางหรือเลือกไฟล์ PDF"}</div>
               <div className="batch-drop-desc">{files.length ? `เลือกไว้ ${files.length} ไฟล์แล้ว · สามารถเพิ่มไฟล์ได้อีก` : "ลากไฟล์มาวาง หรือเลือกไฟล์จากเครื่องได้หลายไฟล์พร้อมกัน"}</div>
               <button type="button" className="btn btn-b batch-pick-btn" onClick={e => { e.stopPropagation(); ref.current?.click() }}>
                 <Ico n="upload" s={18} /> เลือกไฟล์ PDF

@@ -115,15 +115,13 @@ function Layout({ onLogout }) {
 
   const path = location.pathname
 
-  // เมนูแบ่งเป็น 2 กลุ่ม
+  // เมนูหลักเหลือเฉพาะงานที่เปิดใช้งานจริง เพื่อลดตัวเลือกที่ไม่จำเป็น
   const NAV_VIEW = [
-    { path: "/",         ico: "grid", label: "ภาพรวม",        desc: "Dashboard + สถิติ",       badge: 0 },
-    { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ปิดใช้งานชั่วคราว",        badge: expiringCount, disabled: true },
+    { path: "/", ico: "grid", label: "ภาพรวม", desc: "ค้นหาและดูรายการกรมธรรม์", badge: 0 },
   ]
   const NAV_ACTION = [
-    { path: "/upload",    ico: "upload",   label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF เพื่อเพิ่มกรมธรรม์ใหม่" },
-    { path: "/batch",     ico: "inbox",    label: "จัดการ PDF", desc: "นำเข้า ตรวจข้อมูล และจับคู่เอกสาร", disabled: false },
-    { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "ปิดใช้งานชั่วคราว", disabled: true },
+    { path: "/upload", ico: "upload", label: "เพิ่มเอกสาร", desc: "อ่านและบันทึก PDF หนึ่งไฟล์" },
+    { path: "/batch", ico: "inbox", label: "จัดการเอกสาร", desc: "นำเข้าหลายไฟล์ ตรวจข้อมูล และดูเอกสารรอตรวจ" },
   ]
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
   const isActive = navPath => navPath === "/" ? path === "/" : path.startsWith(navPath)
@@ -414,14 +412,12 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
           <Outlet context={{ search, setSearch: handleSearch, page, setPage, notify, setExpiringCount, serverStatus }} />
         </main>
 
-        {/* Mobile: keep the five most-used actions within thumb reach.  The
-            complete menu (invoice, quotation, settings) remains under More. */}
+        {/* มือถือแสดงเพียงสามงานหลัก เพื่อให้กดง่ายและไม่สับสน */}
         <nav className="mobile-bottom-nav" aria-label="เมนูหลักบนมือถือ">
           {[
-            { path: "/",         ico: "grid",   label: "ภาพรวม" },
-            { path: "/expiring", ico: "bell",   label: "ใกล้หมด", disabled: true },
-            { path: "/upload",   ico: "upload", label: "เพิ่ม" },
-            { path: "/batch",    ico: "inbox",  label: "PDF", disabled: false },
+            { path: "/", ico: "grid", label: "ภาพรวม" },
+            { path: "/upload", ico: "upload", label: "เพิ่มเอกสาร" },
+            { path: "/batch", ico: "inbox", label: "จัดการเอกสาร" },
           ].map(it => {
             const active = !it.disabled && isActive(it.path)
             return (
@@ -435,22 +431,9 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
               >
                 <span className="mobile-bottom-icon"><Ico n={it.ico} s={21} /></span>
                 <span>{it.label}</span>
-                {it.path === "/expiring" && expiringCount > 0 && (
-                  <b className="mobile-bottom-badge">{expiringCount > 99 ? "99+" : expiringCount}</b>
-                )}
               </button>
             )
           })}
-          <button
-            type="button"
-            className={`mobile-bottom-item${mobileMenu ? " on" : ""}`}
-            onClick={() => setMobileMenu(m => !m)}
-            aria-expanded={mobileMenu}
-            aria-label="เมนูเพิ่มเติม"
-          >
-            <span className="mobile-bottom-icon"><Ico n="menu" s={22} /></span>
-            <span>เพิ่มเติม</span>
-          </button>
         </nav>
       </div>
 
