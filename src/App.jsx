@@ -118,12 +118,12 @@ function Layout({ onLogout }) {
   // เมนูแบ่งเป็น 2 กลุ่ม
   const NAV_VIEW = [
     { path: "/",         ico: "grid", label: "ภาพรวม",        desc: "Dashboard + สถิติ",       badge: 0 },
-    { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ภายใน 30 วัน",            badge: expiringCount },
+    { path: "/expiring", ico: "bell", label: "ใกล้หมดอายุ",   desc: "ปิดใช้งานชั่วคราว",        badge: expiringCount, disabled: true },
   ]
   const NAV_ACTION = [
     { path: "/upload",    ico: "upload",   label: "เพิ่มกรมธรรม์", desc: "อัปโหลด PDF เพื่อเพิ่มกรมธรรม์ใหม่" },
     { path: "/batch",     ico: "inbox",    label: "จัดการ PDF", desc: "กำลังปรับปรุงระบบอ่านหลายไฟล์", disabled: true },
-    { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "สร้าง invoice + QR" },
+    { path: "/invoice",   ico: "banknote", label: "ใบแจ้งหนี้",     desc: "ปิดใช้งานชั่วคราว", disabled: true },
   ]
 const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1) }
   const isActive = navPath => navPath === "/" ? path === "/" : path.startsWith(navPath)
@@ -158,7 +158,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         <span className="sb-nav-icon"><Ico n={it.ico} s={18} /></span>
         <span className="sb-nav-label">{it.label}</span>
         {it.disabled && <span className="sb-nav-soon">ปิดชั่วคราว</span>}
-        {it.badge > 0 && <span className="sb-nav-badge">{it.badge}</span>}
+        {!it.disabled && it.badge > 0 && <span className="sb-nav-badge">{it.badge}</span>}
       </button>
     )
   }
@@ -264,11 +264,12 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                   ดูข้อมูล
                 </div>
                 {NAV_VIEW.map(it => {
-                  const active = isActive(it.path)
+                  const active = !it.disabled && isActive(it.path)
                   return (
                     <div key={it.path}
                       className={`mob-item${active ? " on" : ""}`}
-                      onClick={() => navTo(it.path)}
+                      onClick={() => !it.disabled && navTo(it.path)}
+                      aria-disabled={it.disabled || undefined}
                       style={{
                         display: "flex", alignItems: "center", gap: 14,
                         padding: "14px 14px",
@@ -276,7 +277,8 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                         marginBottom: 6,
                         background: active ? "var(--blue-bg)" : "transparent",
                         border: active ? "1px solid var(--blue-mid)" : "1px solid transparent",
-                        cursor: "pointer"
+                        cursor: it.disabled ? "not-allowed" : "pointer",
+                        opacity: it.disabled ? .48 : 1
                       }}>
                       <div style={{
                         width: 44, height: 44, borderRadius: 11,
@@ -295,7 +297,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
                           {it.desc}
                         </div>
                       </div>
-                      {it.badge > 0 && (
+                      {!it.disabled && it.badge > 0 && (
                         <span style={{
                           background: "var(--amber, #CA8A04)", color: "#1A0F0A",
                           padding: "4px 12px", borderRadius: 12, fontSize: 14, fontWeight: 700
@@ -418,7 +420,7 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         <nav className="mobile-bottom-nav" aria-label="เมนูหลักบนมือถือ">
           {[
             { path: "/",         ico: "grid",   label: "ภาพรวม" },
-            { path: "/expiring", ico: "bell",   label: "ใกล้หมด" },
+            { path: "/expiring", ico: "bell",   label: "ใกล้หมด", disabled: true },
             { path: "/upload",   ico: "upload", label: "เพิ่ม" },
             { path: "/batch",    ico: "inbox",  label: "PDF", disabled: true },
           ].map(it => {
