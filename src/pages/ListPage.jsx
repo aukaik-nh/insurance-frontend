@@ -50,6 +50,8 @@ export function ListPage({ tab }) {
   const [allRows, setAllRows]         = useState([])  // ⚡ สำหรับ dashboard analytics (ทั้งหมด ไม่ใช่หน้านี้)
   const [todayAttachments, setTodayAttachments] = useState({}) // { policyId: [att, ...] } สำหรับนับ พ.ร.บ.
   const [total, setTotal]             = useState(0)
+  const [summaryStats, setSummaryStats] = useState(null)
+  const [serverGrouped, setServerGrouped] = useState(false)
   const [loading, setLoading]         = useState(true)
   const [loadError, setLoadError] = useState("")
   const [retryCount, setRetryCount] = useState(0)
@@ -161,6 +163,8 @@ export function ListPage({ tab }) {
     if (tab === "policies" || tab === "dashboard") {
       params.limit = 20000
       params.page  = 1
+      params.grouped = true
+      if (typeFilter) params.category = typeFilter
     }
     // ── /expiring tab: ส่ง filter ไป backend (ไม่ใช่ filter client-side ของ page เดียว) ──
     if (tab === "expiring") {
@@ -187,7 +191,9 @@ export function ListPage({ tab }) {
     if (memoryEntry && Date.now() - memoryEntry.ts < LIST_MEMORY_TTL) {
       setRows(memoryEntry.rows)
       setTotal(memoryEntry.total)
-      const expCnt = memoryEntry.rows.filter(r => {
+      setSummaryStats(memoryEntry.stats || null)
+      setServerGrouped(!!memoryEntry.grouped)
+      const expCnt = memoryEntry.stats?.expiring ?? memoryEntry.rows.filter(r => {
         if (!r.coverage_end) return false
         const d = (new Date(r.coverage_end) - new Date()) / 86400000
         return d >= 0 && d < 30
@@ -198,12 +204,14 @@ export function ListPage({ tab }) {
     try {
       const raw = localStorage.getItem(cacheKey)
       if (raw && !hadCache) {
-        const { rows: cRows, total: cTotal, ts } = JSON.parse(raw)
+        const { rows: cRows, total: cTotal, stats: cStats, grouped: cGrouped, ts } = JSON.parse(raw)
         // ใช้ cache ถ้าอายุไม่เกิน 7 วัน
         if (cRows && Date.now() - (ts || 0) < 7 * 24 * 60 * 60 * 1000) {
           setRows(cRows)
           setTotal(cTotal || 0)
-          const expCnt = cRows.filter(r => {
+          setSummaryStats(cStats || null)
+          setServerGrouped(!!cGrouped)
+          const expCnt = cStats?.expiring ?? cRows.filter(r => {
             if (!r.coverage_end) return false
             const d = (new Date(r.coverage_end) - new Date()) / 86400000
             return d >= 0 && d < 30
@@ -221,7 +229,13 @@ export function ListPage({ tab }) {
     if (!request) {
       request = loadPolicyList(params)
         .then(res => {
-          const result = { rows: res.data.data || [], total: res.data.total || 0, ts: Date.now() }
+          const result = {
+            rows: res.data.data || [],
+            total: res.data.total || 0,
+            stats: res.data.stats || null,
+            grouped: !!res.data.grouped,
+            ts: Date.now(),
+          }
           listMemoryCache.delete(cacheKey)
           listMemoryCache.set(cacheKey, result)
           while (listMemoryCache.size > LIST_MEMORY_MAX) {
@@ -245,8 +259,10 @@ export function ListPage({ tab }) {
         setHasLoaded(true)
         setLoadError("")
         setTotal(totalCount)
+        setSummaryStats(result.stats)
+        setServerGrouped(result.grouped)
         if (tab === "dashboard") setAllRows(data)
-        const expCnt = data.filter(r => {
+        const expCnt = result.stats?.expiring ?? data.filter(r => {
           if (!r.coverage_end) return false
           const d = (new Date(r.coverage_end) - new Date()) / 86400000
           return d >= 0 && d < 30
@@ -262,7 +278,7 @@ export function ListPage({ tab }) {
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [pageForFetch, debouncedSearch, serverSortKey, serverSortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange, serverStatus, retryCount])
+  }, [pageForFetch, debouncedSearch, serverSortKey, serverSortDir, status, dateFrom, dateTo, hasPdf, tab, typeFilter, expiryRange, serverStatus, retryCount])
   useEffect(() => {
     setPreviewPolicy(null)
     if (lastListTab !== null && lastListTab !== tab) setPage(1)
@@ -336,7 +352,9 @@ export function ListPage({ tab }) {
       })
   // ⚡ Dashboard/Expiring ใช้ allRows (ทั้งหมดในระบบ) — tab อื่นใช้ rows (หน้านี้)
   const statsRows  = (tab === "dashboard" || tab === "expiring") && allRows.length ? allRows : rows
-  const active     = statsRows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
+  const active     = tab === "dashboard" && summaryStats
+    ? summaryStats.active
+    : statsRows.filter(r => r.coverage_end && new Date(r.coverage_end) > new Date()).length
   const expired    = statsRows.filter(r => r.coverage_end && new Date(r.coverage_end) <= new Date()).length
   const sumPremium = statsRows.reduce((s, r) => s + (Number(r.total_premium) || 0), 0)
   const pages      = Math.ceil(total / LIMIT)
@@ -592,7 +610,7 @@ export function ListPage({ tab }) {
       ? rows.filter(r => policyTypeCategory(r.policy_type) === typeFilter)
       : rows
     // 2) dedup ตามชื่อ (เก็บฉบับล่าสุดในขอบเขตประเภทที่กรอง)
-    const grouped = dedupLatestByCustomer(typeFiltered)
+    const grouped = serverGrouped ? typeFiltered : dedupLatestByCustomer(typeFiltered)
     // 3) sort client-side
     const dir = sortDir === "asc" ? 1 : -1
     return [...grouped].sort((a, b) => {
@@ -697,7 +715,7 @@ export function ListPage({ tab }) {
                 {[
                   { path: "/policies", kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", action: "ดูทั้งหมด", ico: "list" },
                   { path: "/policies", kind: "active", lbl: "คุ้มครองอยู่", value: active.toLocaleString(), detail: "กรมธรรม์ที่ยังมีผล", action: "ดูรายการ", ico: "shield" },
-                  { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: expiring.length.toLocaleString(), detail: "ภายใน 30 วัน", action: "ดูรายการ", ico: "bell", urgent: expiring.length > 0 },
+                  { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: (summaryStats?.expiring ?? expiring.length).toLocaleString(), detail: "ภายใน 30 วัน", action: "ดูรายการ", ico: "bell", urgent: (summaryStats?.expiring ?? expiring.length) > 0 },
                 ].map(m => (
                   <button key={m.path} className={`overview-stat overview-stat-${m.kind}`}
                     onClick={() => navigate(m.path)} aria-label={`ดู${m.lbl}`}>
