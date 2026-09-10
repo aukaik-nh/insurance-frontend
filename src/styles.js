@@ -2511,6 +2511,7 @@ tr:hover .plate{border-color:var(--blue);transform:scale(1.02);box-shadow:inset 
 .policy-form .fi label{margin:0 0 4px;font-size:13px;font-weight:600;line-height:1.5;color:var(--t2)}
 .policy-form .fi input{height:40px;margin-top:0;padding:7px 10px;border:1px solid var(--brd2);border-radius:7px;background:var(--sur);font-size:16px;line-height:1.4;box-shadow:none}
 .policy-form .fi input:hover{border-color:var(--blue)}.policy-form .fi input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-mid)}
+.policy-form .fi.needs-review input{border-color:var(--amber);background:var(--amber-bg)}.field-review-label{margin-left:auto;padding:2px 6px;border-radius:5px;background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:800}.policy-form .fi label:has(.field-review-label){display:flex;align-items:center;gap:7px}
 .policy-form .notes-card{border-radius:8px}.policy-form .notes-card-hd{padding:8px 10px;font-size:13px}.policy-form .notes-ta{min-height:72px;padding:9px 10px;font-size:16px}
 /* Respond to the form's actual width, including when beside a PDF preview. */
 @container policy-fields (min-width:720px){.policy-form .fg{grid-template-columns:repeat(3,minmax(0,1fr))}.policy-form .fi-long{grid-column:span 2}}

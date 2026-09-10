@@ -40,7 +40,11 @@ export function FormPanel({ open, onToggle, loading, parsed, setParsed, hideSect
                   <Ico n="doc" s={14} />ขนาดไฟล์ {(parsed.pdf_size / 1024).toFixed(0)} KB
                 </div>
               )}
-              <PolicyForm values={parsed} onChange={setParsed} hideSections={hideSections} embedded />
+              <PolicyForm values={parsed} onChange={next => {
+                const remaining = (parsed.review_fields || []).filter(key => next[key] === parsed[key])
+                setParsed({ ...next, review_fields: remaining })
+              }} hideSections={hideSections}
+                reviewFields={parsed.review_fields || []} embedded />
             </>
           )}
         </div>

@@ -30,7 +30,7 @@ function calcPremium(net) {
   return { stamp_duty: stamp, vat, total_premium: total }
 }
 
-export function PolicyForm({ values, onChange, hideSections = [], embedded = false }) {
+export function PolicyForm({ values, onChange, hideSections = [], reviewFields = [], embedded = false }) {
   const formId = useId()
   function handleChange(k, val) {
     if (k === "net_premium") {
@@ -61,9 +61,10 @@ export function PolicyForm({ values, onChange, hideSections = [], embedded = fal
               // value สำหรับ <input type=date> ต้องเป็น YYYY-MM-DD (ค.ศ.) เสมอ
               const dateVal = isDate ? normalizeDate(rawVal) : ""
               return (
-                <div key={k} className={`fi${isWide ? " fw" : ""}${["insured_name", "broker_name"].includes(k) ? " fi-long" : ""}`}>
+                <div key={k} className={`fi${isWide ? " fw" : ""}${["insured_name", "broker_name"].includes(k) ? " fi-long" : ""}${reviewFields.includes(k) ? " needs-review" : ""}`}>
                   <label htmlFor={`${formId}-${k}`} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
                     {F_LBL[k]}
+                    {reviewFields.includes(k) && <span className="field-review-label">ตรวจจาก PDF</span>}
                     {isCalc && (
                       <span style={{ fontSize: 12, color: "var(--blue)", background: "var(--blue-bg)", borderRadius: 6, padding: "3px 8px" }}>
                         คำนวณอัตโนมัติ
