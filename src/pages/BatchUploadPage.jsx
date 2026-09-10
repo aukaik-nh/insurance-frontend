@@ -6,9 +6,23 @@ import { fmtDate, POLICY_TYPE_LABEL } from "../helpers"
 import { usePdfBlob } from "../pdfUtils"
 import { PdfLightbox } from "../components/PdfLightbox"
 
+const DOCUMENT_LABELS = {
+  motor_main: "กรมธรรม์รถยนต์",
+  motor_prb: "พ.ร.บ.",
+  renewal_notice: "หนังสือแจ้งเตือนต่ออายุ",
+  endorsement: "สลักหลัง",
+  credit_note: "ใบลดหนี้ / ใบคืนเบี้ย",
+  invoice: "ใบแจ้งหนี้",
+  receipt: "ใบเสร็จรับเงิน",
+  fire: "กรมธรรม์อัคคีภัย",
+  sme_property: "กรมธรรม์ทรัพย์สิน",
+  other_policy: "กรมธรรม์ประเภทอื่น (PA / TA / ฯลฯ)",
+  unknown: "เอกสารรอตรวจประเภท",
+}
+
 // สรุปข้อมูลย่อของ record ที่ตัวอ่าน PDF อ่านได้ — ใช้โชว์ในรายการรีวิว
 function recLine(r) {
-  const typeLabel = POLICY_TYPE_LABEL?.[r?.policy_type] || r?.policy_type || "—"
+  const typeLabel = DOCUMENT_LABELS[r?.doc_type] || POLICY_TYPE_LABEL?.[r?.policy_type] || r?.policy_type || "—"
   return {
     name:  r?.insured_name || "— ไม่พบชื่อ —",
     plate: r?.license_plate || "—",
@@ -16,6 +30,7 @@ function recLine(r) {
     pol:   r?.policy_number || "—",
     end:   r?.coverage_end ? fmtDate(r.coverage_end) : "—",
     err:   r?.parse_error || null,
+    docType: r?.doc_type || "unknown",
   }
 }
 
@@ -37,6 +52,7 @@ export function BatchUploadPage() {
   const [expandedKey, setExpandedKey] = useState(null)
   const [activeMenu, setActiveMenu] = useState("import")
   const [history, setHistory] = useState([])
+  const [inboxDocuments, setInboxDocuments] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
 
   // จับเวลาระหว่าง extracting — ให้ผู้ใช้เห็นว่ากำลังทำงาน ไม่ได้ค้าง
@@ -69,8 +85,12 @@ export function BatchUploadPage() {
   const loadHistory = async () => {
     setHistoryLoading(true); setErr("")
     try {
-      const res = await api.get("/batch/history")
-      setHistory(res.data?.items || [])
+      const [historyRes, inboxRes] = await Promise.all([
+        api.get("/batch/history"),
+        api.get("/documents/inbox"),
+      ])
+      setHistory(historyRes.data?.items || [])
+      setInboxDocuments(inboxRes.data?.data || [])
     } catch (e) {
       setErr("โหลดประวัติไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally {
@@ -186,7 +206,8 @@ export function BatchUploadPage() {
       const res = await api.post(`/batch/${data.batch_id}/commit`, payload)
       setDone(res.data)
       setActiveMenu("review")
-      notify(`บันทึกสำเร็จ ${res.data.summary?.created || 0} รายการ`, "success")
+      const summary = res.data.summary || {}
+      notify(`บันทึก กธ. ${summary.created || 0} · ผูกเอกสาร ${summary.attached || 0} · รอตรวจ ${summary.inbox || 0}`, "success")
     } catch (e) {
       setErr("บันทึกไม่สำเร็จ: " + (e.response?.data?.detail || e.message))
     } finally {
@@ -238,7 +259,7 @@ export function BatchUploadPage() {
           </button>
           <button type="button" className={activeMenu === "history" ? "active" : ""}
             onClick={() => selectMenu("history")} disabled={pdfFlowPaused}>
-            <span>3</span><div><strong>ประวัติการนำเข้า</strong><small>งานค้าง สำเร็จ และผิดพลาด</small></div>
+            <span>3</span><div><strong>เอกสารรอตรวจ / ประวัติ</strong><small>เอกสารที่ยังจับคู่ไม่ได้และงานที่ผ่านมา</small></div>
           </button>
         </nav>
 
@@ -260,7 +281,7 @@ export function BatchUploadPage() {
 
         {/* ── เนื้อหาตามเมนู ── */}
         {activeMenu === "history" ? (
-          <BatchHistory items={history} loading={historyLoading} onRefresh={loadHistory}
+          <BatchHistory items={history} pendingDocuments={inboxDocuments} loading={historyLoading} onRefresh={loadHistory}
             onOpen={async batchId => {
               try {
                 const result = (await api.get(`/batch/${batchId}`)).data
@@ -275,7 +296,7 @@ export function BatchUploadPage() {
           <div className="info-card" style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "34px 24px" }}>
             <div style={{ fontSize: 48, color: "var(--green)", marginBottom: 8 }}>✓</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: "var(--t1)" }}>
-              บันทึกสำเร็จ {done.summary?.created || 0} รายการ
+              บันทึกกรมธรรม์ {done.summary?.created || 0} · ผูกเอกสาร {done.summary?.attached || 0} · รอตรวจ {done.summary?.inbox || 0}
             </div>
             {(done.summary?.failed || 0) > 0 && (
               <div style={{ fontSize: 15, color: "var(--red)", marginTop: 6 }}>
@@ -289,6 +310,11 @@ export function BatchUploadPage() {
               <button className="btn btn-w" onClick={resetAll}>
                 <Ico n="upload" s={18} /><span>อัปโหลดกองใหม่</span>
               </button>
+              {(done.summary?.inbox || 0) > 0 && (
+                <button className="btn btn-w" onClick={() => selectMenu("history")}>
+                  <Ico n="inbox" s={18} /><span>ดูเอกสารรอตรวจ</span>
+                </button>
+              )}
             </div>
           </div>
         ) : !data ? (
@@ -400,14 +426,14 @@ export function BatchUploadPage() {
               ))}
             </Section>
 
-            <Section title="พ.ร.บ. เดี่ยว (บันทึกเป็นกรมธรรม์ พ.ร.บ.)" icon="doc" count={(data.orphan_prb || []).length}>
+            <Section title="พ.ร.บ. เดี่ยว (จับคู่ กธ. เดิม หรือเก็บรอตรวจ)" icon="doc" count={(data.orphan_prb || []).length}>
               {(data.orphan_prb || []).map((r, i) => (
                 <ReviewRow key={`op-${i}`} k={`op-${i}`} checked={checked} toggle={toggle} main={r}
                   batchId={data.batch_id} sourceFiles={files} expanded={expandedKey === `op-${i}`} onExpand={() => setExpandedKey(k => k === `op-${i}` ? null : `op-${i}`)} onUpdate={updateRecord} />
               ))}
             </Section>
 
-            <Section title="เอกสารอื่น (อัคคีภัย / PA / ฯลฯ)" icon="doc" count={(data.others || []).length}>
+            <Section title="เอกสารอื่น (แจ้งต่ออายุ / สลักหลัง / การเงิน / กธ. ประเภทอื่น)" icon="doc" count={(data.others || []).length}>
               {(data.others || []).map((r, i) => (
                 <ReviewRow key={`ot-${i}`} k={`ot-${i}`} checked={checked} toggle={toggle} main={r}
                   batchId={data.batch_id} sourceFiles={files} expanded={expandedKey === `ot-${i}`} onExpand={() => setExpandedKey(k => k === `ot-${i}` ? null : `ot-${i}`)} onUpdate={updateRecord} />
@@ -442,12 +468,35 @@ export function BatchUploadPage() {
   )
 }
 
-function BatchHistory({ items, loading, onRefresh, onOpen }) {
+function BatchHistory({ items, pendingDocuments = [], loading, onRefresh, onOpen }) {
   const labels = {
     processing: ["กำลังอ่าน", "processing"], review: ["รอตรวจสอบ", "review"],
     committed: ["บันทึกแล้ว", "committed"], error: ["ผิดพลาด", "error"],
   }
   return (
+    <>
+    <section className="batch-history" style={{ marginBottom: 18 }}>
+      <div className="batch-history-head">
+        <div><strong>เอกสารที่ยังจับคู่ไม่ได้</strong><span>เก็บแยกจากกรมธรรม์ เพื่อไม่ให้ยอดและข้อมูลหลักผิด</span></div>
+      </div>
+      {!loading && !pendingDocuments.length
+        ? <div className="pdf-menu-empty"><Ico n="checkc" s={34} /><strong>ไม่มีเอกสารค้างตรวจ</strong></div>
+        : <div className="batch-history-list">{pendingDocuments.map(doc => {
+            const label = DOCUMENT_LABELS[doc.document_type] || doc.document_type || "เอกสารไม่ทราบประเภท"
+            return <article key={doc.id}>
+              <div className="batch-history-main">
+                <strong>{label}</strong>
+                <span>{doc.original_filename || doc.pdf_filename || "PDF"}</span>
+              </div>
+              <div className="batch-history-main">
+                <strong>{doc.reference_policy_number || "ไม่พบเลข กธ. อ้างอิง"}</strong>
+                <span>{doc.insured_name || doc.license_plate || "ต้องตรวจข้อมูล"}</span>
+              </div>
+              <span className="batch-history-status review">รอตรวจ</span>
+              {doc.pdf_url && <a className="btn btn-w" href={doc.pdf_url} target="_blank" rel="noreferrer">เปิด PDF</a>}
+            </article>
+          })}</div>}
+    </section>
     <section className="batch-history">
       <div className="batch-history-head">
         <div><strong>ประวัติการนำเข้า PDF</strong><span>แสดงสูงสุด 50 ชุดล่าสุด</span></div>
@@ -469,6 +518,7 @@ function BatchHistory({ items, loading, onRefresh, onOpen }) {
           </article>
         })}</div>}
     </section>
+    </>
   )
 }
 
@@ -497,6 +547,7 @@ function Section({ title, icon, count, children }) {
 function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin, batchId, sourceFiles, expanded, onExpand, onUpdate }) {
   const m = recLine(main)
   const p = prb ? recLine(prb) : null
+  const isSupportDocument = ["motor_prb", "renewal_notice", "endorsement", "credit_note", "invoice", "receipt", "unknown"].includes(m.docType)
   const on = checked.has(k)
   return (
     <article className={`batch-review-row${on ? "" : " is-unselected"}${expanded ? " is-open" : ""}`}>
@@ -509,7 +560,7 @@ function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin
             {p && <span className="batch-prb-chip">มี พ.ร.บ. จับคู่</span>}
           </div>
           <div className="batch-review-facts">
-            <span>กธ. {m.pol}</span><span>ทะเบียน {m.plate}</span><span>หมดอายุ {m.end}</span>
+            <span>{isSupportDocument ? "เลข กธ. อ้างอิง" : "กธ."} {m.pol}</span><span>ทะเบียน {m.plate}</span><span>หมดอายุ {m.end}</span>
             {main?.chassis_no && <span>ตัวถัง {main.chassis_no}</span>}
           </div>
           {(m.err || reasons.length) && <div className="batch-review-note">{m.err || reasons.join(" · ")}</div>}
@@ -525,7 +576,7 @@ function ReviewRow({ k, checked, toggle, main, prb, status, reasons = [], margin
           <div className="batch-review-workspace">
             <BatchPdfEvidence batchId={batchId} main={main} prb={prb} sourceFiles={sourceFiles} />
             <div className="batch-editor-column">
-              <RecordEditor title="ข้อมูลกรมธรรม์" record={main} onChange={(field, value) => onUpdate(k, "main", field, value)} />
+              <RecordEditor title={isSupportDocument ? "ข้อมูลเอกสารและข้อมูลอ้างอิง" : "ข้อมูลกรมธรรม์"} record={main} onChange={(field, value) => onUpdate(k, "main", field, value)} />
               {prb && <RecordEditor title="ข้อมูล พ.ร.บ. ที่จับคู่" record={prb} onChange={(field, value) => onUpdate(k, "prb", field, value)} />}
             </div>
           </div>
@@ -588,6 +639,7 @@ function BatchPdfEvidence({ batchId, main, prb, sourceFiles = [] }) {
 
 function RecordEditor({ title, record = {}, onChange }) {
   const fields = [
+    ["doc_type", "ประเภทเอกสาร", "document_type"],
     ["policy_number", "เลขกรมธรรม์"], ["company_code", "รหัสบริษัท"], ["app_number", "เลขใบคำขอ"],
     ["policy_type", "ประเภทกรมธรรม์"], ["new_renew", "ใหม่ / ต่ออายุ"], ["insured_name", "ผู้เอาประกัน"],
     ["phone", "เบอร์โทรศัพท์"], ["insured_address", "ที่อยู่", "wide"],
@@ -605,8 +657,14 @@ function RecordEditor({ title, record = {}, onChange }) {
         {fields.map(([key, label, kind]) => (
           <label key={key} className={kind === "wide" ? "wide" : ""}>
             <span>{label}</span>
-            <input type={kind === "date" ? "date" : kind === "number" ? "number" : "text"}
-              value={record[key] ?? ""} onChange={e => onChange(key, e.target.value)} />
+            {kind === "document_type" ? (
+              <select value={record[key] ?? "unknown"} onChange={e => onChange(key, e.target.value)}>
+                {Object.entries(DOCUMENT_LABELS).map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+              </select>
+            ) : (
+              <input type={kind === "date" ? "date" : kind === "number" ? "number" : "text"}
+                value={record[key] ?? ""} onChange={e => onChange(key, e.target.value)} />
+            )}
           </label>
         ))}
       </div>

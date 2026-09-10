@@ -3026,8 +3026,8 @@ body:not(.dark) .upload-page-hd .upload-back-to-home:hover{color:#1a0f0a;backgro
 .batch-editor-grid label{display:flex;flex-direction:column;gap:5px;min-width:0}
 .batch-editor-grid label.wide{grid-column:span 2}
 .batch-editor-grid label>span{font-size:12.5px;font-weight:650;color:var(--t2)}
-.batch-editor-grid input{width:100%;min-width:0;height:38px;border:1px solid var(--brd2);border-radius:8px;background:var(--sur);padding:0 10px;color:var(--t1);font:14px inherit;outline:none}
-.batch-editor-grid input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.batch-editor-grid input,.batch-editor-grid select{width:100%;min-width:0;height:38px;border:1px solid var(--brd2);border-radius:8px;background:var(--sur);padding:0 10px;color:var(--t1);font:14px inherit;outline:none}
+.batch-editor-grid input:focus,.batch-editor-grid select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
 .batch-review-warning{margin-top:12px;border-left:3px solid var(--amber);background:var(--amber-bg);padding:10px 12px;color:#82520F;font-size:13px;line-height:1.45}
 @media(max-width:800px){
   .batch-workflow{align-items:flex-start;gap:7px;padding:12px}
@@ -3151,8 +3151,8 @@ body:not(.dark) .upload-page-hd .upload-back-to-home:hover{color:#1a0f0a;backgro
 .batch-editor-grid label{display:flex;flex-direction:column;gap:5px;min-width:0}
 .batch-editor-grid label.wide{grid-column:span 2}
 .batch-editor-grid label>span{font-size:12.5px;font-weight:650;color:var(--t2)}
-.batch-editor-grid input{width:100%;min-width:0;height:38px;border:1px solid var(--brd2);border-radius:8px;background:var(--sur);padding:0 10px;color:var(--t1);font:14px inherit;outline:none}
-.batch-editor-grid input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.batch-editor-grid input,.batch-editor-grid select{width:100%;min-width:0;height:38px;border:1px solid var(--brd2);border-radius:8px;background:var(--sur);padding:0 10px;color:var(--t1);font:14px inherit;outline:none}
+.batch-editor-grid input:focus,.batch-editor-grid select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
 .batch-review-warning{margin-top:12px;border-left:3px solid var(--amber);background:var(--amber-bg);padding:10px 12px;color:#82520F;font-size:13px;line-height:1.45}
 @media(max-width:800px){
   .batch-workflow{align-items:flex-start;gap:7px;padding:12px}

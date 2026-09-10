@@ -350,6 +350,7 @@ export function DetailPage() {
   const DOC_TAB_META = {
     main:        { color: "var(--blue)",  bg: "var(--blue-bg)",  brd: "var(--blue-mid)", ico: "doc",    label: "กรมธรรม์" },
     prb:         { color: "var(--green)", bg: "var(--green-bg)", brd: "var(--green-brd)",ico: "shield",  label: "พ.ร.บ." },
+    renewal_notice: { color: "var(--amber)", bg: "var(--amber-bg)", brd: "var(--amber-brd)", ico: "bell", label: "แจ้งเตือนต่ออายุ" },
     endorsement: { color: "#D97706",      bg: "var(--amber-bg)", brd: "var(--amber-brd)",ico: "pen",    label: "สลักหลัง" },
   }
   const viewingRelated = activePdfId !== p?.id
@@ -1246,14 +1247,18 @@ export function DetailPage() {
                       return b - a
                     })
                     // sort docs within year: main → prb → endorsement → other
-                    const ORDER = { main: 0, prb: 1, endorsement: 2, other: 3 }
+                    const ORDER = { main: 0, prb: 1, renewal_notice: 2, endorsement: 3, credit_note: 4, invoice: 5, receipt: 6, other: 7 }
                     for (const list of groups.values()) {
                       list.sort((a, b) => (ORDER[a.docType] ?? 9) - (ORDER[b.docType] ?? 9))
                     }
                     const DOC_META = {
                       main:        { label: "กธ.",        color: "var(--blue)",  bg: "var(--blue-bg)",   ico: "doc" },
                       prb:         { label: "พ.ร.บ.",     color: "var(--green)", bg: "var(--green-bg)",  ico: "shield" },
+                      renewal_notice: { label: "แจ้งเตือนต่ออายุ", color: "var(--amber)", bg: "var(--amber-bg)", ico: "bell" },
                       endorsement: { label: "สลักหลัง",   color: "#D97706",      bg: "var(--amber-bg)",  ico: "pen" },
+                      credit_note: { label: "ใบลดหนี้", color: "var(--t2)", bg: "var(--sur2)", ico: "doc" },
+                      invoice: { label: "ใบแจ้งหนี้", color: "var(--t2)", bg: "var(--sur2)", ico: "doc" },
+                      receipt: { label: "ใบเสร็จ", color: "var(--t2)", bg: "var(--sur2)", ico: "doc" },
                       other:       { label: "อื่นๆ",       color: "var(--t3)",    bg: "var(--sur2)",      ico: "doc" },
                     }
                     return (

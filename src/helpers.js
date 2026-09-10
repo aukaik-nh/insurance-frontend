@@ -76,7 +76,9 @@ export function computeDisplayFilename({ plate, policy_type, risk_address, insur
     if (y >= 2400) y -= 543
     const date = new Date(Date.UTC(y, m - 1, d))
     if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return "รอตรวจข้อมูล.pdf"
-    stem = `${ident}-${prb ? "พรบ." : "กธ"}-${y + 543}`
+    stem = doc_type === "renewal_notice"
+      ? `${ident}-แจ้งเตือนต่ออายุ-${y + 543}`
+      : `${ident}-${prb ? "พรบ." : "กธ"}-${y + 543}`
   }
   if (!ident) return "รอตรวจข้อมูล.pdf"
   if (doc_type === "endorsement") stem += "-สลักหลัง"

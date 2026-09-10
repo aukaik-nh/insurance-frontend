@@ -8,6 +8,23 @@ import { FormPanel } from "../components/FormPanel"
 import { PremiumGrid } from "../components/PremiumGrid"
 import { DocumentReader } from "../components/DocumentReader"
 
+const SUPPORT_DOCUMENT_TYPES = new Set([
+  "motor_prb", "renewal_notice", "endorsement", "credit_note", "invoice", "receipt", "unknown",
+])
+const DOCUMENT_LABELS = {
+  motor_main: "กรมธรรม์รถยนต์",
+  motor_prb: "พ.ร.บ.",
+  renewal_notice: "หนังสือแจ้งเตือนต่ออายุ",
+  endorsement: "สลักหลัง",
+  credit_note: "ใบลดหนี้ / ใบคืนเบี้ย",
+  invoice: "ใบแจ้งหนี้",
+  receipt: "ใบเสร็จรับเงิน",
+  fire: "กรมธรรม์อัคคีภัย",
+  sme_property: "กรมธรรม์ทรัพย์สิน",
+  other_policy: "กรมธรรม์ประเภทอื่น (PA / TA / ฯลฯ)",
+  unknown: "ยังไม่ทราบประเภท — เก็บรอตรวจ",
+}
+
 export function UploadPage() {
   const navigate = useNavigate()
   const { notify } = useOutletContext()
@@ -29,6 +46,8 @@ export function UploadPage() {
   const [formOpen, setFormOpen]       = useState(true)
   const [premiumOpen, setPremiumOpen] = useState(true)
   const [manualMode, setManualMode]   = useState(false)
+  const [documentMatch, setDocumentMatch] = useState(null)
+  const [resolvingMatch, setResolvingMatch] = useState(false)
 
   // PRB state — null = ไม่เพิ่ม, object = เพิ่มแล้ว
   const [prb, setPrb]             = useState(null)
@@ -46,6 +65,7 @@ export function UploadPage() {
   const clearFile = () => {
     setFile(null); setParsed({}); setPreview({}); setHasData(false)
     setFilename(""); setOcrWarn(null); setErr(""); setManualMode(false)
+    setDocumentMatch(null); setResolvingMatch(false)
     setPrb(null); setPrbFile(null); setActivePreview("main")
     setPrbPreview({}); setPrbRead({}); setPdfFull(false)
   }
@@ -81,13 +101,44 @@ export function UploadPage() {
       insured_name:    parsed.insured_name,
       coverage_start:  parsed.coverage_start,
       coverage_end:    parsed.coverage_end,
-      doc_type:        "main",
+      doc_type:        parsed.doc_type || "main",
     })
     if (computed) {
       setFilename(computed)
     }
   }, [file, filenameAuto, parsed.license_plate, parsed.policy_type,
-      parsed.risk_address, parsed.insured_name, parsed.coverage_start, parsed.coverage_end])
+      parsed.risk_address, parsed.insured_name, parsed.coverage_start, parsed.coverage_end, parsed.doc_type])
+
+  useEffect(() => {
+    const documentType = parsed.doc_type || "unknown"
+    if (!file || !SUPPORT_DOCUMENT_TYPES.has(documentType)) {
+      setDocumentMatch(null)
+      setResolvingMatch(false)
+      return
+    }
+    let cancelled = false
+    setResolvingMatch(true)
+    const timer = setTimeout(() => {
+      api.post("/documents/resolve-parent", {
+        ...parsed,
+        doc_type: documentType,
+      }, { timeout: 30000 })
+        .then(res => {
+          if (!cancelled) setDocumentMatch(res.data || { match: null, reason: "no_match" })
+        })
+        .catch(() => {
+          if (!cancelled) setDocumentMatch({ match: null, reason: "lookup_failed" })
+        })
+        .finally(() => {
+          if (!cancelled) setResolvingMatch(false)
+        })
+    }, 250)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [file, parsed.doc_type, parsed.policy_number, parsed.company_code,
+      parsed.chassis_no, parsed.license_plate, parsed.coverage_start])
 
   const pick = async f => {
     if (!f || loading || prbLoading || saving) return
@@ -233,12 +284,49 @@ export function UploadPage() {
   })
 
   const doSave = async () => {
-    if (file && filename === "รอตรวจข้อมูล.pdf") {
+    const documentType = parsed.doc_type || "unknown"
+    const isSupportDocument = Boolean(file && SUPPORT_DOCUMENT_TYPES.has(documentType))
+    if (!isSupportDocument && file && filename === "รอตรวจข้อมูล.pdf") {
       setErr("กรุณาตรวจข้อมูลสำหรับตั้งชื่อไฟล์ให้ครบก่อนบันทึก"); return
     }
-    if (loading || prbLoading || saving) return
+    if (loading || prbLoading || saving || resolvingMatch) return
     setSaving(true); setErr("")
     try {
+      if (isSupportDocument) {
+        const parent = documentMatch?.match
+        if (parent && documentType !== "unknown") {
+          const form = new FormData()
+          form.append("file", file)
+          form.append("doc_type", documentType === "motor_prb" ? "prb" : documentType)
+          form.append("auto_extract", "false")
+          form.append("label", DOCUMENT_LABELS[documentType] || "เอกสารประกอบ")
+          form.append("note", `อ้างอิงกรมธรรม์ ${parsed.policy_number || parent.policy_number || ""}`)
+          for (const key of ["net_premium", "stamp_duty", "vat", "total_premium", "coverage_start", "coverage_end"]) {
+            if (parsed[key] !== null && parsed[key] !== undefined && parsed[key] !== "") {
+              form.append(key, String(parsed[key]))
+            }
+          }
+          await api.post(`/policies/${parent.id}/attachments`, form, { timeout: 120000 })
+          notify(`แนบ${DOCUMENT_LABELS[documentType]}กับกรมธรรม์ ${parent.policy_number} แล้ว`)
+          navigate(`/policies/${parent.id}`)
+          return
+        }
+
+        const form = new FormData()
+        form.append("file", file)
+        form.append("document_type", documentType)
+        form.append("reference_policy_number", parsed.policy_number || "")
+        form.append("insured_name", parsed.insured_name || "")
+        form.append("license_plate", parsed.license_plate || "")
+        form.append("coverage_start", parsed.coverage_start || "")
+        form.append("coverage_end", parsed.coverage_end || "")
+        form.append("extracted_json", JSON.stringify(parsed))
+        await api.post("/documents/inbox", form, { timeout: 120000 })
+        notify(`เก็บ${DOCUMENT_LABELS[documentType]}ไว้ในรายการรอตรวจแล้ว`, "info")
+        navigate("/")
+        return
+      }
+
       // 1a) ถ้ามีไฟล์ PDF หลัก — upload ไป R2 ก่อน (ไม่ทำตอนเลือกไฟล์)
       let pdfMeta = {}
       if (file) {
@@ -396,6 +484,31 @@ export function UploadPage() {
                 </div>
               )}
 
+              {file && !loading && (
+                <div className={`bnr ${SUPPORT_DOCUMENT_TYPES.has(parsed.doc_type || "unknown") ? "am" : "ok"}`} style={{ marginBottom: 0, alignItems: "flex-start" }}>
+                  <Ico n={SUPPORT_DOCUMENT_TYPES.has(parsed.doc_type || "unknown") ? "doc" : "shield"} s={22} />
+                  <div className="bnr-body" style={{ width: "100%" }}>
+                    <div className="bnr-t">ประเภทเอกสาร</div>
+                    <select
+                      value={parsed.doc_type || "unknown"}
+                      onChange={e => setParsed(p => ({ ...p, doc_type: e.target.value }))}
+                      style={{ width: "100%", marginTop: 8, minHeight: 40, borderRadius: 8, border: "1px solid var(--brd2)", background: "var(--sur)", color: "var(--t1)", padding: "0 10px", font: "inherit" }}
+                    >
+                      {Object.entries(DOCUMENT_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                    {SUPPORT_DOCUMENT_TYPES.has(parsed.doc_type || "unknown") && (
+                      <div className="bnr-s" style={{ marginTop: 8 }}>
+                        {resolvingMatch
+                          ? "กำลังค้นหากรมธรรม์ที่เอกสารนี้อ้างอิง…"
+                          : documentMatch?.match
+                            ? `จะผูกกับ กธ. ${documentMatch.match.policy_number} — ${documentMatch.match.insured_name || "ไม่พบชื่อ"}`
+                            : "ยังจับคู่ไม่ได้ ระบบจะเก็บเอกสารไว้รอตรวจ และจะไม่สร้างเป็นกรมธรรม์ใหม่"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {(file || manualMode) && <>
                 {file && (
                   <div className={`upload-ai-status${loading ? " reading" : hasData ? " ready" : ""}`}>
@@ -491,6 +604,15 @@ export function UploadPage() {
             </aside>
             )}
           </div>
+          {(file || manualMode || prb) && (
+            <div style={{ position: "sticky", bottom: 12, zIndex: 20, display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18, padding: 12, border: "1px solid var(--brd)", borderRadius: 12, background: "var(--sur)", boxShadow: "var(--sh2)" }}>
+              <button type="button" className="btn btn-w" onClick={() => navigate(-1)} disabled={saving}>ยกเลิก</button>
+              <button type="button" className="btn btn-p" onClick={doSave}
+                disabled={!hasAnyInput || loading || prbLoading || saving || resolvingMatch}>
+                {saving ? <><span className="spin" /> กำลังบันทึก…</> : <><Ico n="save" s={18} /> บันทึกเอกสาร</>}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -32,13 +32,52 @@ const DOC_TYPES = [
     bg: "var(--amber-bg)",
     brd: "var(--amber-brd)",
   },
+  {
+    val: "renewal_notice",
+    label: "หนังสือแจ้งเตือนต่ออายุ",
+    desc: "หนังสือเสนอ/แจ้งเตือนให้ต่ออายุ ซึ่งอ้างอิงกรมธรรม์เดิม",
+    ico: "bell",
+    color: "var(--amber)",
+    bg: "var(--amber-bg)",
+    brd: "var(--amber-brd)",
+  },
+  {
+    val: "credit_note",
+    label: "ใบลดหนี้ / ใบคืนเบี้ย",
+    desc: "เอกสารการเงินที่อ้างอิงกรมธรรม์",
+    ico: "doc",
+    color: "var(--t2)",
+    bg: "var(--sur2)",
+    brd: "var(--brd)",
+  },
+  {
+    val: "invoice",
+    label: "ใบแจ้งหนี้",
+    desc: "เอกสารเรียกเก็บเงินที่อ้างอิงกรมธรรม์",
+    ico: "cash",
+    color: "var(--t2)",
+    bg: "var(--sur2)",
+    brd: "var(--brd)",
+  },
+  {
+    val: "receipt",
+    label: "ใบเสร็จรับเงิน",
+    desc: "หลักฐานรับชำระเงินที่อ้างอิงกรมธรรม์",
+    ico: "doc",
+    color: "var(--t2)",
+    bg: "var(--sur2)",
+    brd: "var(--brd)",
+  },
 ]
 
 const typeMeta = v => DOC_TYPES.find(t => t.val === v) || DOC_TYPES[0]
 
 // auto-detect ประเภทจากชื่อไฟล์
 function detectDocType(filename = "") {
-  const f = filename.toLowerCase()
+  if (/(แจ้งเตือนต่ออายุ|แจ้งต่ออายุ|renewal)/i.test(filename)) return "renewal_notice"
+  if (/(ใบลดหนี้|ใบคืนเบี้ย|credit.?note)/i.test(filename)) return "credit_note"
+  if (/(ใบแจ้งหนี้|invoice)/i.test(filename)) return "invoice"
+  if (/(ใบเสร็จ|receipt)/i.test(filename)) return "receipt"
   if (/(พรบ|พ\.?ร\.?บ\.?|prb|compulsory)/i.test(filename)) return "prb"
   if (/(สลักหลัง|สลัก|endorsement)/i.test(filename)) return "endorsement"
   if (/(กธ|กรมธรรม)/i.test(filename))                  return "main"
