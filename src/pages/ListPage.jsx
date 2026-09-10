@@ -16,6 +16,22 @@ const listMemoryCache = new Map()
 const listInflight = new Map()
 let lastListTab = null
 
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+async function loadPolicyList(params) {
+  try {
+    return await api.get("/policies", { params, timeout: 25000 })
+  } catch (error) {
+    const status = error.response?.status
+    const retryable = !error.response || status === 502 || status === 503 || status === 504
+    if (!retryable) throw error
+    // Render can need extra time after being idle. Retry once without making the
+    // table discard data already restored from the local cache.
+    await wait(900)
+    return api.get("/policies", { params, timeout: 45000 })
+  }
+}
+
 const STATUS_OPTS = [
   { val: "",         label: "ทั้งหมด" },
   { val: "active",   label: "คุ้มครองอยู่",    cls: "b-on" },
@@ -129,9 +145,11 @@ export function ListPage({ tab }) {
   //    page จะถูกล็อกเป็น 1 → useEffect ไม่ควร refire เมื่อ user แค่กด next page
   //    → ใช้ pageForFetch เป็น dep แทน page ดิบ
   const pageForFetch = (tab === "policies" || tab === "dashboard") ? 1 : page
+  const serverSortKey = (tab === "policies" || tab === "dashboard") ? "created_at" : sortKey
+  const serverSortDir = (tab === "policies" || tab === "dashboard") ? "desc" : sortDir
   useEffect(() => {
     let cancelled = false
-    const params = { page: pageForFetch, limit: LIMIT, sort: sortKey, order: sortDir }
+    const params = { page: pageForFetch, limit: LIMIT, sort: serverSortKey, order: serverSortDir }
     if (debouncedSearch) params.search = debouncedSearch
     if (status)   params.status    = status
     if (dateFrom) params.date_from = dateFrom
@@ -160,7 +178,10 @@ export function ListPage({ tab }) {
       }
     }
 
+    // Keep the old cache key compatible so a slow/cold backend never blanks a
+    // table that the user has already loaded successfully.
     const cacheKey = `policies-cache:${JSON.stringify(params)}`
+    params.summary = true
     let hadCache = false
     const memoryEntry = listMemoryCache.get(cacheKey)
     if (memoryEntry && Date.now() - memoryEntry.ts < LIST_MEMORY_TTL) {
@@ -198,7 +219,7 @@ export function ListPage({ tab }) {
 
     let request = listInflight.get(cacheKey)
     if (!request) {
-      request = api.get("/policies", { params, timeout: 15000 })
+      request = loadPolicyList(params)
         .then(res => {
           const result = { rows: res.data.data || [], total: res.data.total || 0, ts: Date.now() }
           listMemoryCache.delete(cacheKey)
@@ -234,14 +255,14 @@ export function ListPage({ tab }) {
       })
       .catch(e => {
         if (cancelled) return
-        setLoadError("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ จึงยังโหลดข้อมูลไม่สำเร็จ")
+        setLoadError(hadCache ? "" : "เซิร์ฟเวอร์ตอบช้าและยังโหลดข้อมูลไม่สำเร็จ")
         // ถ้ามี cache อยู่แล้ว ไม่ต้อง notify error รบกวน — user ยังเห็นข้อมูลได้
         if (!hadCache) notify("โหลดข้อมูลไม่สำเร็จ: " + (e.response?.data?.detail || e.message), "error")
       })
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [pageForFetch, debouncedSearch, sortKey, sortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange, serverStatus, retryCount])
+  }, [pageForFetch, debouncedSearch, serverSortKey, serverSortDir, status, dateFrom, dateTo, hasPdf, tab, expiryRange, serverStatus, retryCount])
   useEffect(() => {
     setPreviewPolicy(null)
     if (lastListTab !== null && lastListTab !== tab) setPage(1)
@@ -269,7 +290,7 @@ export function ListPage({ tab }) {
         }
       }
     } catch {}
-    api.get("/policies", { params: { limit: 20000, sort: "created_at", order: "desc" } })
+    loadPolicyList({ limit: 20000, sort: "created_at", order: "desc", summary: true })
       .then(res => {
         if (cancelled) return
         const data = res.data.data || []
@@ -843,7 +864,7 @@ export function ListPage({ tab }) {
           <PolicyTable
             groupedByCustomer={isPoliciesTab}
             rows={displayRows}
-            loading={loading || (!hasLoaded && !!loadError)}
+            loading={loading}
             total={displayTotal}
             page={page}
             pages={displayPages}
