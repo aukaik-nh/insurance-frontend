@@ -335,7 +335,7 @@ export function BatchUploadPage() {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 14.5, fontWeight: 600, color: "var(--t1)" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                           <span className="spin" style={{ width: 16, height: 16, borderWidth: 2 }} />
-                          AI กำลังอ่านรอบ {progress?.chunk || 1} / {progress?.chunk_total || Math.ceil(files.length / 10)} · {progress?.done ?? 0} / {progress?.total ?? files.length} ไฟล์
+                          กำลังอ่าน PDF รอบ {progress?.chunk || 1} / {progress?.chunk_total || Math.ceil(files.length / 10)} · {progress?.done ?? 0} / {progress?.total ?? files.length} ไฟล์
                         </span>
                         <span style={{ color: "var(--t3)", fontWeight: 500 }}>{elapsed}s</span>
                       </div>
@@ -354,7 +354,7 @@ export function BatchUploadPage() {
                     <div className="batch-file-ready">
                       <span><Ico n="shield" s={16} /> เพิ่มไฟล์ได้ครบแล้วจึงเริ่มอ่าน · ระบบอ่านครั้งละ 10 ไฟล์</span>
                       <button className="btn btn-b" onClick={doExtract} disabled={extracting}>
-                        <Ico n="upload" s={18} /><span>เริ่มอ่าน AI ทั้งกอง ({files.length} ไฟล์)</span>
+                        <Ico n="upload" s={18} /><span>เริ่มอ่าน PDF ทั้งชุด ({files.length} ไฟล์)</span>
                       </button>
                     </div>
                   )}
