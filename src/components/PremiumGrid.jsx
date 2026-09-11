@@ -1,5 +1,6 @@
 import { useRef } from "react"
 import { Ico } from "../icons"
+import { calculateBilling, premiumEquation } from "../helpers"
 
 /**
  * ตารางคำนวณเบี้ย 3 คอลัมน์ (กรมธรรม์ / พ.ร.บ. / รวม)
@@ -62,11 +63,11 @@ const ROWS = [
   { key: "stamp_duty",       label: "อากร",            highlight: false, bold: false },
   { key: "vat",              label: "ภาษี (VAT 7%)",   highlight: false, bold: false },
   { key: "total_premium",    label: "เบี้ยรวม",         highlight: true,  bold: true },
-  { key: "prepaid_tax_1pct", label: "1%",              mainOnly: true,   bold: false },
-  { key: "commission_pct",   label: "CM %",            mainOnly: true,   bold: false },
-  { key: "commission_baht",  label: "CM (บาท)",        mainOnly: true,   bold: false },
-  { key: "wht_10pct",        label: "ภาษี 10%",        mainOnly: true,   bold: false },
-  { key: "rounding",         label: "ปัดเศษ",          mainOnly: true,   bold: false },
+  { key: "prepaid_tax_1pct", label: "หัก 1% (บาท)",    mainOnly: true,   bold: false },
+  { key: "commission_pct",   label: "คอมมิชชั่น %",    mainOnly: true,   bold: false },
+  { key: "commission_baht",  label: "คอมมิชชั่น (บาท)", mainOnly: true,  bold: false },
+  { key: "wht_10pct",        label: "ภาษี CM 10%",     mainOnly: true,   bold: false },
+  { key: "rounding",         label: "ปรับเศษ",         mainOnly: true,   bold: false },
   { key: "collected",        label: "เรียกเก็บ",        highlight: true,  bold: true, computed: true },
 ]
 
@@ -102,9 +103,12 @@ const tdInput = (highlight, totalCol) => ({
  *   prbFile, onPrbFile      — สำหรับอัปโหลด PDF พ.ร.บ. inline (optional)
  *   readOnly                — โหมดแสดงผลอย่างเดียว (ใช้ในหน้า DetailPage)
  */
-export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onTogglePrb, prbFile, onPrbFile, prbLoading = false, open = true, onToggle, readOnly = false, title }) {
+export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onTogglePrb, prbFile, onPrbFile, prbLoading = false, open = true, onToggle, readOnly = false, title, mainLabel = "กรมธรรม์", allowPrb = true }) {
   const hasPrb = prb !== null && prb !== undefined
   const prbFileRef = useRef(null)
+  const billing = calculateBilling(main, prb)
+  const mainEquation = premiumEquation(main)
+  const prbEquation = hasPrb ? premiumEquation(prb) : null
 
   // คำนวณคอลัมน์รวม (main + prb)
   const total = {
@@ -113,10 +117,10 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
     vat:              sum(main.vat,           prb?.vat),
     total_premium:    sum(main.total_premium, prb?.total_premium),
     prepaid_tax_1pct: num(main.prepaid_tax_1pct),
-    commission_baht:  num(main.commission_baht),
-    wht_10pct:        num(main.wht_10pct),
+    commission_baht:  billing.commissionBaht,
+    wht_10pct:        billing.wht10,
     rounding:         num(main.rounding),
-    collected:        sum(main.collected_amount || main.total_premium, prb?.total_premium),
+    collected:        billing.collected,
   }
 
   return (
@@ -131,7 +135,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
           {/* ปุ่มอัปโหลด PDF พ.ร.บ. (เฉพาะเมื่อ hasPrb และมี onPrbFile callback) */}
-          {!readOnly && hasPrb && onPrbFile && (
+          {!readOnly && allowPrb && hasPrb && onPrbFile && (
             <>
               <button
                 className="btn btn-w"
@@ -160,7 +164,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           )}
 
           {/* ปุ่ม toggle PRB — ซ่อนในโหมด readOnly */}
-          {!readOnly && hasPrb && onTogglePrb && (
+          {!readOnly && allowPrb && hasPrb && onTogglePrb && (
             <button
               className={hasPrb ? "btn" : "btn btn-b btn-prb"}
               onClick={e => { e.stopPropagation(); onTogglePrb() }}
@@ -206,7 +210,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
         )}
       </div>
 
-      {!readOnly && !hasPrb && onTogglePrb && (
+      {!readOnly && allowPrb && !hasPrb && onTogglePrb && (
         <div className="premium-prb-invite">
           <div className="premium-prb-description">
             <span className="premium-prb-symbol" aria-hidden="true"><Ico n="shield" s={24} /></span>
@@ -219,6 +223,22 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
       )}
 
       {open && <div className="info-card-bd" style={{ padding: 12, position: "relative" }}>
+        {(mainEquation.hasValues || prbEquation?.hasValues) && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+            {mainEquation.hasValues && (
+              <span className={`premium-check ${mainEquation.valid ? "ok" : "warn"}`}>
+                <Ico n={mainEquation.valid ? "checkc" : "warn"} s={15} />
+                {mainEquation.valid ? `ยอด${mainLabel}ถูกต้อง` : `ยอด${mainLabel}ควรเป็น ${fmt(mainEquation.expected)} บาท`}
+              </span>
+            )}
+            {prbEquation?.hasValues && (
+              <span className={`premium-check ${prbEquation.valid ? "ok" : "warn"}`}>
+                <Ico n={prbEquation.valid ? "checkc" : "warn"} s={15} />
+                {prbEquation.valid ? "ยอด พ.ร.บ. ถูกต้อง" : `ยอด พ.ร.บ. ควรเป็น ${fmt(prbEquation.expected)} บาท`}
+              </span>
+            )}
+          </div>
+        )}
         {/* แถบ banner บนสุดของ PremiumGrid — เห็นทันทีไม่ต้องมองข้าม */}
         {prbLoading && (
           <div style={{
@@ -242,7 +262,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
             <thead>
               <tr>
                 <th style={thStyle(110)}>รายการ</th>
-                <th style={{ ...thStyle(), color: "var(--blue)" }}>กรมธรรม์</th>
+                <th style={{ ...thStyle(), color: "var(--blue)" }}>{mainLabel}</th>
                 {hasPrb && (
                   <th style={{ ...thStyle(), color: "var(--green)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -251,7 +271,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                     </span>
                   </th>
                 )}
-                <th style={{ ...thStyle(), color: "var(--t1)", background: "var(--blue-bg)" }}>รวม</th>
+                {hasPrb && <th style={{ ...thStyle(), color: "var(--t1)", background: "var(--blue-bg)" }}>รวม</th>}
               </tr>
             </thead>
             <tbody>
@@ -262,10 +282,9 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                       <td style={tdLabel(row.bold, row.highlight)}>{row.label}</td>
                       <td style={tdInput(row.highlight)}>
                         <Cell
-                          value={main.collected_amount ?? main.total_premium ?? ""}
-                          onChange={readOnly ? undefined : (v => onMainChange("collected_amount", v))}
-                          readOnly={readOnly}
-                          displayFormat={readOnly}
+                          value={calculateBilling(main, {}).collected}
+                          readOnly
+                          displayFormat
                           bold={row.bold}
                         />
                       </td>
@@ -274,9 +293,11 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                           <Cell value={prb.total_premium ?? ""} readOnly displayFormat={readOnly} bold color="var(--green)" />
                         </td>
                       )}
-                      <td style={tdInput(row.highlight, true)}>
-                        <Cell value={fmt(total.collected)} readOnly bold color="var(--blue)" highlight />
-                      </td>
+                      {hasPrb && (
+                        <td style={tdInput(row.highlight, true)}>
+                          <Cell value={fmt(total.collected)} readOnly bold color="var(--blue)" highlight />
+                        </td>
+                      )}
                     </tr>
                   )
                 }
@@ -286,7 +307,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                       <td style={tdLabel(row.bold, row.highlight)}>{row.label}</td>
                       <td style={tdInput(row.highlight)}>
                         <Cell
-                          value={main[row.key] ?? ""}
+                          value={row.key === "commission_baht" ? billing.commissionBaht : row.key === "wht_10pct" ? billing.wht10 : (main[row.key] ?? "")}
                           onChange={readOnly ? undefined : (v => onMainChange(row.key, v))}
                           readOnly={readOnly}
                           displayFormat={readOnly}
@@ -298,9 +319,11 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                           <Cell value="—" readOnly color="var(--t3)" />
                         </td>
                       )}
-                      <td style={tdInput(row.highlight, true)}>
-                        <Cell value={fmt(total[row.key])} readOnly bold color="var(--blue)" highlight />
-                      </td>
+                      {hasPrb && (
+                        <td style={tdInput(row.highlight, true)}>
+                          <Cell value={fmt(total[row.key])} readOnly bold color="var(--blue)" highlight />
+                        </td>
+                      )}
                     </tr>
                   )
                 }
@@ -329,14 +352,21 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                         />
                       </td>
                     )}
-                    <td style={tdInput(row.highlight, true)}>
-                      <Cell value={fmt(total[row.key])} readOnly bold color="var(--blue)" highlight />
-                    </td>
+                    {hasPrb && (
+                      <td style={tdInput(row.highlight, true)}>
+                        <Cell value={fmt(total[row.key])} readOnly bold color="var(--blue)" highlight />
+                      </td>
+                    )}
                   </tr>
                 )
               })}
             </tbody>
           </table>
+        </div>
+        <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 9, background: "var(--sur2)", color: "var(--t3)", fontSize: 12.5, lineHeight: 1.5 }}>
+          {hasPrb
+            ? "ยอดเรียกเก็บ = เบี้ยรวมกรมธรรม์ + พ.ร.บ. − หัก 1% − คอมมิชชั่น + ภาษีคอมมิชชั่น 10% + ปรับเศษ"
+            : "ยอดเรียกเก็บ = เบี้ยรวม − หัก 1% − คอมมิชชั่น + ภาษีคอมมิชชั่น 10% + ปรับเศษ"}
         </div>
       </div>}
     </div>

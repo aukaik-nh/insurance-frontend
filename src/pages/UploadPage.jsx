@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
-import { computeDisplayFilename } from "../helpers"
+import { calculateBilling, computeDisplayFilename, premiumEquation } from "../helpers"
 import { PdfLightbox } from "../components/PdfLightbox"
 import { FormPanel } from "../components/FormPanel"
 import { PremiumGrid } from "../components/PremiumGrid"
@@ -61,6 +61,13 @@ export function UploadPage() {
   const readerFile = showingPrb ? prbFile : file
   const readerPreview = showingPrb ? prbPreview : preview
   const readerData = showingPrb ? prbRead : parsed
+  const documentType = parsed.doc_type || "unknown"
+  const canPairPrb = !file || documentType === "motor_main"
+  const premiumMainLabel = documentType === "motor_prb"
+    ? "พ.ร.บ."
+    : documentType === "renewal_notice"
+      ? "ยอดตามหนังสือ"
+      : "กรมธรรม์"
 
   const clearFile = () => {
     setFile(null); setParsed({}); setPreview({}); setHasData(false)
@@ -139,6 +146,15 @@ export function UploadPage() {
     }
   }, [file, parsed.doc_type, parsed.policy_number, parsed.company_code,
       parsed.chassis_no, parsed.license_plate, parsed.coverage_start])
+
+  useEffect(() => {
+    if (canPairPrb || !prb) return
+    setPrb(null)
+    setPrbFile(null)
+    setPrbPreview({})
+    setPrbRead({})
+    setActivePreview("main")
+  }, [canPairPrb])
 
   const pick = async f => {
     if (!f || loading || prbLoading || saving) return
@@ -226,9 +242,23 @@ export function UploadPage() {
     return t > 0 ? Math.round(t * 100) / 100 : ""
   }
 
+  const withCommission = next => {
+    const pct = num(next.commission_pct)
+    const commission = Math.round(num(next.net_premium) * pct) / 100
+    return {
+      ...next,
+      commission_baht: commission || "",
+      wht_10pct: commission ? Math.round(commission * 10) / 100 : "",
+    }
+  }
   const onMainChange = (k, v) => setParsed(p => {
     // เปลี่ยน net → recalc stamp/vat/total ทั้งหมด
-    if (k === "net_premium") return { ...p, net_premium: v, ...calcPrb(v) }
+    if (k === "net_premium") return withCommission({ ...p, net_premium: v, ...calcPrb(v) })
+    if (k === "commission_pct") return withCommission({ ...p, commission_pct: v })
+    if (k === "commission_baht") {
+      const commission = num(v)
+      return { ...p, commission_baht: v, wht_10pct: commission ? Math.round(commission * 10) / 100 : "" }
+    }
     // เปลี่ยน stamp/vat → update total
     if (k === "stamp_duty" || k === "vat") {
       const next = { ...p, [k]: v }
@@ -290,6 +320,18 @@ export function UploadPage() {
       setErr("กรุณาตรวจข้อมูลสำหรับตั้งชื่อไฟล์ให้ครบก่อนบันทึก"); return
     }
     if (loading || prbLoading || saving || resolvingMatch) return
+    if (!isSupportDocument) {
+      const mainEquation = premiumEquation(parsed)
+      const prbEquation = prb ? premiumEquation(prb) : null
+      if (mainEquation.hasValues && !mainEquation.valid) {
+        setErr(`ยอดกรมธรรม์ไม่ตรง: เบี้ยสุทธิ + อากร + VAT ต้องเท่ากับ ${mainEquation.expected.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`)
+        return
+      }
+      if (prbEquation?.hasValues && !prbEquation.valid) {
+        setErr(`ยอด พ.ร.บ. ไม่ตรง: ยอดที่ถูกต้องคือ ${prbEquation.expected.toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`)
+        return
+      }
+    }
     setSaving(true); setErr("")
     try {
       if (isSupportDocument) {
@@ -345,8 +387,13 @@ export function UploadPage() {
       }
 
       // 1b) บันทึก policy หลัก (พร้อม pdf_url ถ้ามี)
+      const billing = calculateBilling(parsed, prb || {})
       const res = await api.post("/save-policy", {
         ...parsed,
+        commission_baht: billing.commissionBaht,
+        wht_10pct: billing.wht10,
+        collected_amount: billing.collected,
+        paired_prb_total: billing.prbTotal,
         ...pdfMeta,
         original_filename: file?.name || parsed.original_filename,
         pdf_filename: pdfMeta.pdf_filename || filename || parsed.pdf_filename,
@@ -537,6 +584,9 @@ export function UploadPage() {
                   prbLoading={prbLoading}
                   open={premiumOpen}
                   onToggle={() => setPremiumOpen(o => !o)}
+                  allowPrb={canPairPrb}
+                  mainLabel={premiumMainLabel}
+                  title={documentType === "renewal_notice" ? "ตรวจยอดเสนอเบี้ยต่ออายุ" : "คำนวณยอดเบี้ยและเรียกเก็บ"}
                 />
               </>}
             </div>

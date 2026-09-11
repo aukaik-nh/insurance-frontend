@@ -693,7 +693,7 @@ export function DetailPage() {
           </button>
           <div className="page-hd-div" />
           <div className="page-hd-info">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div className="detail-title-row">
               <div className="page-title">{p.policy_number || "—"}</div>
               <span className={`badge ${st.cls}`}><span className="bdot" />{st.label}</span>
             </div>
