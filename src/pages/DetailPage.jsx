@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { useNavigate, useLocation, useParams } from "react-router-dom"
 import api from "../api"
 import { Ico } from "../icons"
@@ -26,6 +26,16 @@ export function DetailPage() {
   const location      = useLocation()
   const { state }     = location
   const { id }        = useParams()
+
+  // A detail route must always open at its header. The list deliberately
+  // restores its own scroll position when the user comes back.
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [id])
 
   // ⚡ instant render: ถ้ามีข้อมูลจาก list (navigate state) ใช้ทันที — ไม่ต้องรอ API
   //    ยังคง fetch ข้อมูลล่าสุดในเบื้องหลังเพื่อ refresh
