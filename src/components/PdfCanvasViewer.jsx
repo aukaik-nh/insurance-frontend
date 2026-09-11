@@ -21,7 +21,9 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
         if (cancelled) return
         const natural = page.getViewport({ scale: 1 })
         const cssScale = Math.max(0.1, (availableWidth / natural.width) * (zoom / 100))
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
+        // Keep small Thai characters and scanned policy details sharp on
+        // high-density phone screens while capping memory use for large PDFs.
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 3)
         const viewport = page.getViewport({ scale: cssScale * pixelRatio })
         const canvas = canvasRef.current
         if (!canvas) return
@@ -67,13 +69,20 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
   const [pdf, setPdf] = useState(null)
   const [pageCount, setPageCount] = useState(initialPageCount || 0)
   const [availableWidth, setAvailableWidth] = useState(0)
-  const [zoom, setZoom] = useState(100)
+  const [zoom, setZoom] = useState(() => (
+    typeof window !== "undefined" && window.matchMedia("(max-width: 700px)").matches ? 150 : 100
+  ))
   const [status, setStatus] = useState(src ? "loading" : "empty")
 
   useEffect(() => {
     const stage = stageRef.current
     if (!stage) return undefined
-    const measure = () => setAvailableWidth(Math.max(260, stage.clientWidth - (fullscreen ? 56 : 32)))
+    const measure = () => {
+      const style = window.getComputedStyle(stage)
+      const horizontalPadding = Number.parseFloat(style.paddingLeft || "0")
+        + Number.parseFloat(style.paddingRight || "0")
+      setAvailableWidth(Math.max(260, stage.clientWidth - horizontalPadding))
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(stage)
@@ -119,7 +128,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
   }, [src, imageUrl, initialPageCount])
 
   const zoomOut = () => setZoom(value => Math.max(50, value - 25))
-  const zoomIn = () => setZoom(value => Math.min(200, value + 25))
+  const zoomIn = () => setZoom(value => Math.min(300, value + 25))
 
   return <div className={`pdf-canvas-viewer${fullscreen ? " is-fullscreen" : ""}`}>
     <div className="pdf-canvas-toolbar">
@@ -130,7 +139,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
       <div className="pdf-canvas-controls" aria-label="ปรับขนาดเอกสาร">
         <button type="button" onClick={zoomOut} disabled={zoom <= 50} title="ย่อเอกสาร" aria-label="ย่อเอกสาร"><Ico n="zoomOut" s={18} /></button>
         <button type="button" className="pdf-canvas-zoom" onClick={() => setZoom(100)} title="พอดีกับความกว้าง">{zoom}%</button>
-        <button type="button" onClick={zoomIn} disabled={zoom >= 200} title="ขยายเอกสาร" aria-label="ขยายเอกสาร"><Ico n="zoomIn" s={18} /></button>
+        <button type="button" onClick={zoomIn} disabled={zoom >= 300} title="ขยายเอกสาร" aria-label="ขยายเอกสาร"><Ico n="zoomIn" s={18} /></button>
         {zoom !== 100 && <button type="button" className="pdf-canvas-fit" onClick={() => setZoom(100)}>พอดีหน้า</button>}
       </div>
     </div>
