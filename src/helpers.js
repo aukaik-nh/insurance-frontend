@@ -21,6 +21,42 @@ export const baht = n => n
   ? Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   : "—"
 
+const moneyNumber = value => {
+  const parsed = Number(String(value ?? "").replace(/,/g, ""))
+  return Number.isFinite(parsed) ? parsed : 0
+}
+const moneyRound = value => Math.round((value + Number.EPSILON) * 100) / 100
+
+// สูตรยอดเรียกเก็บ: เบี้ยรวม + พ.ร.บ. - ภาษีล่วงหน้า 1% - คอมมิชชั่น
+// + ภาษีคอมมิชชั่น 10% + ปรับเศษ
+export function calculateBilling(main = {}, prb = {}) {
+  const netPremium = moneyNumber(main.net_premium)
+  const mainTotal = moneyNumber(main.total_premium)
+  const prbTotal = moneyNumber(prb?.total_premium)
+  const prepaidTax = moneyNumber(main.prepaid_tax_1pct)
+  const commissionPct = moneyNumber(main.commission_pct)
+  const hasCommissionBaht = main.commission_baht !== "" && main.commission_baht !== null && main.commission_baht !== undefined
+  const commissionBaht = moneyRound(hasCommissionBaht
+    ? moneyNumber(main.commission_baht)
+    : netPremium * commissionPct / 100)
+  const hasWht = main.wht_10pct !== "" && main.wht_10pct !== null && main.wht_10pct !== undefined
+  const wht10 = moneyRound(hasWht ? moneyNumber(main.wht_10pct) : commissionBaht * 0.10)
+  const rounding = moneyNumber(main.rounding)
+  const collected = moneyRound(mainTotal + prbTotal - prepaidTax - commissionBaht + wht10 + rounding)
+  return { mainTotal, prbTotal, prepaidTax, commissionPct, commissionBaht, wht10, rounding, collected }
+}
+
+export function premiumEquation(record = {}) {
+  const net = moneyNumber(record.net_premium)
+  const stamp = moneyNumber(record.stamp_duty)
+  const vat = moneyNumber(record.vat)
+  const total = moneyNumber(record.total_premium)
+  const hasValues = [record.net_premium, record.stamp_duty, record.vat, record.total_premium]
+    .every(value => value !== "" && value !== null && value !== undefined)
+  const expected = moneyRound(net + stamp + vat)
+  return { hasValues, expected, total, valid: hasValues && Math.abs(expected - total) <= 0.02 }
+}
+
 const MONTH_TH = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
                        "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
 
