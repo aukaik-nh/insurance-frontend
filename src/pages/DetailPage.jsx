@@ -714,11 +714,11 @@ export function DetailPage() {
             ) : (
               <>
                 <button className="btn btn-b detail-primary-action detail-edit-action" onClick={startEdit}>
-                  <Ico n="pen" s={18} /> <span className="btn-label">แก้ไขข้อมูล</span>
+                  <Ico n="pen" s={18} /> <span className="btn-label">แก้ไข</span>
                 </button>
                 <button className="btn btn-w detail-primary-action detail-document-action"
                   onClick={() => attachRef.current?.openAddDialog()}>
-                  <Ico n="upload" s={18} /> <span className="btn-label">เพิ่มเอกสาร</span>
+                  <Ico n="upload" s={18} /> <span className="btn-label">เอกสาร</span>
                 </button>
                 <button className="btn btn-w detail-secondary-action detail-invoice-action"
                   onClick={() => navigate(`/invoice?policy_id=${id}`)}>
