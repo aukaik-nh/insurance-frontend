@@ -60,6 +60,15 @@
 .detail-page-actions{
   gap:9px;
 }
+.detail-page-actions:not(.is-editing) .btn{
+  flex:0 0 132px;
+  width:132px;
+  min-width:132px;
+  justify-content:center;
+  padding-left:12px;
+  padding-right:12px;
+  white-space:nowrap;
+}
 .detail-page-actions .btn-w{
   color:var(--t2);
   border-color:var(--brd);
@@ -80,7 +89,7 @@
   background:transparent;
 }
 .detail-page-actions .detail-delete-action{
-  margin-left:5px;
+  margin-left:0;
   color:#F5E6D3;
   border-color:#B91C1C;
   background:#991B1B;
@@ -599,6 +608,9 @@ body:not(.dark) .policy-detail-split > .detail-aside .pdf-preview-bar{
     min-height: 50px;
     padding: 0 8px !important;
     font-size: 13px;
+    width: 100%;
+    min-width: 0;
+    flex-basis: auto;
   }
   .page-wrap .detail-page-hd .detail-primary-action .btn-label,
   .page-wrap .detail-page-hd .detail-more-btn .btn-label {
