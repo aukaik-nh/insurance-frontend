@@ -102,6 +102,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
   const [availableWidth, setAvailableWidth] = useState(0)
   const [zoom, setZoom] = useState(100)
   const [status, setStatus] = useState(src ? "loading" : "empty")
+  const hasFittedFullscreenPage = useRef(false)
 
   useEffect(() => {
     const stage = stageRef.current
@@ -142,6 +143,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
         }
         setPdf(document)
         setPageCount(document.numPages)
+        hasFittedFullscreenPage.current = false
         setStatus("ready")
       } catch (error) {
         if (!cancelled && error?.name !== "AbortException") setStatus("error")
@@ -156,7 +158,35 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
     }
   }, [src, initialPageCount])
 
-  const zoomOut = () => setZoom(value => Math.max(50, value - 25))
+  useEffect(() => {
+    if (!fullscreen || !pdf || !availableWidth || hasFittedFullscreenPage.current) return undefined
+
+    let cancelled = false
+    const fitWholePage = async () => {
+      try {
+        const page = await pdf.getPage(1)
+        const stage = stageRef.current
+        if (cancelled || !stage) return
+        const natural = page.getViewport({ scale: 1 })
+        const style = window.getComputedStyle(stage)
+        const verticalPadding = Number.parseFloat(style.paddingTop || "0")
+          + Number.parseFloat(style.paddingBottom || "0")
+        const availableHeight = Math.max(180, stage.clientHeight - verticalPadding)
+        const fitZoom = Math.floor(Math.min(
+          availableWidth / natural.width,
+          availableHeight / natural.height,
+        ) * 96)
+        hasFittedFullscreenPage.current = true
+        setZoom(Math.max(25, Math.min(300, fitZoom)))
+      } catch {
+        // The normal width-fit view remains available if page metadata cannot load.
+      }
+    }
+    fitWholePage()
+    return () => { cancelled = true }
+  }, [availableWidth, fullscreen, pdf])
+
+  const zoomOut = () => setZoom(value => Math.max(25, value - 25))
   const zoomIn = () => setZoom(value => Math.min(300, value + 25))
 
   return <div className={`pdf-canvas-viewer${fullscreen ? " is-fullscreen" : ""}`}>
@@ -166,7 +196,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
         <span><strong>เอกสารต้นฉบับ</strong><small title={filename}>{pageCount ? `${pageCount} หน้า` : "กำลังเตรียมเอกสาร"}</small></span>
       </div>
       <div className="pdf-canvas-controls" aria-label="ปรับขนาดเอกสาร">
-        <button type="button" onClick={zoomOut} disabled={zoom <= 50} title="ย่อเอกสาร" aria-label="ย่อเอกสาร"><Ico n="zoomOut" s={18} /></button>
+        <button type="button" onClick={zoomOut} disabled={zoom <= 25} title="ย่อเอกสาร" aria-label="ย่อเอกสาร"><Ico n="zoomOut" s={18} /></button>
         <button type="button" className="pdf-canvas-zoom" onClick={() => setZoom(100)} title="พอดีกับความกว้าง">{zoom}%</button>
         <button type="button" onClick={zoomIn} disabled={zoom >= 300} title="ขยายเอกสาร" aria-label="ขยายเอกสาร"><Ico n="zoomIn" s={18} /></button>
         {zoom !== 100 && <button type="button" className="pdf-canvas-fit" onClick={() => setZoom(100)}>พอดีหน้า</button>}
