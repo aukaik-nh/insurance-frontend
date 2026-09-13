@@ -854,10 +854,9 @@ export function DetailPage() {
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
                     <div className="info-card-bd">
-                      {/* เลขกรมธรรม์ — เน้นพิเศษ */}
-                      <div className="info-field" style={{ background: "var(--blue-bg)", border: "1px solid var(--blue-mid)", borderRadius: 12, padding: "18px 22px", marginBottom: 20 }}>
+                      <div className="info-field detail-policy-number">
                         <div className="info-label">เลขกรมธรรม์</div>
-                        <div className="info-val hi" style={{ fontSize: 26, fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", letterSpacing: 0.5 }}>
+                        <div className="info-val detail-policy-number-value">
                           {activePolicy.policy_number || "—"}
                         </div>
                       </div>

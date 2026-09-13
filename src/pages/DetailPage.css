@@ -118,18 +118,6 @@ body.dark .policy-detail-split > .detail-aside > .info-card .info-card-hd{
   border-bottom-color:var(--brd);
   box-shadow:inset 3px 0 0 var(--accent);
 }
-body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"]{
-  background:var(--sur2) !important;
-  border-color:var(--brd2) !important;
-  box-shadow:none !important;
-}
-body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-label{
-  color:var(--t2);
-}
-body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{
-  color:var(--blue);
-}
-
 .policy-detail-split{
   grid-template-columns:minmax(390px,2fr) minmax(0,3fr);
   gap:20px;
@@ -199,22 +187,14 @@ body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*
   font-size:15px;
   letter-spacing:.15px;
 }
-/* Make the policy number the page's clear anchor, while keeping the existing
-   inline style as a fallback for older rendered records. */
-.policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"]{
-  padding:17px 20px !important;
-  margin-bottom:16px !important;
-  border:1px solid var(--green-brd) !important;
-  border-radius:15px !important;
-  background:linear-gradient(135deg,var(--green-bg) 0%,#f5fbf7 100%) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.8);
-}
-.policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-label{
-  color:var(--green);
-}
-.policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{
-  color:var(--blue-h);
-  font-size:27px !important;
+.policy-detail-split > :first-child .info-card-bd > .detail-policy-number{margin-bottom:14px}
+.policy-detail-split > :first-child .detail-policy-number-value{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:19px;
+  font-weight:700;
+  letter-spacing:.15px;
+  color:var(--t1);
+  overflow-wrap:anywhere;
 }
 .policy-detail-split > :first-child .plate{
   padding:4px 10px;
@@ -413,7 +393,7 @@ body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*
   .policy-detail-split > :first-child .info-card-bd{padding:14px !important}
   .policy-detail-split > :first-child .info-field:not([style]){min-height:0;padding:4px 0 8px}
   .policy-detail-split > :first-child .info-val{font-size:15px}
-  .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{font-size:21px !important}
+  .policy-detail-split > :first-child .detail-policy-number-value{font-size:17px}
   .policy-detail-split > .detail-aside .pdf-preview-bar{min-height:56px;padding:9px 10px}
   .policy-detail-split > .detail-aside .pdf-preview-bar .pdf-fname{font-size:14px}
   .policy-detail-split > .detail-aside .pdf-zoom-btn{width:35px;height:35px}
@@ -503,15 +483,6 @@ body:not(.dark) .policy-detail-split > :first-child .info-field:not([style]){
 }
 body:not(.dark) .policy-detail-split > :first-child .info-field:not([style]):hover{
   border-bottom-color:var(--accent);
-}
-body:not(.dark) .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"]{
-  background:linear-gradient(135deg,#f8e9c7 0%,#fffaf0 100%) !important;
-  border-color:#dfbd72 !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.85),0 3px 10px rgba(138,93,3,.07) !important;
-}
-body:not(.dark) .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-label,
-body:not(.dark) .policy-detail-split > :first-child .info-card-bd > .info-field[style*="blue-bg"] .info-val.hi{
-  color:var(--blue);
 }
 body:not(.dark) .policy-detail-split > :first-child .plate{
   color:var(--blue);background:var(--blue-bg);border-color:var(--blue-mid);
