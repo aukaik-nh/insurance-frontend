@@ -1282,7 +1282,7 @@ export function DetailPage() {
                       other:       { label: "อื่นๆ",       color: "var(--t3)",    bg: "var(--sur2)",      ico: "doc" },
                     }
                     return (
-                      <div className="info-card-bd detail-document-list-bd" style={{ padding: "8px 12px 12px" }}>
+                      <div className="info-card-bd detail-document-list-bd" role="region" aria-label="รายการเอกสารแยกตามปี" tabIndex={0} style={{ padding: "8px 12px 12px" }}>
                         <div className="detail-document-groups" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                           {years.map(year => (
                             <div className="detail-document-year" key={year}>

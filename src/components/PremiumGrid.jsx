@@ -99,7 +99,7 @@ const tdInput = (highlight, totalCol) => ({
   borderBottom: "1px solid var(--sur2)",
 })
 
-function PremiumComparison({ main, prb, mainLabel, mainSource, prbSource, billing, total, canCollectMain, canCollectPair }) {
+function PremiumMatrix({ main, prb, mainLabel, mainSource, prbSource, billing, total, canCollectMain, canCollectPair }) {
   const sections = [
     { key: "main", title: mainLabel, source: mainSource || "ยังไม่พบ กธ.", available: Object.keys(main).length > 0 },
     { key: "prb", title: "พ.ร.บ.", source: prbSource || "ยังไม่พบ พ.ร.บ.", available: !!prb },
@@ -115,7 +115,7 @@ function PremiumComparison({ main, prb, mainLabel, mainSource, prbSource, billin
       return hasAmount(main[row.key]) ? fmt(main[row.key]) : "—"
     }
     if (section.key === "prb") {
-      if (row.mainOnly) return "—"
+      if (row.mainOnly) return "0.00"
       const value = row.key === "collected" ? prb.total_premium : prb[row.key]
       return hasAmount(value) ? fmt(value) : "—"
     }
@@ -124,26 +124,30 @@ function PremiumComparison({ main, prb, mainLabel, mainSource, prbSource, billin
   }
 
   return (
-    <div className="premium-compare-grid" aria-label="ตารางเบี้ยประกัน กธ. พ.ร.บ. และยอดรวม">
-      {sections.map(section => (
-        <section className={`premium-compare-card premium-compare-${section.key}`} key={section.key}>
-          <div className="premium-compare-heading">
-            <strong>{section.title}</strong>
-            <small title={section.source}>{section.source}</small>
-          </div>
-          <table>
-            <thead><tr><th scope="col">รายการ</th><th scope="col">บาท</th></tr></thead>
-            <tbody>
-              {ROWS.map(row => (
-                <tr key={row.key} className={row.highlight ? "premium-compare-highlight" : ""}>
-                  <th scope="row">{row.label}</th>
-                  <td>{valueFor(section, row)}</td>
-                </tr>
+    <div className="premium-matrix-wrap" role="region" aria-label="ตารางเปรียบเทียบเบี้ยประกัน" tabIndex={0}>
+      <table className="premium-matrix">
+        <thead>
+          <tr>
+            <th scope="col">รายการ</th>
+            {sections.map(section => (
+              <th scope="col" key={section.key} className={`premium-matrix-${section.key}`}>
+                <strong>{section.title}</strong>
+                <small title={section.source}>{section.source}</small>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {ROWS.map(row => (
+            <tr key={row.key} className={row.highlight ? "premium-matrix-highlight" : ""}>
+              <th scope="row">{row.label}</th>
+              {sections.map(section => (
+                <td key={section.key} className={`premium-matrix-${section.key}`}>{valueFor(section, row)}</td>
               ))}
-            </tbody>
-          </table>
-        </section>
-      ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -309,7 +313,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           </div>
         )}
         {readOnly && showAllColumns ? (
-          <PremiumComparison main={main} prb={prb} mainLabel={mainLabel} mainSource={mainSource} prbSource={prbSource}
+          <PremiumMatrix main={main} prb={prb} mainLabel={mainLabel} mainSource={mainSource} prbSource={prbSource}
             billing={billing} total={total} canCollectMain={canCollectMain} canCollectPair={canCollectPair} />
         ) : <div className="premium-grid-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="premium-grid-table" style={{
