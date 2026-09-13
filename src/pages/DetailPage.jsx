@@ -1118,20 +1118,14 @@ export function DetailPage() {
                       <div className="spin" style={{ width: 32, height: 32, borderWidth: 3 }} />
                       <div style={{ fontSize: 15, color: "var(--t3)" }}>กำลังโหลด PDF…</div>
                     </div>
-                  ) : pdfBlobUrl && useMobilePdfViewer ? (
+                  ) : pdfBlobUrl ? (
                     <PdfCanvasViewer
-                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-mobile`}
+                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-${useMobilePdfViewer ? "mobile" : "desktop"}`}
                       src={pdfBlobUrl}
                       filename={activePolicy.pdf_filename || "PDF"}
+                      fitPage={!useMobilePdfViewer}
                       onOpenFallback={() => openPdfTab(currentDocUrl)}
                     />
-                  ) : pdfBlobUrl ? (
-                    <iframe
-                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
-                      className="pdf-iframe"
-                      src={pdfBlobUrl}
-                      title="PDF Preview"
-                      style={{ height: "calc(100vh - 180px)", minHeight: 700 }} />
                   ) : (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, height: "calc(100vh - 180px)", minHeight: 700, background: "var(--sur2)", color: "var(--t3)" }}>
                       <Ico n="warn" s={40} sw={1} />

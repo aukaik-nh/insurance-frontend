@@ -6,7 +6,7 @@ import "./PdfCanvasViewer.css"
 
 GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
-function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
+function PdfPage({ pdf, pageNumber, availableWidth, availableHeight, fitMode, zoom }) {
   const canvasRef = useRef(null)
   const textLayerRef = useRef(null)
   const [error, setError] = useState("")
@@ -23,7 +23,10 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
         const page = await pdf.getPage(pageNumber)
         if (cancelled) return
         const natural = page.getViewport({ scale: 1 })
-        const cssScale = Math.max(0.1, (availableWidth / natural.width) * (zoom / 100))
+        const fitScale = fitMode === "page" && availableHeight
+          ? 0.96 * Math.min(availableWidth / natural.width, availableHeight / natural.height)
+          : availableWidth / natural.width
+        const cssScale = Math.max(0.01, fitScale * (zoom / 100))
         const cssWidth = Math.round(natural.width * cssScale)
         const cssHeight = Math.round(natural.height * cssScale)
         setPageSize({ width: cssWidth, height: cssHeight })
@@ -75,7 +78,7 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
       renderTask?.cancel()
       textLayer?.cancel()
     }
-  }, [pdf, pageNumber, availableWidth, zoom])
+  }, [pdf, pageNumber, availableWidth, availableHeight, fitMode, zoom])
 
   return <section className="pdf-canvas-page" aria-label={`หน้า ${pageNumber}`}>
     <span className="pdf-canvas-page-number">หน้า {pageNumber}</span>
@@ -95,14 +98,15 @@ function PdfImagePage({ imageUrl, availableWidth, zoom, pageCount }) {
   </section>
 }
 
-export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, fullscreen = false, onOpenFallback }) {
+export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, fullscreen = false, fitPage = false, onOpenFallback }) {
   const stageRef = useRef(null)
   const [pdf, setPdf] = useState(null)
   const [pageCount, setPageCount] = useState(initialPageCount || 0)
   const [availableWidth, setAvailableWidth] = useState(0)
+  const [availableHeight, setAvailableHeight] = useState(0)
   const [zoom, setZoom] = useState(100)
+  const [fitMode, setFitMode] = useState(fullscreen || fitPage ? "page" : "width")
   const [status, setStatus] = useState(src ? "loading" : "empty")
-  const hasFittedFullscreenPage = useRef(false)
 
   useEffect(() => {
     const stage = stageRef.current
@@ -111,7 +115,10 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
       const style = window.getComputedStyle(stage)
       const horizontalPadding = Number.parseFloat(style.paddingLeft || "0")
         + Number.parseFloat(style.paddingRight || "0")
+      const verticalPadding = Number.parseFloat(style.paddingTop || "0")
+        + Number.parseFloat(style.paddingBottom || "0")
       setAvailableWidth(Math.max(260, stage.clientWidth - horizontalPadding))
+      setAvailableHeight(Math.max(180, stage.clientHeight - verticalPadding))
     }
     measure()
     const observer = new ResizeObserver(measure)
@@ -143,7 +150,6 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
         }
         setPdf(document)
         setPageCount(document.numPages)
-        hasFittedFullscreenPage.current = false
         setStatus("ready")
       } catch (error) {
         if (!cancelled && error?.name !== "AbortException") setStatus("error")
@@ -158,38 +164,11 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
     }
   }, [src, initialPageCount])
 
-  useEffect(() => {
-    if (!fullscreen || !pdf || !availableWidth || hasFittedFullscreenPage.current) return undefined
-
-    let cancelled = false
-    const fitWholePage = async () => {
-      try {
-        const page = await pdf.getPage(1)
-        const stage = stageRef.current
-        if (cancelled || !stage) return
-        const natural = page.getViewport({ scale: 1 })
-        const style = window.getComputedStyle(stage)
-        const verticalPadding = Number.parseFloat(style.paddingTop || "0")
-          + Number.parseFloat(style.paddingBottom || "0")
-        const availableHeight = Math.max(180, stage.clientHeight - verticalPadding)
-        const fitZoom = Math.floor(Math.min(
-          availableWidth / natural.width,
-          availableHeight / natural.height,
-        ) * 96)
-        hasFittedFullscreenPage.current = true
-        setZoom(Math.max(25, Math.min(300, fitZoom)))
-      } catch {
-        // The normal width-fit view remains available if page metadata cannot load.
-      }
-    }
-    fitWholePage()
-    return () => { cancelled = true }
-  }, [availableWidth, fullscreen, pdf])
-
   const zoomOut = () => setZoom(value => Math.max(25, value - 25))
   const zoomIn = () => setZoom(value => Math.min(300, value + 25))
+  const setPageFit = mode => { setFitMode(mode); setZoom(100); stageRef.current?.scrollTo({ top: 0, left: 0 }) }
 
-  return <div className={`pdf-canvas-viewer${fullscreen ? " is-fullscreen" : ""}`}>
+  return <div className={`pdf-canvas-viewer${fullscreen ? " is-fullscreen" : ""}${fitPage && !fullscreen ? " is-inline-document" : ""}`}>
     <div className="pdf-canvas-toolbar">
       <div className="pdf-canvas-title">
         <span className="pdf-canvas-icon"><Ico n="doc" s={17} /></span>
@@ -197,9 +176,11 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
       </div>
       <div className="pdf-canvas-controls" aria-label="ปรับขนาดเอกสาร">
         <button type="button" onClick={zoomOut} disabled={zoom <= 25} title="ย่อเอกสาร" aria-label="ย่อเอกสาร"><Ico n="zoomOut" s={18} /></button>
-        <button type="button" className="pdf-canvas-zoom" onClick={() => setZoom(100)} title="พอดีกับความกว้าง">{zoom}%</button>
+        <button type="button" className="pdf-canvas-zoom" onClick={() => setZoom(100)} title="กลับขนาดเริ่มต้น">{zoom}%</button>
         <button type="button" onClick={zoomIn} disabled={zoom >= 300} title="ขยายเอกสาร" aria-label="ขยายเอกสาร"><Ico n="zoomIn" s={18} /></button>
-        {zoom !== 100 && <button type="button" className="pdf-canvas-fit" onClick={() => setZoom(100)}>พอดีหน้า</button>}
+        <button type="button" className="pdf-canvas-fit" onClick={() => setPageFit(fitMode === "page" ? "width" : "page")}>
+          {fitMode === "page" ? "พอดีกว้าง" : "พอดีแผ่น"}
+        </button>
       </div>
     </div>
     <div className="pdf-canvas-stage" ref={stageRef}>
@@ -215,7 +196,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
       </div>}
       {!imageUrl && status === "empty" && <div className="pdf-canvas-state"><Ico n="doc" s={30} /><strong>ยังไม่มีเอกสาร</strong></div>}
       {!imageUrl && status === "ready" && <div className="pdf-canvas-pages">
-        {Array.from({ length: pageCount }, (_, index) => <PdfPage key={index + 1} pdf={pdf} pageNumber={index + 1} availableWidth={availableWidth} zoom={zoom} />)}
+        {Array.from({ length: pageCount }, (_, index) => <PdfPage key={index + 1} pdf={pdf} pageNumber={index + 1} availableWidth={availableWidth} availableHeight={fitMode === "page" ? availableHeight : 0} fitMode={fitMode} zoom={zoom} />)}
       </div>}
     </div>
   </div>
