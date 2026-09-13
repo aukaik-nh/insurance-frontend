@@ -77,6 +77,10 @@ export function DocumentReader({ file, loading, pdfUrl, imageUrl, text = "", pag
           <button type="button" onClick={onClear} disabled={loading} title="ล้างไฟล์" aria-label="ล้างไฟล์"><Ico n="x" s={19} /></button>
         </div>
       </div>
+      {view === "pdf" && !loading && <div className="reader-select-guide">
+        <span>ลากเลือกข้อความบน PDF ได้เมื่อไฟล์มีชั้นข้อความ หากเป็นไฟล์สแกนให้เลือกจากผลสแกน</span>
+        {text && <button type="button" onClick={() => setView("text")}><Ico n="list" s={16} />เปิดข้อความให้เลือก</button>}
+      </div>}
       {loading && view === "pdf" && pdfUrl ? <>
           <div className="reader-live-status" role="status"><span className="spin" /><span><strong>แสดงต้นฉบับแล้ว</strong><small>ระบบกำลังอ่านและตรวจข้อมูลทุกช่องอยู่เบื้องหลัง</small></span></div>
           <PdfCanvasViewer key={pdfUrl} src={pdfUrl} imageUrl={imageUrl} filename={file.name} initialPageCount={pageCount} />

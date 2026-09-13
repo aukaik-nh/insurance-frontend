@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist"
+import { GlobalWorkerOptions, TextLayer, getDocument } from "pdfjs-dist"
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url"
 import { Ico } from "../icons"
 import "./PdfCanvasViewer.css"
@@ -8,12 +8,15 @@ GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
 function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
   const canvasRef = useRef(null)
+  const textLayerRef = useRef(null)
   const [error, setError] = useState("")
+  const [pageSize, setPageSize] = useState(null)
 
   useEffect(() => {
     if (!pdf || !availableWidth) return undefined
     let cancelled = false
     let renderTask
+    let textLayer
 
     const render = async () => {
       try {
@@ -23,6 +26,7 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
         const cssScale = Math.max(0.1, (availableWidth / natural.width) * (zoom / 100))
         const cssWidth = Math.round(natural.width * cssScale)
         const cssHeight = Math.round(natural.height * cssScale)
+        setPageSize({ width: cssWidth, height: cssHeight })
         // Render more pixels without enlarging the page on screen. Limit the
         // canvas area so zoomed pages and multi-page files remain usable.
         const targetRatio = window.matchMedia("(max-width: 700px)").matches
@@ -39,6 +43,24 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
         canvas.style.height = `${cssHeight}px`
         renderTask = page.render({ canvasContext: canvas.getContext("2d"), viewport })
         await renderTask.promise
+        const layerElement = textLayerRef.current
+        if (!cancelled && layerElement) {
+          layerElement.replaceChildren()
+          try {
+            const textContent = await page.getTextContent()
+            if (!cancelled && textContent.items.length) {
+              layerElement.style.setProperty("--total-scale-factor", String(cssScale))
+              textLayer = new TextLayer({
+                textContentSource: textContent,
+                container: layerElement,
+                viewport: page.getViewport({ scale: cssScale }),
+              })
+              await textLayer.render()
+            }
+          } catch (textError) {
+            if (!cancelled && textError?.name !== "AbortException") layerElement.replaceChildren()
+          }
+        }
         if (!cancelled) setError("")
       } catch (err) {
         if (!cancelled && err?.name !== "RenderingCancelledException") {
@@ -51,12 +73,16 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
     return () => {
       cancelled = true
       renderTask?.cancel()
+      textLayer?.cancel()
     }
   }, [pdf, pageNumber, availableWidth, zoom])
 
   return <section className="pdf-canvas-page" aria-label={`หน้า ${pageNumber}`}>
     <span className="pdf-canvas-page-number">หน้า {pageNumber}</span>
-    {error ? <div className="pdf-canvas-page-error">{error}</div> : <canvas ref={canvasRef} />}
+    {error ? <div className="pdf-canvas-page-error">{error}</div> : <div className="pdf-canvas-sheet" style={pageSize ? { width: pageSize.width, height: pageSize.height } : undefined}>
+      <canvas ref={canvasRef} />
+      <div className="pdf-canvas-text-layer" ref={textLayerRef} />
+    </div>}
   </section>
 }
 
@@ -93,7 +119,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
   }, [fullscreen])
 
   useEffect(() => {
-    if (!src || imageUrl) return undefined
+    if (!src) return undefined
 
     let cancelled = false
     let loadingTask
@@ -128,7 +154,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
       cancelled = true
       loadingTask?.destroy()
     }
-  }, [src, imageUrl, initialPageCount])
+  }, [src, initialPageCount])
 
   const zoomOut = () => setZoom(value => Math.max(50, value - 25))
   const zoomIn = () => setZoom(value => Math.min(300, value + 25))
@@ -147,7 +173,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
       </div>
     </div>
     <div className="pdf-canvas-stage" ref={stageRef}>
-      {imageUrl && <div className="pdf-canvas-pages pdf-image-pages">
+      {imageUrl && status !== "ready" && <div className="pdf-canvas-pages pdf-image-pages">
         <PdfImagePage imageUrl={imageUrl} availableWidth={availableWidth} zoom={zoom} pageCount={pageCount} />
       </div>}
       {!imageUrl && status === "loading" && <div className="pdf-canvas-state"><span className="spin" /><strong>กำลังเปิดเอกสาร…</strong><small>ระบบกำลังจัดหน้า PDF ให้พร้อมตรวจสอบ</small></div>}

@@ -7,6 +7,12 @@
 body.dark .pdf-canvas-stage{background:#171A1E}
 .pdf-canvas-pages{display:flex;flex-direction:column;align-items:center;gap:24px;width:max-content;min-width:100%;margin:0 auto}
 .pdf-canvas-page{position:relative;flex:0 0 auto;line-height:0}.pdf-canvas-page canvas{display:block;background:#fff;border:1px solid rgba(20,49,40,.12);border-radius:3px;box-shadow:0 12px 30px rgba(22,55,45,.16)}
+.pdf-canvas-sheet{position:relative;line-height:0}
+.pdf-canvas-text-layer{position:absolute;inset:0;overflow:hidden;line-height:1;letter-spacing:normal;word-spacing:normal;text-align:initial;transform-origin:0 0;z-index:2;user-select:text;-webkit-user-select:text;--text-scale-factor:calc(var(--total-scale-factor) * var(--min-font-size,1));--min-font-size-inv:calc(1 / var(--min-font-size,1))}
+.pdf-canvas-text-layer :is(span,br){position:absolute;color:transparent;white-space:pre;cursor:text;transform-origin:0 0;user-select:text;-webkit-user-select:text}
+.pdf-canvas-text-layer > :not(.markedContent),.pdf-canvas-text-layer .markedContent span:not(.markedContent){font-size:calc(var(--text-scale-factor) * var(--font-height));transform:rotate(var(--rotate,0deg)) scaleX(var(--scale-x,1)) scale(var(--min-font-size-inv))}
+.pdf-canvas-text-layer .markedContent{display:contents}
+.pdf-canvas-text-layer ::selection{background:rgba(35,112,210,.32);color:transparent}
 .pdf-image-page{width:max-content;max-width:100%}.pdf-canvas-image{display:block;max-width:none;height:auto;background:#fff;border:1px solid rgba(20,49,40,.12);border-radius:3px;box-shadow:0 12px 30px rgba(22,55,45,.16)}
 .pdf-canvas-page-number{position:absolute;top:12px;right:12px;z-index:1;padding:5px 9px;border-radius:99px;background:rgba(16,40,32,.72);color:#fff;font-size:11px;font-weight:600;line-height:1;backdrop-filter:blur(5px);opacity:0;transition:opacity .15s}.pdf-canvas-page:hover .pdf-canvas-page-number{opacity:1}
 .pdf-canvas-page-error{display:grid;place-items:center;width:min(560px,75vw);height:260px;border:1px dashed var(--brd2);border-radius:10px;background:var(--sur);color:var(--red);font-size:14px;line-height:1.5}
