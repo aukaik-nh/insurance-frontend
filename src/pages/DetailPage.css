@@ -187,7 +187,7 @@ body.dark .policy-detail-split > .detail-aside > .info-card .info-card-hd{
   font-size:15px;
   letter-spacing:.15px;
 }
-.policy-detail-split > :first-child .info-card-bd > .detail-policy-number{margin-bottom:14px}
+.policy-detail-split > :first-child .info-card-bd > .detail-policy-number{margin-bottom:0}
 .policy-detail-split > :first-child .detail-policy-number-value{
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   font-size:19px;

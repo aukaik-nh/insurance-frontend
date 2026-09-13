@@ -854,23 +854,19 @@ export function DetailPage() {
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="doc" s={20} /><span className="info-card-title">ข้อมูลกรมธรรม์</span></div>
                     <div className="info-card-bd">
-                      <div className="info-field detail-policy-number">
-                        <div className="info-label">เลขกรมธรรม์</div>
-                        <div className="info-val detail-policy-number-value">
-                          {activePolicy.policy_number || "—"}
-                        </div>
-                      </div>
                       <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="รหัสบริษัท"     value={activePolicy.company_code} />
                         <F label="เลขใบคำขอ"      value={activePolicy.app_number} />
+                        <F label="รหัสบริษัท"     value={activePolicy.company_code} />
                       </div>
                       <div className="info-row" style={{ marginBottom: 18 }}>
                         <F label="ประเภทกรมธรรม์" value={policyTypeLabel(activePolicy.policy_type)} />
                         <F label="ใหม่/ต่ออายุ"   value={activePolicy.new_renew === "N" ? "ใหม่" : activePolicy.new_renew === "R" ? "ต่ออายุ" : activePolicy.new_renew} />
                       </div>
-                      <div className="info-row">
-                        <F label="รหัสตัวแทน"           value={activePolicy.agent_code} />
-                        <F label="ชื่อตัวแทน / นายหน้า" value={activePolicy.broker_name !== activePolicy.agent_code ? activePolicy.broker_name : null} />
+                      <div className="info-field detail-policy-number">
+                        <div className="info-label">เลขกรมธรรม์</div>
+                        <div className="info-val detail-policy-number-value">
+                          {activePolicy.policy_number || "—"}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -890,6 +886,26 @@ export function DetailPage() {
                       <div className="info-row fw">
                         <F label="ที่อยู่" value={activePolicy.insured_address} />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* ระยะเวลาคุ้มครอง */}
+                  <div className="info-card">
+                    <div className="info-card-hd"><Ico n="cal" s={20} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
+                    <div className="info-card-bd">
+                      <div className="info-row" style={{ marginBottom: 18 }}>
+                        <F label="วันเริ่มต้น" value={fmtDate(activePolicy.coverage_start)} />
+                        <F label="วันสิ้นสุด"  value={fmtDate(activePolicy.coverage_end)} />
+                      </div>
+                      <div className="info-row">
+                        <F label="วันแจ้งงาน"     value={fmtDate(activePolicy.date_notify)} />
+                        <F label="วันรับกรมธรรม์" value={fmtDate(activePolicy.date_policy_receive)} />
+                      </div>
+                      {activePolicy.date_cancel && (
+                        <div className="info-row" style={{ marginTop: 12 }}>
+                          <F label="วันยกเลิก" value={fmtDate(activePolicy.date_cancel)} />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -916,25 +932,17 @@ export function DetailPage() {
                     </div>
                   </div>
 
-                  {/* ระยะเวลาคุ้มครอง */}
-                  <div className="info-card">
-                    <div className="info-card-hd"><Ico n="cal" s={20} /><span className="info-card-title">ระยะเวลาคุ้มครอง</span></div>
-                    <div className="info-card-bd">
-                      <div className="info-row" style={{ marginBottom: 18 }}>
-                        <F label="วันเริ่มต้น" value={fmtDate(activePolicy.coverage_start)} />
-                        <F label="วันสิ้นสุด"  value={fmtDate(activePolicy.coverage_end)} />
-                      </div>
-                      <div className="info-row">
-                        <F label="วันแจ้งงาน"     value={fmtDate(activePolicy.date_notify)} />
-                        <F label="วันรับกรมธรรม์" value={fmtDate(activePolicy.date_policy_receive)} />
-                      </div>
-                      {activePolicy.date_cancel && (
-                        <div className="info-row" style={{ marginTop: 12 }}>
-                          <F label="วันยกเลิก" value={fmtDate(activePolicy.date_cancel)} />
+                  {(activePolicy.agent_code || activePolicy.broker_name) && (
+                    <div className="info-card">
+                      <div className="info-card-hd"><Ico n="person" s={20} /><span className="info-card-title">ตัวแทน / นายหน้า</span></div>
+                      <div className="info-card-bd">
+                        <div className="info-row">
+                          <F label="รหัสตัวแทน" value={activePolicy.agent_code} />
+                          <F label="ชื่อตัวแทน / นายหน้า" value={activePolicy.broker_name !== activePolicy.agent_code ? activePolicy.broker_name : null} />
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* เบี้ยของเอกสารที่เลือก และคู่ กธ./พ.ร.บ. ที่พิสูจน์ได้ว่าเป็นรถและปีเดียวกัน */}
                   {(() => {
