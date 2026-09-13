@@ -16,9 +16,15 @@ export const documentYear = record => {
   return label ? Number(label[1]) : yearFromDate(record.coverage_start) || yearFromDate(record.coverage_end)
 }
 
-const normalize = value => String(value || "").replace(/[\s\-]/g, "").toUpperCase()
+const normalize = value => String(value || "").replace(/[\s-]/g, "").toUpperCase()
 const isPrb = record => record?.doc_type === "prb" || String(record?.policy_type || "").toUpperCase() === "P"
-const isMotor = record => ["M", "STY"].includes(String(record?.policy_type || "").toUpperCase())
+const isMotor = record => {
+  if (!record || isPrb(record) || (record.doc_type && record.doc_type !== "main")) return false
+  const type = String(record.policy_type || "").toUpperCase().trim()
+  // Older imported motor policies use insurer-specific type codes. A vehicle
+  // identifier is stronger evidence than that code, but never for another doc type.
+  return ["M", "STY"].includes(type) || !!(normalize(record.chassis_no) || normalize(record.license_plate))
+}
 const sameId = (a, b) => String(a) === String(b)
 
 function carMatchScore(main, prb) {

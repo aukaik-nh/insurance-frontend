@@ -126,11 +126,10 @@ export function DetailPage() {
   useEffect(() => {
     if (initialP && String(initialP.id) === String(id)) setActivePdfId(id)
     else setActivePdfId(null)  // จะถูกตั้งใหม่หลัง fetch เสร็จ
+    setActiveDocId("main")
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  // reset doc tab เมื่อสลับ related policy
-  useEffect(() => { setActiveDocId("main") }, [activePdfId])
   useEffect(() => {
     setPdfTextOpen(false)
     setPdfText("")
@@ -1304,7 +1303,7 @@ export function DetailPage() {
                                   const meta = DOC_META[d.docType] || DOC_META.other
                                   const onClick = d.kind === "policy"
                                     ? () => { setActivePdfId(d.id); setActiveDocId("main") }
-                                    : () => setActiveDocId(d.id)
+                                    : () => { setActivePdfId(p.id); setActiveDocId(d.id) }
                                   return (
                                     <button
                                       key={d.id}

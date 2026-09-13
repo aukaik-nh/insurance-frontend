@@ -99,6 +99,55 @@ const tdInput = (highlight, totalCol) => ({
   borderBottom: "1px solid var(--sur2)",
 })
 
+function PremiumComparison({ main, prb, mainLabel, mainSource, prbSource, billing, total, canCollectMain, canCollectPair }) {
+  const sections = [
+    { key: "main", title: mainLabel, source: mainSource || "ยังไม่พบ กธ.", available: Object.keys(main).length > 0 },
+    { key: "prb", title: "พ.ร.บ.", source: prbSource || "ยังไม่พบ พ.ร.บ.", available: !!prb },
+    { key: "total", title: "รวม กธ. + พ.ร.บ.", source: canCollectPair ? "เอกสารคู่ปีเดียวกัน" : "รอเอกสารคู่และยอดเบี้ยครบ", available: canCollectPair },
+  ]
+  const mainBilling = calculateBilling(main, {})
+  const valueFor = (section, row) => {
+    if (!section.available) return "—"
+    if (section.key === "main") {
+      if (row.key === "collected") return canCollectMain ? fmt(mainBilling.collected) : "—"
+      if (row.key === "commission_baht") return fmt(billing.commissionBaht)
+      if (row.key === "wht_10pct") return fmt(billing.wht10)
+      return hasAmount(main[row.key]) ? fmt(main[row.key]) : "—"
+    }
+    if (section.key === "prb") {
+      if (row.mainOnly) return "—"
+      const value = row.key === "collected" ? prb.total_premium : prb[row.key]
+      return hasAmount(value) ? fmt(value) : "—"
+    }
+    const value = total[row.key]
+    return hasAmount(value) ? fmt(value) : "—"
+  }
+
+  return (
+    <div className="premium-compare-grid" aria-label="ตารางเบี้ยประกัน กธ. พ.ร.บ. และยอดรวม">
+      {sections.map(section => (
+        <section className={`premium-compare-card premium-compare-${section.key}`} key={section.key}>
+          <div className="premium-compare-heading">
+            <strong>{section.title}</strong>
+            <small title={section.source}>{section.source}</small>
+          </div>
+          <table>
+            <thead><tr><th scope="col">รายการ</th><th scope="col">บาท</th></tr></thead>
+            <tbody>
+              {ROWS.map(row => (
+                <tr key={row.key} className={row.highlight ? "premium-compare-highlight" : ""}>
+                  <th scope="row">{row.label}</th>
+                  <td>{valueFor(section, row)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ))}
+    </div>
+  )
+}
+
 /**
  * props:
  *   main, prb, onMainChange, onPrbChange, onTogglePrb
@@ -259,7 +308,10 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
             </span>
           </div>
         )}
-        <div className="premium-grid-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        {readOnly && showAllColumns ? (
+          <PremiumComparison main={main} prb={prb} mainLabel={mainLabel} mainSource={mainSource} prbSource={prbSource}
+            billing={billing} total={total} canCollectMain={canCollectMain} canCollectPair={canCollectPair} />
+        ) : <div className="premium-grid-wrap" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table className="premium-grid-table" style={{
             width: "100%",
             borderCollapse: "separate", borderSpacing: 0,
@@ -371,7 +423,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
               })}
             </tbody>
           </table>
-        </div>
+        </div>}
         <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 9, background: "var(--sur2)", color: "var(--t3)", fontSize: 12.5, lineHeight: 1.5 }}>
           {hasPrb && canCollectPair
             ? "ยอดเรียกเก็บ = เบี้ยรวมกรมธรรม์ + พ.ร.บ. − หัก 1% − คอมมิชชั่น + ภาษีคอมมิชชั่น 10% + ปรับเศษ"

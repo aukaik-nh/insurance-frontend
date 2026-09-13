@@ -53,6 +53,21 @@ test("a PRB attachment uses its linked parent only in the same year", () => {
   assert.equal(otherDocument.main, null)
 })
 
+test("a vehicle policy with an insurer-specific type still pairs with its linked PRB in the selected year", () => {
+  const selected = { ...main("main", "3ฒศ 8862 กท", "LVPRPB4B9PC897237"), policy_type: "3" }
+  const prb2570 = { id: "prb-2570", doc_type: "prb", label: "พ.ร.บ. ปี 2570", pdf_filename: "พ.ร.บ. ปี 2570.pdf", total_premium: 967.28 }
+  const pair = selectPremiumPair({ activePolicy: selected, parentPolicy: selected, attachments: [prb2570], activeDocId: "prb-2570" })
+  assert.equal(pair.status, "paired")
+  assert.equal(pair.year, 2570)
+  assert.equal(pair.main?.id, "main")
+  assert.equal(pair.prb?.id, "prb-2570")
+
+  const wrongYear = selectPremiumPair({ activePolicy: selected, parentPolicy: selected, attachments: [{ ...prb2570, label: "พ.ร.บ. ปี 2569", pdf_filename: "พ.ร.บ. ปี 2569.pdf" }], activeDocId: "prb-2570" })
+  assert.equal(wrongYear.main, null)
+  const notice = selectPremiumPair({ activePolicy: { ...selected, doc_type: "renewal_notice" }, parentPolicy: selected, relatedPolicies: [prb("other")], activeDocId: "main" })
+  assert.equal(notice.status, "not-motor")
+})
+
 test("combined total follows the premium formula for the verified pair", () => {
   const selected = main("main")
   const pair = selectPremiumPair({ activePolicy: selected, parentPolicy: selected, relatedPolicies: [prb("prb")] })
