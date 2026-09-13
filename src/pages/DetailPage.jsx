@@ -62,6 +62,8 @@ export function DetailPage() {
   const [refreshKey, setRefreshKey]     = useState(0)
   const fileInputRef = useRef(null)
   const attachRef = useRef(null)   // ref ไป AttachmentsCard เพื่อ trigger เปิด modal จากปุ่มบน header
+  const detailHeaderRef = useRef(null)
+  const [showFloatingBack, setShowFloatingBack] = useState(false)
 
   const [deleteModal, setDeleteModal] = useState(false)  // confirm ลบ record
   const [deleting, setDeleting]       = useState(false)
@@ -71,6 +73,15 @@ export function DetailPage() {
   const [pdfText, setPdfText] = useState("")
   const [pdfTextLoading, setPdfTextLoading] = useState(false)
   const [pdfTextError, setPdfTextError] = useState("")
+
+  useEffect(() => {
+    if (loading || !detailHeaderRef.current) return undefined
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowFloatingBack(!entry.isIntersecting)
+    }, { rootMargin: "-64px 0px 0px 0px" })
+    observer.observe(detailHeaderRef.current)
+    return () => observer.disconnect()
+  }, [loading])
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 700px)")
@@ -245,6 +256,18 @@ export function DetailPage() {
   )
 
   const st = getStatus(p.coverage_end, p.coverage_start)
+
+  const goBackToList = () => {
+    const query = new URLSearchParams(location.search)
+    const returnTo = state?.returnTo || query.get("returnTo")
+    const returnPolicyId = state?.returnPolicyId || query.get("returnPolicyId") || p?.id
+    if (returnTo) {
+      navigate(returnTo, {
+        replace: true,
+        state: { returnPolicyId, returnScrollY: state?.returnScrollY },
+      })
+    } else navigate("/policies", { replace: true })
+  }
 
   const saveName = async () => {
     setSavingName(true)
@@ -681,25 +704,20 @@ export function DetailPage() {
       )}
 
       <div className="page-wrap">
-        <div className="page-hd detail-page-hd">
+        {showFloatingBack && <button
+          type="button"
+          className="detail-floating-back"
+          onClick={goBackToList}
+          aria-label="กลับหน้ารายการกรมธรรม์"
+        >
+          <Ico n="chevL" s={19} /> กลับหน้ารายการ
+        </button>}
+        <div className="page-hd detail-page-hd" ref={detailHeaderRef}>
           <button
             className="page-back detail-back-to-list"
             title="กลับไปยังหน้ารายการและแถวที่เปิดก่อนหน้านี้"
             aria-label="กลับไปหน้ารายการกรมธรรม์"
-            onClick={() => {
-            const query = new URLSearchParams(location.search)
-            const returnTo = state?.returnTo || query.get("returnTo")
-            const returnPolicyId = state?.returnPolicyId || query.get("returnPolicyId") || p?.id
-            if (returnTo) {
-              navigate(returnTo, {
-                replace: true,
-                state: {
-                  returnPolicyId,
-                  returnScrollY: state?.returnScrollY,
-                },
-              })
-            } else navigate("/policies", { replace: true })
-          }}>
+            onClick={goBackToList}>
             <span className="detail-back-icon"><Ico n="chevL" s={19} /></span>
             <span className="page-back-text">กลับ<span className="page-back-destination">หน้ารายการ</span></span>
           </button>
