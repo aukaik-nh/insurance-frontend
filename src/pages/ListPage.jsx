@@ -58,6 +58,7 @@ export function ListPage({ tab }) {
   const [retryCount, setRetryCount] = useState(0)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [previewPolicy, setPreviewPolicy] = useState(null)
+  const searchFieldRef = useRef(null)
   // ค่าเริ่มต้นต้องเป็นวันที่บันทึกจริง ไม่ใช่วันเริ่มคุ้มครองในเอกสาร
   const [sortKey, setSortKey]         = useState("created_at")
   const [sortDir, setSortDir]         = useState("desc")
@@ -744,7 +745,7 @@ export function ListPage({ tab }) {
                 <span className="dashboard-search-mark" aria-hidden="true"><Ico n="search" s={21} /></span>
                 <div className="dashboard-search-copy">
                   <div className="dashboard-search-title">ค้นหากรมธรรม์</div>
-                  <div className="dashboard-search-sub">พิมพ์ทะเบียนรถ ชื่อ หรือเลขกรมธรรม์ แล้วดูผลได้ทันที</div>
+                  <div className="dashboard-search-sub">พิมพ์ทะเบียนรถ ชื่อ หรือเลขกรมธรรม์ แล้วกดค้นหา</div>
                 </div>
               </div>
 
@@ -779,8 +780,9 @@ export function ListPage({ tab }) {
           {/* ── Search ── */}
           <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}${tab === "expiring" ? " expiring-search-wrap" : ""}`}>
             <div className="big-srch" style={{ minWidth: 0 }}>
-              <Ico n="search" s={20} />
+              {tab !== "dashboard" && <Ico n="search" s={20} />}
               <input
+                ref={searchFieldRef}
                 aria-label="ค้นหาทะเบียนรถ ชื่อผู้เอาประกัน หรือเลขกรมธรรม์"
                 type="text"
                 inputMode="search"
@@ -799,6 +801,15 @@ export function ListPage({ tab }) {
               {search && (
                 <button type="button" className="big-srch-clr" aria-label="ล้างคำค้นหา" onClick={() => { setSearch(""); setDebouncedSearch(""); setPage(1) }}>
                   <Ico n="x" s={18} />
+                </button>
+              )}
+              {tab === "dashboard" && (
+                <button type="button" className="dashboard-search-submit" onClick={() => {
+                  if (!search.trim()) { searchFieldRef.current?.focus(); return }
+                  setDebouncedSearch(search)
+                  setPage(1)
+                }}>
+                  <Ico n="search" s={19} /> ค้นหา
                 </button>
               )}
             </div>
