@@ -57,7 +57,7 @@ export function DetailPage() {
 
   const [relatedPdfs, setRelatedPdfs] = useState([])  // PDFs ของลูกค้าเดียวกัน (renewals)
   const [activePdfId, setActivePdfId] = useState(initialP?.id || null) // id ของ record ที่กำลังดู PDF
-  const [pdfListOpen, setPdfListOpen] = useState(true) // collapse/expand list
+  const [pdfListOpen, setPdfListOpen] = useState(false) // keep the PDF visible on entry
   const [uploadingPdf, setUploadingPdf] = useState(false)
   const [refreshKey, setRefreshKey]     = useState(0)
   const fileInputRef = useRef(null)
@@ -1079,36 +1079,23 @@ export function DetailPage() {
                         {activePolicy.pdf_size && (
                           <span className="pdf-size">{(activePolicy.pdf_size / 1024).toFixed(0)} KB</span>
                         )}
-                        {/* ── action buttons ── */}
-                        <button className="pdf-zoom-btn" onClick={() => setEditName(true)} title="แก้ไขชื่อ">
-                          <Ico n="pen" s={17} />
+                        <button className="pdf-zoom-btn pdf-fullscreen-action" onClick={() => setPdfFull(true)}
+                          disabled={!pdfBlobUrl} title="ดู PDF เต็มจอ">
+                          <Ico n="expand" s={17} /><span>ดูเต็มจอ</span>
                         </button>
-                        <button className="pdf-zoom-btn" onClick={() => setPdfFull(true)} title="เต็มจอ"
-                          disabled={!pdfBlobUrl}>
-                          <Ico n="expand" s={17} />
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => openPdfTab(currentDocUrl)} title="เปิดแท็บใหม่">
+                        <button className="pdf-zoom-btn pdf-open-action" onClick={() => openPdfTab(currentDocUrl)} title="เปิด PDF ในแท็บใหม่" aria-label="เปิด PDF ในแท็บใหม่">
                           <Ico n="open" s={17} />
                         </button>
-                        <button className={`pdf-zoom-btn${pdfTextOpen ? " is-active" : ""}`} onClick={openPdfText}
-                          disabled={!pdfBlobUrl || pdfTextLoading} title="อ่านข้อความเพื่อคัดลอก">
-                          {pdfTextLoading
-                            ? <div className="spin" style={{ width: 15, height: 15, borderWidth: 2 }} />
-                            : <Ico n="copy" s={17} />}
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => downloadPdf(currentDocDlUrl, activePolicy.pdf_filename || "policy.pdf")} title="ดาวน์โหลด">
-                          <Ico n="download" s={17} />
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={() => fileInputRef.current?.click()}
-                          disabled={uploadingPdf} title="เปลี่ยนไฟล์ PDF">
-                          {uploadingPdf
-                            ? <div className="spin" style={{ width: 15, height: 15, borderWidth: 2 }} />
-                            : <Ico n="upload" s={17} />}
-                        </button>
-                        <button className="pdf-zoom-btn" onClick={deletePdf} title="ลบไฟล์ PDF"
-                          style={{ color: "var(--red)", borderColor: "var(--red-brd)", background: "var(--red-bg)" }}>
-                          <Ico n="trash" s={17} />
-                        </button>
+                        <details className="pdf-file-tools">
+                          <summary title="เครื่องมือ PDF" aria-label="เครื่องมือ PDF"><Ico n="menu" s={17} /><span>เพิ่มเติม</span></summary>
+                          <div className="pdf-file-tools-menu">
+                            <button type="button" onClick={() => setEditName(true)}><Ico n="pen" s={16} />แก้ไขชื่อไฟล์</button>
+                            <button type="button" onClick={openPdfText} disabled={!pdfBlobUrl || pdfTextLoading}><Ico n="copy" s={16} />คัดลอกข้อความ</button>
+                            <button type="button" onClick={() => downloadPdf(currentDocDlUrl, activePolicy.pdf_filename || "policy.pdf")}><Ico n="download" s={16} />ดาวน์โหลด PDF</button>
+                            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingPdf}><Ico n="upload" s={16} />เปลี่ยนไฟล์ PDF</button>
+                            <button type="button" className="pdf-file-tools-delete" onClick={deletePdf}><Ico n="trash" s={16} />ลบไฟล์ PDF</button>
+                          </div>
+                        </details>
                       </>
                     )}
                   </div>
@@ -1204,33 +1191,16 @@ export function DetailPage() {
                 <div className="info-card detail-document-card" style={{ marginBottom: 12 }}>
                   <div
                     className="info-card-hd detail-document-card-hd"
-                    onClick={() => setPdfListOpen(o => !o)}
-                    style={{ cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px" }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button type="button" className="detail-document-toggle" onClick={() => setPdfListOpen(o => !o)} aria-expanded={pdfListOpen} aria-label={`${pdfListOpen ? "ซ่อน" : "เลือก"}เอกสาร PDF ทั้งหมด ${totalDocs} ฉบับ`}>
                       <Ico n="doc" s={17} />
-                      <span className="info-card-title" style={{ fontSize: 15 }}>
-                        เอกสาร PDF ทั้งหมด ({totalDocs} ฉบับ)
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button
-                        className="btn btn-b"
-                        onClick={(e) => { e.stopPropagation(); attachRef.current?.openAddDialog() }}
-                        style={{ padding: "6px 12px", fontSize: 13 }}
-                      >
-                        <Ico n="upload" s={14} /> เพิ่มเอกสาร
-                      </button>
-                      <div style={{
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        width: 24, height: 24, borderRadius: 6,
-                        background: "var(--sur2)",
-                        transition: "transform 0.2s",
-                        transform: pdfListOpen ? "rotate(180deg)" : "rotate(0deg)"
-                      }}>
-                        <Ico n="chevD" s={15} />
-                      </div>
-                    </div>
+                      <span className="info-card-title" style={{ fontSize: 15 }}>เอกสาร PDF ทั้งหมด ({totalDocs} ฉบับ)</span>
+                      <Ico n="chevD" s={15} />
+                    </button>
+                    <button className="btn btn-b" onClick={() => attachRef.current?.openAddDialog()} style={{ padding: "6px 12px", fontSize: 13 }}>
+                      <Ico n="upload" s={14} /> เพิ่มเอกสาร
+                    </button>
                   </div>
                   {pdfListOpen && (() => {
                     const docs = [
@@ -1302,8 +1272,8 @@ export function DetailPage() {
                                     : (activeDocId === d.id)
                                   const meta = DOC_META[d.docType] || DOC_META.other
                                   const onClick = d.kind === "policy"
-                                    ? () => { setActivePdfId(d.id); setActiveDocId("main") }
-                                    : () => { setActivePdfId(p.id); setActiveDocId(d.id) }
+                                    ? () => { setActivePdfId(d.id); setActiveDocId("main"); setPdfListOpen(false) }
+                                    : () => { setActivePdfId(p.id); setActiveDocId(d.id); setPdfListOpen(false) }
                                   return (
                                     <button
                                       key={d.id}
