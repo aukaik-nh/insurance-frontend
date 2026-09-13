@@ -879,10 +879,14 @@ export function DetailPage() {
                   <div className="info-card">
                     <div className="info-card-hd"><Ico n="person" s={20} /><span className="info-card-title">ผู้เอาประกัน</span></div>
                     <div className="info-card-bd">
-                      <div className="info-row" style={{ marginBottom: 18 }}>
+                      <div className="info-row fw" style={{ marginBottom: 18 }}>
                         <F label="ชื่อ-นามสกุล"  value={activePolicy.insured_name} />
-                        <F label="เบอร์โทรศัพท์" value={activePolicy.phone} />
                       </div>
+                      {activePolicy.phone && (
+                        <div className="info-row fw" style={{ marginBottom: 18 }}>
+                          <F label="เบอร์โทรศัพท์" value={activePolicy.phone} />
+                        </div>
+                      )}
                       <div className="info-row fw">
                         <F label="ที่อยู่" value={activePolicy.insured_address} />
                       </div>
