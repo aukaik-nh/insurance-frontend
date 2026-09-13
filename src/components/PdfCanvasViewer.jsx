@@ -21,17 +21,22 @@ function PdfPage({ pdf, pageNumber, availableWidth, zoom }) {
         if (cancelled) return
         const natural = page.getViewport({ scale: 1 })
         const cssScale = Math.max(0.1, (availableWidth / natural.width) * (zoom / 100))
-        // Keep small Thai characters and scanned policy details sharp on
-        // high-density phone screens while capping memory use for large PDFs.
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, 3)
+        const cssWidth = Math.round(natural.width * cssScale)
+        const cssHeight = Math.round(natural.height * cssScale)
+        // Render more pixels without enlarging the page on screen. Limit the
+        // canvas area so zoomed pages and multi-page files remain usable.
+        const targetRatio = window.matchMedia("(max-width: 700px)").matches
+          ? 4
+          : Math.min(window.devicePixelRatio || 1, 2)
+        const pixelRatio = Math.min(targetRatio, Math.sqrt(4_000_000 / (cssWidth * cssHeight)))
         const viewport = page.getViewport({ scale: cssScale * pixelRatio })
         const canvas = canvasRef.current
         if (!canvas) return
 
-        canvas.width = Math.floor(viewport.width)
-        canvas.height = Math.floor(viewport.height)
-        canvas.style.width = `${Math.floor(viewport.width / pixelRatio)}px`
-        canvas.style.height = `${Math.floor(viewport.height / pixelRatio)}px`
+        canvas.width = Math.round(viewport.width)
+        canvas.height = Math.round(viewport.height)
+        canvas.style.width = `${cssWidth}px`
+        canvas.style.height = `${cssHeight}px`
         renderTask = page.render({ canvasContext: canvas.getContext("2d"), viewport })
         await renderTask.promise
         if (!cancelled) setError("")
@@ -69,9 +74,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
   const [pdf, setPdf] = useState(null)
   const [pageCount, setPageCount] = useState(initialPageCount || 0)
   const [availableWidth, setAvailableWidth] = useState(0)
-  const [zoom, setZoom] = useState(() => (
-    typeof window !== "undefined" && window.matchMedia("(max-width: 700px)").matches ? 150 : 100
-  ))
+  const [zoom, setZoom] = useState(100)
   const [status, setStatus] = useState(src ? "loading" : "empty")
 
   useEffect(() => {
