@@ -114,6 +114,7 @@ function Layout({ onLogout }) {
   const notify = (msg, type = "success") => setToast({ msg, type })
 
   const path = location.pathname
+  const isViewingData = path === "/" || path === "/policies" || path.startsWith("/policies/") || path === "/expiring"
 
   // เมนูหลักเหลือเฉพาะงานที่เปิดใช้งานจริง เพื่อลดตัวเลือกที่ไม่จำเป็น
   const NAV_VIEW = [
@@ -162,7 +163,14 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
 
   return (
     <>
-      <style>{CSS}</style>
+      <style>{`${CSS}
+        @media (max-width:767px){
+          .mobile-bottom-nav .mobile-bottom-item.on{
+            background:var(--accent);color:#1A0F0A;
+            box-shadow:0 4px 12px rgba(202,138,4,.22);
+          }
+        }
+      `}</style>
       <div className={`app${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
 
         {/* ── TOPNAV ── */}
@@ -415,18 +423,21 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         {/* มือถือแสดงเพียงสามงานหลัก เพื่อให้กดง่ายและไม่สับสน */}
         <nav className="mobile-bottom-nav" aria-label="เมนูหลักบนมือถือ">
           {[
-            { path: "/", ico: "grid", label: "ภาพรวม" },
+            { path: "/", ico: "doc", label: "ดูข้อมูล" },
             { path: "/upload", ico: "upload", label: "เพิ่มเอกสาร" },
             { path: "/batch", ico: "inbox", label: "จัดการเอกสาร" },
           ].map(it => {
-            const active = !it.disabled && isActive(it.path)
+            const active = it.path === "/" ? isViewingData : isActive(it.path)
             return (
               <button
                 key={it.path}
                 type="button"
-                className={`mobile-bottom-item${active ? " on" : ""}${it.path === "/upload" ? " mobile-bottom-primary" : ""}`}
-                onClick={() => !it.disabled && navTo(it.path)}
-                disabled={it.disabled}
+                className={`mobile-bottom-item${active ? " on" : ""}`}
+                onClick={() => {
+                  if (it.path === "/" && path.startsWith("/policies/")) {
+                    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+                  } else navTo(it.path)
+                }}
                 aria-current={active ? "page" : undefined}
               >
                 <span className="mobile-bottom-icon"><Ico n={it.ico} s={21} /></span>
