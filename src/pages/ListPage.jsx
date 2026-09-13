@@ -750,7 +750,7 @@ export function ListPage({ tab }) {
                 <span className="dashboard-search-mark" aria-hidden="true"><Ico n="search" s={21} /></span>
                 <div className="dashboard-search-copy">
                   <div className="dashboard-search-title">ค้นหากรมธรรม์</div>
-                  <div className="dashboard-search-sub">ค้นหาได้จากทะเบียนรถ ชื่อผู้เอาประกัน หรือเลขกรมธรรม์</div>
+                  <div className="dashboard-search-sub">พิมพ์ทะเบียนรถ ชื่อ หรือเลขกรมธรรม์ แล้วดูผลได้ทันที</div>
                 </div>
               </div>
 
@@ -783,30 +783,36 @@ export function ListPage({ tab }) {
           })()}
 
           {/* ── Search ── */}
-          <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}${tab === "expiring" ? " expiring-search-wrap" : ""}`} style={{ flexDirection: "row", gap: 10, alignItems: "stretch" }}>
-            <div className="big-srch" style={{ flex: 1 }}>
+          <div className={`filter-wrap${tab === "dashboard" ? " dashboard-filter-wrap" : ""}${tab === "expiring" ? " expiring-search-wrap" : ""}`}>
+            <div className="big-srch" style={{ minWidth: 0 }}>
               <Ico n="search" s={20} />
               <input
-                aria-label="ค้นหาทะเบียนรถหรือชื่อผู้เอาประกัน"
+                aria-label="ค้นหาทะเบียนรถ ชื่อผู้เอาประกัน หรือเลขกรมธรรม์"
+                type="text"
+                inputMode="search"
+                enterKeyHint="search"
+                style={{ minWidth: 0 }}
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1) }}
-                placeholder={tab === "expiring" ? "ค้นหาชื่อ เลขกรมธรรม์ ทะเบียนรถ หรือเบอร์โทร..." : "เช่น กข 1234, คุณสมชาย หรือ D0-70-69/001234"}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    setDebouncedSearch(search)
+                    e.currentTarget.blur()
+                  }
+                }}
+                placeholder="ทะเบียนรถ / ชื่อ / เลขกรมธรรม์"
               />
               {search && (
-                <button className="big-srch-clr" aria-label="ล้างคำค้นหา" onClick={() => { setSearch(""); setPage(1) }}>
+                <button type="button" className="big-srch-clr" aria-label="ล้างคำค้นหา" onClick={() => { setSearch(""); setDebouncedSearch(""); setPage(1) }}>
                   <Ico n="x" s={18} />
                 </button>
               )}
             </div>
-            <button
-              className="btn btn-b"
-              style={{ flexShrink: 0, padding: "0 22px", fontSize: 14.5, fontWeight: 600 }}
-              title="ค้นหา"
-              onClick={() => setPage(1)}
-            >
-              <Ico n="search" s={17} />
-              ค้นหา
-            </button>
+            {search.trim() && (
+              <div role="status" aria-live="polite" style={{ margin: "2px 2px 0", color: "var(--t2)", fontSize: 13 }}>
+                {search !== debouncedSearch || loading ? "กำลังค้นหา…" : loadError ? "ค้นหาไม่สำเร็จ กรุณาลองอีกครั้ง" : `พบ ${displayTotal.toLocaleString("th-TH")} รายการ`}
+              </div>
+            )}
           </div>
 
           {/* ── Expiring page: stat strip + filter chips ── */}
