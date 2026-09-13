@@ -332,20 +332,20 @@ body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*
 .detail-pdf-open-float:hover{transform:translateY(-2px);background:var(--sur);box-shadow:var(--sh2)}
 @media(max-width:767px){.detail-pdf-open-float{right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0));width:44px;height:44px}}
 .detail-floating-back{
-  position:fixed;left:20px;bottom:24px;z-index:299;
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  min-height:46px;padding:0 16px;border:1px solid var(--brd2);
-  border-radius:999px;background:var(--sur);color:var(--t1);
+  position:fixed;left:0;bottom:24px;z-index:299;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:44px;padding:0;border:1px solid var(--brd2);
+  border-left:0;border-radius:0 999px 999px 0;background:var(--sur);color:var(--t1);
   box-shadow:var(--sh2);font-family:inherit;font-size:14px;font-weight:700;line-height:1.2;cursor:pointer;
 }
 .detail-floating-back:hover{background:var(--blue-bg);border-color:var(--accent)}
 .detail-floating-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media(min-width:1280px){
-  .detail-floating-back{left:276px}
-  .sidebar-collapsed .detail-floating-back{left:108px}
+  .detail-floating-back{left:236px;border-left:1px solid var(--brd2);border-radius:50%}
+  .sidebar-collapsed .detail-floating-back{left:68px}
 }
 @media(max-width:767px){
-  .detail-floating-back{left:16px;bottom:calc(84px + env(safe-area-inset-bottom,0));min-height:44px;padding:0 12px}
+  .detail-floating-back{width:32px;bottom:calc(84px + env(safe-area-inset-bottom,0))}
 }
 .policy-detail-split > .detail-aside > .info-card + [style*="display: flex"]{
   margin-bottom:14px !important;

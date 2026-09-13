@@ -709,8 +709,9 @@ export function DetailPage() {
           className="detail-floating-back"
           onClick={goBackToList}
           aria-label="กลับหน้ารายการกรมธรรม์"
+          title="กลับหน้ารายการ"
         >
-          <Ico n="chevL" s={19} /> กลับหน้ารายการ
+          <Ico n="chevL" s={19} />
         </button>}
         <div className="page-hd detail-page-hd" ref={detailHeaderRef}>
           <button
