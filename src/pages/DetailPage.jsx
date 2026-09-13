@@ -68,7 +68,6 @@ export function DetailPage() {
   const [deleteModal, setDeleteModal] = useState(false)  // confirm ลบ record
   const [deleting, setDeleting]       = useState(false)
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false)
-  const [useMobilePdfViewer, setUseMobilePdfViewer] = useState(() => window.matchMedia("(max-width: 700px)").matches)
   const [pdfTextOpen, setPdfTextOpen] = useState(false)
   const [pdfText, setPdfText] = useState("")
   const [pdfTextLoading, setPdfTextLoading] = useState(false)
@@ -82,13 +81,6 @@ export function DetailPage() {
     observer.observe(detailHeaderRef.current)
     return () => observer.disconnect()
   }, [loading])
-
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 700px)")
-    const syncViewer = event => setUseMobilePdfViewer(event.matches)
-    media.addEventListener("change", syncViewer)
-    return () => media.removeEventListener("change", syncViewer)
-  }, [])
 
   // 🔎 Quick-search modal — ค้นหาข้ามทั้งระบบจากหน้า detail (กัน user ต้องกลับไปหน้า list)
   const [searchOpen, setSearchOpen]       = useState(false)
@@ -1120,10 +1112,9 @@ export function DetailPage() {
                     </div>
                   ) : pdfBlobUrl ? (
                     <PdfCanvasViewer
-                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}-${useMobilePdfViewer ? "mobile" : "desktop"}`}
+                      key={`${activePolicy.id}-${activeDocId}-${activePolicy.pdf_filename || ""}`}
                       src={pdfBlobUrl}
                       filename={activePolicy.pdf_filename || "PDF"}
-                      fitPage={!useMobilePdfViewer}
                       onOpenFallback={() => openPdfTab(currentDocUrl)}
                     />
                   ) : (

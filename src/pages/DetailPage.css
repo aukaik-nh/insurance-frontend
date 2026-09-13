@@ -235,7 +235,7 @@ body.dark .policy-detail-split > :first-child .info-card-bd > .info-field[style*
 
 /* The document rail is intentionally quieter than the data cards so the PDF
    preview remains the visual focus. */
-.policy-detail-split > .detail-aside{min-width:0}
+.policy-detail-split > .detail-aside{min-width:0;position:static}
 .policy-detail-split > .detail-aside > .info-card{
   border-color:var(--green-brd);
   border-radius:16px;

@@ -98,14 +98,14 @@ function PdfImagePage({ imageUrl, availableWidth, zoom, pageCount }) {
   </section>
 }
 
-export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, fullscreen = false, fitPage = false, onOpenFallback }) {
+export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, fullscreen = false, onOpenFallback }) {
   const stageRef = useRef(null)
   const [pdf, setPdf] = useState(null)
   const [pageCount, setPageCount] = useState(initialPageCount || 0)
   const [availableWidth, setAvailableWidth] = useState(0)
   const [availableHeight, setAvailableHeight] = useState(0)
   const [zoom, setZoom] = useState(100)
-  const [fitMode, setFitMode] = useState(fullscreen || fitPage ? "page" : "width")
+  const [fitMode, setFitMode] = useState(fullscreen ? "page" : "width")
   const [status, setStatus] = useState(src ? "loading" : "empty")
 
   useEffect(() => {
@@ -168,7 +168,7 @@ export function PdfCanvasViewer({ src, imageUrl, filename, initialPageCount, ful
   const zoomIn = () => setZoom(value => Math.min(300, value + 25))
   const setPageFit = mode => { setFitMode(mode); setZoom(100); stageRef.current?.scrollTo({ top: 0, left: 0 }) }
 
-  return <div className={`pdf-canvas-viewer${fullscreen ? " is-fullscreen" : ""}${fitPage && !fullscreen ? " is-inline-document" : ""}`}>
+  return <div className={`pdf-canvas-viewer${fullscreen ? " is-fullscreen" : ""}`}>
     <div className="pdf-canvas-toolbar">
       <div className="pdf-canvas-title">
         <span className="pdf-canvas-icon"><Ico n="doc" s={17} /></span>
