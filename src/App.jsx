@@ -423,8 +423,8 @@ const navTo = p => { navigate(p); setMobileMenu(false); setSearch(""); setPage(1
         {/* มือถือแสดงเพียงสามงานหลัก เพื่อให้กดง่ายและไม่สับสน */}
         <nav className="mobile-bottom-nav" aria-label="เมนูหลักบนมือถือ">
           {[
-            { path: "/", ico: "doc", label: "ดูข้อมูล" },
             { path: "/upload", ico: "upload", label: "เพิ่มเอกสาร" },
+            { path: "/", ico: "doc", label: "ดูข้อมูล" },
             { path: "/batch", ico: "inbox", label: "จัดการเอกสาร" },
           ].map(it => {
             const active = it.path === "/" ? isViewingData : isActive(it.path)
