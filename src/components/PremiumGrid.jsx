@@ -105,8 +105,9 @@ const tdInput = (highlight, totalCol) => ({
  *   prbFile, onPrbFile      — สำหรับอัปโหลด PDF พ.ร.บ. inline (optional)
  *   readOnly                — โหมดแสดงผลอย่างเดียว (ใช้ในหน้า DetailPage)
  */
-export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onTogglePrb, prbFile, onPrbFile, prbLoading = false, open = true, onToggle, readOnly = false, title, mainLabel = "กรมธรรม์", allowPrb = true }) {
+export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onTogglePrb, prbFile, onPrbFile, prbLoading = false, open = true, onToggle, readOnly = false, title, mainLabel = "กรมธรรม์", mainSource, prbSource, showAllColumns = false, allowPrb = true }) {
   const hasPrb = prb !== null && prb !== undefined
+  const showComparison = hasPrb || showAllColumns
   const prbFileRef = useRef(null)
   const billing = calculateBilling(main, prb)
   const mainEquation = premiumEquation(main)
@@ -266,16 +267,20 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
             <thead>
               <tr>
                 <th style={thStyle(110)}>รายการ</th>
-                <th style={{ ...thStyle(), color: "var(--blue)" }}>{mainLabel}</th>
-                {hasPrb && (
+                <th style={{ ...thStyle(), color: "var(--blue)", whiteSpace: "normal" }}>
+                  {mainLabel}
+                  {mainSource && <small title={mainSource} style={{ display: "block", marginTop: 4, fontSize: 11, fontWeight: 500, color: "var(--t3)", overflowWrap: "anywhere" }}>{mainSource}</small>}
+                </th>
+                {showComparison && (
                   <th style={{ ...thStyle(), color: "var(--green)" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                       พ.ร.บ.
                       {prbLoading && <span className="spin" style={{ width: 12, height: 12, borderWidth: 1.5, borderColor: "var(--green)", borderTopColor: "transparent" }} />}
                     </span>
+                    {prbSource && <small title={prbSource} style={{ display: "block", marginTop: 4, fontSize: 11, fontWeight: 500, color: "var(--t3)", whiteSpace: "normal", overflowWrap: "anywhere" }}>{prbSource}</small>}
                   </th>
                 )}
-                {hasPrb && <th style={{ ...thStyle(), color: "var(--t1)", background: "var(--blue-bg)" }}>รวม</th>}
+                {showComparison && <th style={{ ...thStyle(), color: "var(--t1)", background: "var(--blue-bg)" }}>รวม{!hasPrb && <small style={{ display: "block", marginTop: 4, fontSize: 11, fontWeight: 500, color: "var(--t3)" }}>รอเอกสารคู่</small>}</th>}
               </tr>
             </thead>
             <tbody>
@@ -292,14 +297,14 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                           bold={row.bold}
                         />
                       </td>
-                      {hasPrb && (
+                      {showComparison && (
                         <td style={tdInput(row.highlight)}>
-                          <Cell value={prb.total_premium ?? ""} readOnly displayFormat={readOnly} bold color="var(--green)" />
+                          <Cell value={hasPrb ? (prb.total_premium ?? "") : "—"} readOnly displayFormat={readOnly} bold color="var(--green)" />
                         </td>
                       )}
-                      {hasPrb && (
+                      {showComparison && (
                         <td style={tdInput(row.highlight, true)}>
-                          <Cell value={fmt(total.collected)} readOnly bold color="var(--blue)" highlight />
+                          <Cell value={hasPrb ? (fmt(total.collected) || "—") : "—"} readOnly bold color="var(--blue)" highlight />
                         </td>
                       )}
                     </tr>
@@ -318,14 +323,14 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                           bold={row.bold}
                         />
                       </td>
-                      {hasPrb && (
+                      {showComparison && (
                         <td style={tdInput(row.highlight)}>
                           <Cell value="—" readOnly color="var(--t3)" />
                         </td>
                       )}
-                      {hasPrb && (
+                      {showComparison && (
                         <td style={tdInput(row.highlight, true)}>
-                          <Cell value={fmt(total[row.key])} readOnly bold color="var(--blue)" highlight />
+                          <Cell value={hasPrb && canCollectPair ? (fmt(total[row.key]) || "—") : "—"} readOnly bold color="var(--blue)" highlight />
                         </td>
                       )}
                     </tr>
@@ -343,12 +348,12 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                         bold={row.bold}
                       />
                     </td>
-                    {hasPrb && (
+                    {showComparison && (
                       <td style={tdInput(row.highlight)}>
                         <Cell
-                          value={prb[row.key] ?? ""}
-                          onChange={readOnly ? undefined : (v => onPrbChange(row.key, v))}
-                          readOnly={readOnly}
+                          value={hasPrb ? (prb[row.key] ?? "") : "—"}
+                          onChange={readOnly || !hasPrb ? undefined : (v => onPrbChange(row.key, v))}
+                          readOnly={readOnly || !hasPrb}
                           displayFormat={readOnly}
                           bold={row.bold}
                           color="var(--green)"
@@ -356,9 +361,9 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                         />
                       </td>
                     )}
-                    {hasPrb && (
+                    {showComparison && (
                       <td style={tdInput(row.highlight, true)}>
-                        <Cell value={fmt(total[row.key])} readOnly bold color="var(--blue)" highlight />
+                        <Cell value={hasPrb ? (fmt(total[row.key]) || "—") : "—"} readOnly bold color="var(--blue)" highlight />
                       </td>
                     )}
                   </tr>
@@ -368,9 +373,11 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
           </table>
         </div>
         <div style={{ marginTop: 10, padding: "9px 11px", borderRadius: 9, background: "var(--sur2)", color: "var(--t3)", fontSize: 12.5, lineHeight: 1.5 }}>
-          {hasPrb
+          {hasPrb && canCollectPair
             ? "ยอดเรียกเก็บ = เบี้ยรวมกรมธรรม์ + พ.ร.บ. − หัก 1% − คอมมิชชั่น + ภาษีคอมมิชชั่น 10% + ปรับเศษ"
-            : "ยอดเรียกเก็บ = เบี้ยรวม − หัก 1% − คอมมิชชั่น + ภาษีคอมมิชชั่น 10% + ปรับเศษ"}
+            : showComparison
+              ? "ยอดรวมจะแสดงเมื่อพบ กธ. และ พ.ร.บ. ของรถคันเดียวกันในปีเดียวกัน และมีข้อมูลเบี้ยครบทั้งสองฉบับ"
+              : "ยอดเรียกเก็บ = เบี้ยรวม − หัก 1% − คอมมิชชั่น + ภาษีคอมมิชชั่น 10% + ปรับเศษ"}
         </div>
       </div>}
     </div>

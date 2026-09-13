@@ -952,13 +952,18 @@ export function DetailPage() {
                       activeDocId,
                       preferredPairId: pairChoice.documentKey === documentKey ? pairChoice.pairKey : "",
                     })
-                    const displayMain = pair.main || pair.prb || activePolicy
-                    const displayPrb = pair.main ? pair.prb : null
-                    const mainLabel = !pair.main && pair.prb ? "พ.ร.บ." : "กรมธรรม์"
+                    const selectedRecord = activeDocId !== "main" && activePolicy.id === p.id
+                      ? attachItems.find(item => String(item.id) === String(activeDocId)) || activePolicy
+                      : activePolicy
+                    const standalonePrb = pair.status === "no-year" && (selectedRecord.doc_type === "prb" || String(selectedRecord.policy_type || "").toUpperCase() === "P")
+                    const displayMain = pair.main || (pair.prb || standalonePrb ? {} : selectedRecord)
+                    const displayPrb = pair.prb || (standalonePrb ? selectedRecord : null)
+                    const mainLabel = pair.status === "not-motor" ? "เอกสาร" : "กรมธรรม์"
+                    const sourceName = record => record?.pdf_filename || record?.label || (record?.policy_number ? `เลข ${record.policy_number}` : "ยังไม่พบเอกสารคู่")
                     return (
                       <>
                         <div className="premium-pair-context">
-                          <strong>เบี้ยประกัน{pair.year ? ` · ปี ${pair.year}` : ""}</strong>
+                          <strong>กำลังแสดงเบี้ยประกัน{pair.year ? ` · ปี ${pair.year}` : ""}</strong>
                           {pair.status === "paired" && <span>กธ. และ พ.ร.บ. คันเดียวกัน</span>}
                           {pair.status === "unpaired" && <span>ยังไม่พบเอกสารคู่ของรถคันนี้ในปีที่เลือก</span>}
                           {pair.status === "ambiguous" && <span>พบหลายฉบับที่ตรงกัน กรุณาเลือกคู่ก่อนรวมยอด</span>}
@@ -989,6 +994,9 @@ export function DetailPage() {
                           main={displayMain}
                           mainLabel={mainLabel}
                           prb={displayPrb}
+                          showAllColumns={pair.status !== "not-motor"}
+                          mainSource={pair.main ? sourceName(pair.main) : pair.prb || standalonePrb ? "ยังไม่พบ กธ. ที่จับคู่" : sourceName(selectedRecord)}
+                          prbSource={displayPrb ? sourceName(displayPrb) : "ยังไม่พบ พ.ร.บ. ที่จับคู่"}
                         />}
                       </>
                     )
