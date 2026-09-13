@@ -19,6 +19,8 @@ const num = v => {
 }
 
 const sum = (a, b) => num(a) + num(b)
+const hasAmount = value => value !== "" && value !== null && value !== undefined
+const sumIfPresent = (a, b) => hasAmount(a) && hasAmount(b) ? sum(a, b) : ""
 
 // ── Cell (top-level เพื่อไม่ให้ re-create ทุก render — กัน focus loss) ──
 function Cell({ value, onChange, readOnly, color, bold, highlight, displayFormat, placeholder }) {
@@ -109,18 +111,20 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
   const billing = calculateBilling(main, prb)
   const mainEquation = premiumEquation(main)
   const prbEquation = hasPrb ? premiumEquation(prb) : null
+  const canCollectMain = hasAmount(main.total_premium)
+  const canCollectPair = canCollectMain && hasAmount(prb?.total_premium)
 
   // คำนวณคอลัมน์รวม (main + prb)
   const total = {
-    net_premium:      sum(main.net_premium,   prb?.net_premium),
-    stamp_duty:       sum(main.stamp_duty,    prb?.stamp_duty),
-    vat:              sum(main.vat,           prb?.vat),
-    total_premium:    sum(main.total_premium, prb?.total_premium),
+    net_premium:      sumIfPresent(main.net_premium,   prb?.net_premium),
+    stamp_duty:       sumIfPresent(main.stamp_duty,    prb?.stamp_duty),
+    vat:              sumIfPresent(main.vat,           prb?.vat),
+    total_premium:    sumIfPresent(main.total_premium, prb?.total_premium),
     prepaid_tax_1pct: num(main.prepaid_tax_1pct),
     commission_baht:  billing.commissionBaht,
     wht_10pct:        billing.wht10,
     rounding:         num(main.rounding),
-    collected:        billing.collected,
+    collected:        canCollectPair ? billing.collected : "",
   }
 
   return (
@@ -282,7 +286,7 @@ export function PremiumGrid({ main = {}, prb, onMainChange, onPrbChange, onToggl
                       <td style={tdLabel(row.bold, row.highlight)}>{row.label}</td>
                       <td style={tdInput(row.highlight)}>
                         <Cell
-                          value={calculateBilling(main, {}).collected}
+                          value={canCollectMain ? calculateBilling(main, {}).collected : ""}
                           readOnly
                           displayFormat
                           bold={row.bold}

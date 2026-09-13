@@ -8,6 +8,7 @@ import { PdfCanvasViewer } from "../components/PdfCanvasViewer"
 import { PolicyForm } from "../components/PolicyForm"
 import { AttachmentsCard } from "../components/AttachmentsCard"
 import { PremiumGrid } from "../components/PremiumGrid"
+import { documentYear, selectPremiumPair } from "../premiumPairing"
 import { usePdfBlob, downloadPdf, openPdfTab, getPdfUrl } from "../pdfUtils"
 import "./DetailPage.css"
 
@@ -88,6 +89,7 @@ export function DetailPage() {
   // เอกสารแนบ (พ.ร.บ. / สลักหลัง) + tab ที่กำลังดู
   const [attachItems, setAttachItems] = useState([])
   const [activeDocId, setActiveDocId] = useState("main")
+  const [pairChoice, setPairChoice] = useState({ documentKey: "", pairKey: "" })
 
   // fetch ข้อมูลล่าสุดจาก API — refresh data ในเบื้องหลัง
   useEffect(() => {
@@ -921,53 +923,56 @@ export function DetailPage() {
                     </div>
                   </div>
 
-                  {/* เบี้ยประกัน — จับคู่ กธ.มอเตอร์ + พ.ร.บ. ของปีเดียวกัน
-                      ค้นจาก: (1) PRB attachment ของ p, (2) sibling policy ที่ type ตรงข้ามและปีเดียวกัน */}
+                  {/* เบี้ยของเอกสารที่เลือก และคู่ กธ./พ.ร.บ. ที่พิสูจน์ได้ว่าเป็นรถและปีเดียวกัน */}
                   {(() => {
-                    const yearFromFn = (fn) => {
-                      if (!fn) return null
-                      const full = String(fn).match(/-(\d{4})(?: \(\d+\))?\.pdf$/i)
-                      if (full) return Number(full[1])
-                      const m = String(fn).match(/\.(\d{2})\.pdf$/i)
-                      return m ? 2500 + parseInt(m[1], 10) : null
-                    }
-                    const yearOfRec = (rec) => yearFromFn(rec?.pdf_filename)
-                      ?? (rec?.coverage_end   ? parseInt(rec.coverage_end.slice(0, 4))   + 543 : null)
-                      ?? (rec?.coverage_start ? parseInt(rec.coverage_start.slice(0, 4)) + 543 : null)
-                    const isPRB = (t) => (t || "").toUpperCase().trim() === "P"
-                    const activeIsPRB = isPRB(activePolicy.policy_type)
-                    const activeYear  = yearOfRec(activePolicy)
-                    // หา sibling ปีเดียวกัน (ไม่ใช่ฉบับเดียวกัน)
-                    const sibling = relatedPdfs.find(r =>
-                      r.id !== activePolicy.id && yearOfRec(r) === activeYear
-                    )
-                    const siblingIsPRB = sibling && isPRB(sibling.policy_type)
-                    // PRB attachment ของ p (เฉพาะเมื่อดูตัว p เอง ไม่ใช่ sibling)
-                    const attachPrb = !viewingRelated
-                      ? attachItems.find(a => a.doc_type === "prb")
-                      : null
-                    // เลือกข้อมูลเข้าคอลัมน์ main vs prb
-                    let mainCol, prbCol
-                    if (activeIsPRB) {
-                      prbCol  = activePolicy
-                      mainCol = sibling && !siblingIsPRB ? sibling : null
-                    } else {
-                      mainCol = activePolicy
-                      prbCol  = attachPrb || (sibling && siblingIsPRB ? sibling : null)
-                    }
-                    const prbForGrid = prbCol ? {
-                      net_premium:   prbCol.net_premium,
-                      stamp_duty:    prbCol.stamp_duty,
-                      vat:           prbCol.vat,
-                      total_premium: prbCol.total_premium,
-                    } : null
+                    const documentKey = `${activePolicy.id}:${activeDocId}`
+                    const pair = selectPremiumPair({
+                      activePolicy,
+                      parentPolicy: p,
+                      relatedPolicies: relatedPdfs,
+                      attachments: attachItems,
+                      activeDocId,
+                      preferredPairId: pairChoice.documentKey === documentKey ? pairChoice.pairKey : "",
+                    })
+                    const displayMain = pair.main || pair.prb || activePolicy
+                    const displayPrb = pair.main ? pair.prb : null
+                    const mainLabel = !pair.main && pair.prb ? "พ.ร.บ." : "กรมธรรม์"
                     return (
-                      <PremiumGrid
-                        readOnly
-                        title="เบี้ยประกัน"
-                        main={mainCol || {}}
-                        prb={prbForGrid}
-                      />
+                      <>
+                        <div className="premium-pair-context">
+                          <strong>เบี้ยประกัน{pair.year ? ` · ปี ${pair.year}` : ""}</strong>
+                          {pair.status === "paired" && <span>กธ. และ พ.ร.บ. คันเดียวกัน</span>}
+                          {pair.status === "unpaired" && <span>ยังไม่พบเอกสารคู่ของรถคันนี้ในปีที่เลือก</span>}
+                          {pair.status === "ambiguous" && <span>พบหลายฉบับที่ตรงกัน กรุณาเลือกคู่ก่อนรวมยอด</span>}
+                          {pair.status === "no-year" && <span>ไม่พบปีเอกสาร จึงยังไม่รวมกับฉบับอื่น</span>}
+                          {pair.status === "no-policy" && <span>ไม่มีกรมธรรม์ของปีนี้ที่ยืนยันได้ จึงไม่แสดงเบี้ยจากปีอื่น</span>}
+                          {pair.status === "paired" && ["net_premium", "stamp_duty", "vat", "total_premium"].some(key => pair.main?.[key] == null || pair.prb?.[key] == null) && <span>ข้อมูลเบี้ยไม่ครบ กรุณาตรวจต้นฉบับ</span>}
+                          {pair.options.length > 1 && (
+                            <select
+                              aria-label="เลือกกรมธรรม์หรือ พ.ร.บ. ที่จับคู่"
+                              value={pair.chosenKey}
+                              onChange={event => setPairChoice({ documentKey, pairKey: event.target.value })}
+                            >
+                              <option value="">เลือกเอกสารคู่</option>
+                              {pair.options.map((option, index) => (
+                                <option key={option.key} value={option.key}>
+                                  {`${index + 1}. ${option.record.policy_number || option.record.pdf_filename || option.record.label || "เอกสาร"}`}
+                                  {option.record.license_plate ? ` · ${option.record.license_plate}` : ""}
+                                  {option.record.coverage_start ? ` · ${fmtDate(option.record.coverage_start)}` : ""}
+                                  {option.record.total_premium != null ? ` · ${Number(option.record.total_premium).toLocaleString("th-TH")} บาท` : ""}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                        {pair.status !== "no-policy" && <PremiumGrid
+                          readOnly
+                          title="เบี้ยประกัน"
+                          main={displayMain}
+                          mainLabel={mainLabel}
+                          prb={displayPrb}
+                        />}
+                      </>
                     )
                   })()}
 
@@ -1202,27 +1207,6 @@ export function DetailPage() {
                     </div>
                   </div>
                   {pdfListOpen && (() => {
-                    // ── จัดกลุ่มเอกสารตามปี (BE) — จับคู่ กธ + พรบ + สลักหลัง ของปีเดียวกัน ──
-                    // ⚠️ ลำดับ priority:
-                    //   1) parse เลข YY จาก filename ("กธ.69.pdf" / "พรบ.69.pdf") → BE 2569
-                    //      เพราะนี่คือสิ่งที่ user มองเห็น และเป็นมาตรฐานการเรียกปีกรมธรรม์ในไทย
-                    //   2) fallback ไป coverage_end (ปีที่หมดอายุ) ถ้า filename ไม่มี pattern
-                    //   3) fallback ไป coverage_start สุดท้าย
-                    const yearFromFilename = (fn) => {
-                      if (!fn) return null
-                      // จับ ".XX." ก่อน .pdf (XX = 2 หลัก BE สั้น เช่น 69, 70)
-                      const full = String(fn).match(/-(\d{4})(?: \(\d+\))?\.pdf$/i)
-                      if (full) return Number(full[1])
-                      const m = String(fn).match(/\.(\d{2})\.pdf$/i)
-                      if (!m) return null
-                      const yy = parseInt(m[1], 10)
-                      return 2500 + yy  // 69 → 2569, 70 → 2570
-                    }
-                    const yearOf = (rec) => {
-                      return yearFromFilename(rec.pdf_filename)
-                        ?? (rec.coverage_end   ? parseInt(rec.coverage_end.slice(0, 4))   + 543 : null)
-                        ?? (rec.coverage_start ? parseInt(rec.coverage_start.slice(0, 4)) + 543 : null)
-                    }
                     const docs = [
                       ...relatedPdfs.map(r => ({
                         kind: "policy",
@@ -1230,7 +1214,7 @@ export function DetailPage() {
                         record: r,
                         // policy_type "P" = พ.ร.บ., อื่นๆ = กธ
                         docType: (r.policy_type || "").toUpperCase().trim() === "P" ? "prb" : "main",
-                        year: yearOf(r),
+                        year: documentYear(r),
                         filename: r.pdf_filename || "PDF",
                       })),
                       ...attachItems.map(a => ({
@@ -1239,7 +1223,7 @@ export function DetailPage() {
                         record: a,
                         docType: a.doc_type || "other",
                         // attachment ใช้ปีของตัวเอง — fallback ปีของ parent ถ้าไม่มี
-                        year: yearOf(a) || yearOf(p),
+                        year: documentYear(a) || documentYear(p),
                         filename: a.label || a.pdf_filename || "PDF",
                       })),
                     ]
