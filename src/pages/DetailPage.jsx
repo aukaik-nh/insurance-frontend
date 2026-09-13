@@ -27,23 +27,23 @@ export function DetailPage() {
   const { state }     = location
   const { id }        = useParams()
 
-  // A detail route must always open at its header. The list deliberately
-  // restores its own scroll position when the user comes back.
+  // ⚡ instant render: ถ้ามีข้อมูลจาก list (navigate state) ใช้ทันที — ไม่ต้องรอ API
+  //    ยังคง fetch ข้อมูลล่าสุดในเบื้องหลังเพื่อ refresh
+  const initialP = state?.policy && String(state.policy.id) === String(id) ? state.policy : null
+
+  const [p, setP]           = useState(initialP)
+  const [loading, setLoading] = useState(!initialP)
+  const [fetchErr, setFetchErr] = useState(false)
+
+  // The list preserves its own scroll position for Back. A detail page must
+  // start at the header, including after its async policy content arrives.
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" })
     const frame = window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" })
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [id])
-
-  // ⚡ instant render: ถ้ามีข้อมูลจาก list (navigate state) ใช้ทันที — ไม่ต้องรอ API
-  //    ยังคง fetch ข้อมูลล่าสุดในเบื้องหลังเพื่อ refresh
-  const initialP = state?.policy && state.policy.id === id ? state.policy : null
-
-  const [p, setP]           = useState(initialP)
-  const [loading, setLoading] = useState(!initialP)
-  const [fetchErr, setFetchErr] = useState(false)
+  }, [id, loading])
 
   const [pdfFull, setPdfFull]       = useState(false)
   const [editName, setEditName]     = useState(false)
@@ -111,7 +111,7 @@ export function DetailPage() {
 
   // เมื่อเปลี่ยน policy id (เช่น navigate จาก /policies/A → /policies/B) → reset activePdfId
   useEffect(() => {
-    if (initialP?.id === id) setActivePdfId(id)
+    if (initialP && String(initialP.id) === String(id)) setActivePdfId(id)
     else setActivePdfId(null)  // จะถูกตั้งใหม่หลัง fetch เสร็จ
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])

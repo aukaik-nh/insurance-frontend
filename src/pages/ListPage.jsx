@@ -661,6 +661,17 @@ export function ListPage({ tab }) {
     return () => { cancelAnimationFrame(frame); clearTimeout(timer) }
   }, [location.state, loading])
 
+  const openPolicy = policy => {
+    const returnScrollY = window.scrollY
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    navigate(`/policies/${policy.id}`, { state: {
+      policy,
+      returnTo: `${location.pathname}${location.search}`,
+      returnPolicyId: policy.id,
+      returnScrollY,
+    } })
+  }
+
   return (
     <>
       {/* subtitle bar — hidden on dashboard (hero covers it) */}
@@ -863,12 +874,7 @@ export function ListPage({ tab }) {
                 <RenewalChart
                   rows={_expiringSource}
                   loading={loading}
-                  onOpenPolicy={r => navigate(`/policies/${r.id}`, { state: {
-                    policy: r,
-                    returnTo: `${location.pathname}${location.search}`,
-                    returnPolicyId: r.id,
-                    returnScrollY: window.scrollY,
-                  } })}
+                  onOpenPolicy={openPolicy}
                 />
               </>
             )
@@ -887,12 +893,7 @@ export function ListPage({ tab }) {
             page={page}
             pages={displayPages}
             setPage={setPage}
-            onRow={r => navigate(`/policies/${r.id}`, { state: {
-              policy: r,
-              returnTo: `${location.pathname}${location.search}`,
-              returnPolicyId: r.id,
-              returnScrollY: window.scrollY,
-            } })}
+            onRow={openPolicy}
             onRowHover={prefetchPolicy}
             activeId={previewPolicy?.id || returnFocusId}
             pageOffset={(page - 1) * LIMIT}
@@ -906,7 +907,7 @@ export function ListPage({ tab }) {
           <PreviewPanel
             p={previewPolicy}
             onClose={() => setPreviewPolicy(null)}
-            onOpen={() => navigate(`/policies/${previewPolicy.id}`, { state: { policy: previewPolicy } })}
+            onOpen={() => openPolicy(previewPolicy)}
           />
         )}
       </div>
