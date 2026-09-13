@@ -8,6 +8,7 @@ import { getStatus } from "../helpers"
 import { PolicyTable } from "../components/PolicyTable"
 import { PreviewPanel } from "../components/PreviewPanel"
 import { prefetchPdf, getPdfUrl } from "../pdfUtils"
+import "./ListPage.css"
 
 const LIMIT = 10
 const LIST_MEMORY_TTL = 5 * 60 * 1000
@@ -720,29 +721,22 @@ export function ListPage({ tab }) {
               <div className="sec-hd">
                 <Ico n="grid" s={14} />
                 <span>สรุปข้อมูล</span>
-                <small>เลือกบัตรเพื่อเปิดรายการ</small>
               </div>
               <div className="overview-stat-grid dashboard-overview-grid">
                 {[
-                  { path: "/policies", kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", action: "ดูทั้งหมด", ico: "list" },
-                  { path: "/policies", kind: "active", lbl: "คุ้มครองอยู่", value: active.toLocaleString(), detail: "กรมธรรม์ที่ยังมีผล", action: "ดูรายการ", ico: "shield" },
-                  { path: "/expiring", kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: (summaryStats?.expiring ?? expiring.length).toLocaleString(), detail: "ภายใน 30 วัน", action: "ดูรายการ", ico: "bell", urgent: (summaryStats?.expiring ?? expiring.length) > 0 },
+                  { kind: "policies", lbl: "กรมธรรม์ทั้งหมด", value: total.toLocaleString(), detail: "รายการที่บันทึกในระบบ", ico: "list" },
+                  { kind: "active", lbl: "คุ้มครองอยู่", value: active.toLocaleString(), detail: "กรมธรรม์ที่ยังมีผล", ico: "shield" },
+                  { kind: "expiring", lbl: "กรมธรรม์ใกล้หมดอายุ", value: (summaryStats?.expiring ?? expiring.length).toLocaleString(), detail: "ภายใน 30 วัน", ico: "bell", urgent: (summaryStats?.expiring ?? expiring.length) > 0 },
                 ].map(m => (
-                  <button key={m.path} className={`overview-stat overview-stat-${m.kind}`}
-                    onClick={() => navigate(m.path)} aria-label={`ดู${m.lbl}`}>
+                  <div key={m.kind} className={`overview-stat overview-stat-static overview-stat-${m.kind}`}>
                     <span className="overview-stat-icon"><Ico n={m.ico} s={22} /></span>
                     <span className="overview-stat-copy">
                       <span className="overview-stat-label">{m.lbl}</span>
                       <strong>{hasLoaded ? m.value : "—"}</strong>
                       <span className="overview-stat-detail">{m.detail}</span>
                     </span>
-                    <span className="overview-stat-end">
-                      {m.urgent && (
-                        <span className="quick-action-alert">ต้องติดตาม</span>
-                      )}
-                      <span className="overview-stat-action">{m.action} <Ico n="chevR" s={17} /></span>
-                    </span>
-                  </button>
+                    {m.urgent && <span className="overview-stat-end"><span className="quick-action-alert">ต้องติดตาม</span></span>}
+                  </div>
                 ))}
               </div>
 

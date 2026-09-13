@@ -1,0 +1,15 @@
+.dashboard-overview-grid .overview-stat-static{
+  cursor:default;
+}
+
+.dashboard-overview-grid .overview-stat-static:hover,
+.dashboard-overview-grid .overview-stat-static:active{
+  transform:none;
+  border-color:var(--brd);
+  box-shadow:var(--sh0);
+}
+
+.dashboard-overview-grid .overview-stat-static.overview-stat-expiring:hover,
+.dashboard-overview-grid .overview-stat-static.overview-stat-expiring:active{
+  border-color:var(--amber-brd);
+}
